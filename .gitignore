@@ -1,0 +1,25 @@
+# Bytecode / cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Project data and outputs
+data/
+outputs/
+
+# Logs / editor cruft
+*.log
+.DS_Store
+Thumbs.db
+
