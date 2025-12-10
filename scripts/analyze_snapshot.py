@@ -168,6 +168,15 @@ def parse_args() -> argparse.Namespace:
         help="Optional block decomposition for delaunay_3D (reduces memory usage).",
     )
     parser.add_argument(
+        "--delaunay-btype",
+        choices=("mirror", "periodic", "smooth", "void"),
+        default=None,
+        help=(
+            "Boundary extrapolation model for delaunay_3D (-btype). "
+            "Choices: mirror (default), periodic, smooth, void."
+        ),
+    )
+    parser.add_argument(
         "--mse-nsig",
         "--nsig",
         type=float,
@@ -358,6 +367,7 @@ def run_delaunay(
     prefix: str,
     periodic: bool,
     blocks: Optional[Sequence[int]],
+    btype: Optional[str],
 ) -> Path:
     """Launch DisPerSE's `delaunay_3D` program to build the simplicial network.
 
@@ -372,6 +382,8 @@ def run_delaunay(
         cmd.append("-periodic")
     if blocks:
         cmd.extend(["-blocks", str(blocks[0]), str(blocks[1])])
+    if btype:
+        cmd.extend(["-btype", str(btype)])
     run_command(cmd)
     return output_dir / f"{prefix}.NDnet"
 
@@ -508,6 +520,7 @@ def main() -> None:
         prefix,
         periodic=args.periodic,
         blocks=args.delaunay_blocks,
+        btype=args.delaunay_btype,
     )
     print(f"[info] Delaunay network saved to {network_path}")
 
