@@ -42,15 +42,36 @@ snap_010.hdf5
 ## if not in disperse environment then set:
 (base) fules@Fuless-MacBook-Pro disperse % conda activate disperse
 
-## run the analysis
-(disperse) fules@Fuless-MacBook-Pro disperse %      python analyze_snapshot.py \
+## run the analysis for quijote data
+(disperse) fules@Fuless-MacBook-Pro disperse %      python scripts/analyze_snapshot.py \
          --input data/snap_010.hdf5 \
          --output-dir outputs/snap_010 \
-         --periodic \
+         --delaunay-btype periodic \
          --target-count 2000000 \
          --nsig 3.5 \
-         --manifold-spec JD2d \
+         --manifold-spec JE1a \
          --wall-format vtu
+
+## run the analysis for cosmoflow data
+(disperse) fules@Fuless-MacBook-Pro disperse %  python scripts/prepare_cosmoflow_snapshot.py \
+  --input data/univ_ics_2019-03_a10000668.hdf5 \
+  --output data/cosmoflow_z0_snapshot.hdf5 \
+  --redshift-index 0 \
+  --target-count 1000000 \
+  --threshold 5
+
+(disperse) fules@Fuless-MacBook-Pro disperse %  ppython scripts/analyze_snapshot.py \
+  --input data/cosmoflow_z0_snapshot.hdf5 \
+  --output-dir outputs/cosmoflow_z0 \
+  --delaunay-btype periodic \
+  --nsig 3.5 \
+  --manifold-spec JE1a
+
+## parameters to tweak
+periodic - 
+target-count - reduction of 
+nsig 3.5 - 
+manifold-spec JD2d -
 
 ## visualize in paraview:
 (disperse) fules@Fuless-MacBook-Pro disperse %     /Applications/ParaView-6.0.1.app/Contents/bin/pvpython visualize_walls_paraview.py \
