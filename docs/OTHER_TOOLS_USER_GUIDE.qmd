@@ -1,0 +1,175 @@
+---
+title: "Other Tools User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `compute_density_field.py` User Guide
+
+This script deposits particle data from a Gadget/Quijote snapshot onto a regular 3‑D grid using Cloud-In-Cell (CIC). The resulting density (and optional overdensity) fields are written to an HDF5 file that includes the original snapshot header plus metadata describing the grid.
+
+---
+
+### Command Overview
+
+| Argument | Description |
+|----------|-------------|
+| `--input PATH` | Snapshot file (e.g., `data/snap_010.hdf5`). |
+| `--parttype NAME` | Particle group to deposit (default `PartType1`). |
+| `--output PATH` | Destination HDF5 file for the density grid. |
+| `--grid-size N` | Number of cells along each axis (creates an `N×N×N` grid). |
+| `--chunk-size N` | Number of particles streamed in memory per deposit pass (default 2M). |
+| `--mass-override M` | Explicit particle mass if `MassTable` doesn’t specify one. |
+| `--field-name NAME` | Dataset name for the density field (default `density`). |
+| `--store-contrast` | Also store overdensity `delta = rho / mean - 1`. |
+
+The script automatically reads box size and mass information from the snapshot header, computes CIC weights chunk-by-chunk, normalizes by the cell volume, and stores the mean density in the output header.
+
+---
+
+### Example Command
+
+```bash
+/Users/fules/miniforge3/envs/disperse/bin/python scripts/compute_density_field.py \
+  --input data/snap_010.hdf5 \
+  --parttype PartType1 \
+  --output outputs/snap_010_density.hdf5 \
+  --grid-size 256 \
+  --chunk-size 2000000 \
+  --store-contrast
+```
+
+This produces `outputs/snap_010_density.hdf5` with:
+
+- `Header` group (original attributes + `GridSize`, `MeanDensity`, `FieldName`).
+- `DensityField/density` dataset (float32, 256×256×256).
+- Optional `DensityField/delta` if `--store-contrast` is set.
+
+---
+
+### Workflow Summary
+
+1. **Mass/metadata lookup** — reads `Header` to obtain `BoxSize`, `MassTable`, etc. You can override mass with `--mass-override`.
+2. **Chunked deposition** — iterates through coordinates, applying CIC weights into the target grid without loading all particles at once.
+3. **Normalization** — divides by cell volume to convert mass to physical density.
+4. **Output HDF5** — writes the grid(s), along with header metadata for future reference.
+
+This file can then be visualized directly (e.g., via `export_snapshot_vtu.py --density-field`) or used as input for other grid-based analyses.
+
+---
+
+## `export_grid_vti.py` (visualize the HDF5 grid)
+
+`export_grid_vti.py` is a companion tool that converts a 3‑D HDF5 dataset (like the density grid above) into a ParaView-friendly VTI file. It does not change the data; it only wraps it in VTK ImageData with optional origin/spacing overrides.
+
+| Argument | Description |
+|----------|-------------|
+| `--input PATH` | HDF5 file containing the grid (e.g., `outputs/snap_010_density.hdf5`). |
+| `--dataset PATH` | Dataset path inside the HDF5 (default `df`; use `DensityField/density` for the file above). |
+| `--output PATH` | Destination `.vti` file. |
+| `--spacing DX DY DZ` | Voxel spacing (defaults to 1 1 1; override if you want physical units). |
+| `--origin OX OY OZ` | Grid origin (defaults to 0 0 0). |
+| `--field-name NAME` | Scalar name in the VTI (default `df`). |
+
+Example (convert the density grid to VTI):
+
+```bash
+python scripts/export_grid_vti.py \
+  --input outputs/snap_010_density.hdf5 \
+  --dataset DensityField/density \
+  --output outputs/snap_010_density.vti
+```
+
+Open the resulting `.vti` in ParaView for volume rendering or slicing.
+
+
+## `export_snapshot_vtu.py` User Guide
+
+This converter script produces ParaView-friendly VTK files from:
+
+1. **Gadget snapshots** — streaming selected particles into VTU (UnstructuredGrid).
+2. **Density-field HDF5 files** — when `--density-field` is set, reads a 3‑D grid dataset and writes a VTI (ImageData) volume.
+
+It supports chunked processing, optional inclusion of extra particle fields, and the same HDF5 plugin bootstrap used elsewhere.
+
+---
+
+### Command Overview
+
+#### Common Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--input PATH` | Source file (snapshot or density HDF5). |
+| `--output PATH` | Destination `.vtu` (particles) or `.vti` (density grid). |
+| `--include NAME ...` | Extra per-particle datasets to attach as point-data arrays (e.g., `Velocities`). |
+| `--target-count N` | Maximum number of particles to keep; script derives a stride. |
+| `--stride N` | Explicit stride (keep every Nth particle). |
+| `--chunk-size N` | Number of particles to stream per chunk (default 2M). |
+| `--input-unit`, `--output-unit` | Coordinate units for particle mode (kpc/h vs. Mpc/h). |
+
+#### Density-Field Mode
+
+Enable with `--density-field`, which switches to VTI output.
+
+| Argument | Description |
+|----------|-------------|
+| `--grid-dataset PATH` | Dataset path inside the HDF5 (default `DensityField/density`). |
+| `--grid-spacing DX DY DZ` | Override spacing; otherwise inferred from metadata. |
+| `--grid-origin OX OY OZ` | Override origin (defaults to 0 or metadata). |
+
+---
+
+### Example Commands
+
+#### Particles → VTU
+
+```bash
+python scripts/export_snapshot_vtu.py \
+  --input data/snap_010.hdf5 \
+  --parttype PartType1 \
+  --output outputs/snap_010_points.vtu \
+  --target-count 2000000 \
+  --include Velocities
+```
+
+#### Density Field → VTI
+
+```bash
+python scripts/export_snapshot_vtu.py \
+  --density-field \
+  --input outputs/snap_010_density.hdf5 \
+  --grid-dataset DensityField/density \
+  --output outputs/snap_010_density.vti
+```
+
+---
+
+### Workflow Summary
+
+* **Particle mode** streams coordinates (plus optional attributes) in manageable chunks, applies any requested stride/decimation, and writes appended-binary VTU data (Points + Polyvertex cells). This keeps memory usage low and file size reasonable.
+
+* **Density-field mode** simply reads the 3‑D dataset, infers origin/spacing, and writes a uniform ImageData `.vti`, which ParaView can volume-render directly.
+
+Because the script uses appended binary, ParaView can load these files quickly. When exporting particles, the script ensures each particle becomes both a point and a vertex cell so you can use both glyph and cell-based coloring.
+
+
+## Comparison of these tools:
+
+### Roles at a glance
+
+- `compute_density_field.py`: builds a CIC density grid (N³) from a snapshot and writes HDF5 (optionally overdensity). No topology; use when you want a volumetric density field.
+- `export_grid_vti.py`: wraps an existing 3-D HDF5 dataset as VTI (ImageData) for ParaView. Typically run on the HDF5 produced by `compute_density_field.py`.
+- `export_snapshot_vtu.py`: streams snapshot particles to VTU (polyvertex) with optional stride/attributes; with `--density-field` it converts an existing 3-D grid HDF5 to VTI. It converts; it does not compute a grid.
+- `analyze_snapshot.py` / `analyze_snapshot_2d.py`: decimate/crop, run DisPerSE (Delaunay + MSE) to produce manifolds/skeletons, then convert NDnet/NDskl to VTK. They do not emit full density grids or raw particle VTUs.
+
+### Typical combos
+
+- Density volume: `compute_density_field.py` → `export_grid_vti.py` (or `export_snapshot_vtu.py --density-field …`).
+- Raw particle VTU: `export_snapshot_vtu.py`.
+- Walls/filaments: `analyze_snapshot*.py` (with `--dump-manifolds`/`--dump-arcs`).
+
+### Special note: `--export-delaunay` vs. particle export
+- `--export-delaunay` (in `analyze_snapshot*.py`) converts the DisPerSE Delaunay NDnet into a VTU mesh with DTFE densities—this visualizes the tessellation, not raw particles.
+- `export_snapshot_vtu.py` streams the snapshot particles themselves (polyvertex VTU) or, with `--density-field`, converts an existing grid to VTI.

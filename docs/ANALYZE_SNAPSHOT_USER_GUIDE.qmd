@@ -1,0 +1,147 @@
+---
+title: "`analyze_snapshot.py` User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `analyze_snapshot.py` User Guide
+
+This script automates a full DisPerSE workflow for Gadget/Quijote snapshots. It:
+
+1. **Builds an NDfield catalog** (optionally cropped/decimated).
+2. **Runs `delaunay_3D`** to reconstruct the Delaunay tessellation (with optional block decomposition).
+3. **Runs `mse`** to compute the Morse–Smale complex and dump manifolds/filaments.
+4. **Converts DisPerSE outputs** to VTK-family formats (VTU/VTP/etc.) via `netconv`/`skelconv`.
+
+Below is a novice-friendly description of every argument and the overall workflow.
+
+---
+
+### Basic Inputs
+
+| Argument | Description |
+|----------|-------------|
+| `--input PATH` | HDF5 snapshot (Quijote-style). Defaults to `data/snap_010.hdf5`. |
+| `--output-dir DIR` | Folder for all generated artifacts. Created automatically. |
+| `--output-prefix NAME` | Basename for files inside `output-dir`. Default based on input file name. |
+| `--parttype NAME` | Particle group to use (default `PartType1`). |
+| `--coords-input PATH` | Skip snapshot reading and reuse an existing NDfield (`ANDFIELD COORDS`). |
+| `--network-input PATH` | Reuse an existing Delaunay NDnet (skip `delaunay_3D`). |
+| `--manifolds-input PATH` | Reuse an existing manifolds NDnet (skip `mse`). |
+
+### Sampling Controls
+
+* `--target-count N` — approximate number of particles to keep. The script derives a stride.
+* `--stride N` — keep every Nth particle (overrides `--target-count`).
+* `--chunk-size N` — number of particles streamed per read (default 2M).
+* `--crop-box xmin ymin zmin xmax ymax zmax` — restricts the analysis to a rectangular sub-volume in the snapshot’s input units (`kpc/h` by default).
+
+### Units
+
+* `--input-unit {kpc/h,mpc/h}` — units used by `--input`.
+* `--output-unit {kpc/h,mpc/h}` — units stored in downstream NDfields/VTK files.
+
+### Delaunay Stage
+
+* `--periodic` — enforce periodic boundary conditions (THIS GENERATES ARTIFACTS, USE --delaunay-btype INSTEAD).
+* `--delaunay-blocks NCHUNKS NTHREADS` — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered `_G.NDnet` (DON'T USE, THROWS ERROR).
+* `--delaunay-btype {mirror,periodic,smooth,void}` — Delaunay boundary extrapolation.
+* `--export-delaunay` — convert the raw Delaunay NDnet via `netconv`.
+  * `--delaunay-format ...` — output format for the above (defaults to VTU).
+  * `--delaunay-smooth N` — smoothing iterations passed to `netconv`.
+
+### Morse–Smale / Manifolds
+
+* `--mse-nsig s1 [s2 ...]` — persistence thresholds in sigma units (default `3.5`).
+* `--persistence-cut c1 [c2 ...]` — absolute persistence thresholds (override `--mse-nsig`).
+* `--mse-threads N` — OpenMP threads for `mse`.
+* `--mse-vertex-as-minima` — forward `-vertexAsMinima`.
+* `--dump-manifolds SPEC` — descriptor for `mse -dumpManifolds` (default `JD1d`).
+* `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
+
+### Conversion / Output Formats
+
+* `--netconv-format ...` — how to convert manifolds (VTU/PLY/NDnet/etc.).
+* `--netconv-smooth N` — smoothing iterations for `netconv`.
+* `--skip-netconv` — leave manifolds in NDnet form.
+* `--skel-input TAG=PATH` — provide external NDskl files for conversion.
+* `--skelconv-format ...` — skeleton conversion output (default VTP).
+* `--skelconv-smooth N` — smoothing iterations for `skelconv`.
+* `--skip-skelconv` — skip skeleton conversion.
+
+### Workflow Control
+
+* `--stop-after {ndfield,delaunay,mse}` — halt after the named stage.
+* `--keep-ndfield` — keep (rather than delete) the intermediate `coords_stride*.AND`.
+* `--disperse-bin-dir DIR` — directory containing DisPerSE binaries (`delaunay_3D`, `mse`, `netconv`, `skelconv`).
+
+---
+
+## Typical Runs
+
+### Full Snapshot Pipeline
+
+```bash
+python scripts/analyze_snapshot.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_thinned \
+  --target-count 2_000_000 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+### Cropped Sub-volume
+
+```bash
+python scripts/analyze_snapshot.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_subbox \
+  --crop-box 0 0 0 500000 500000 100000 \
+  --stride 1 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+### Conversion-only (reuse existing NDnets)
+
+```bash
+python scripts/analyze_snapshot.py \
+  --output-dir outputs/snap_010 \
+  --manifolds-input outputs/snap_010/snap_010_manifolds_JD1d.NDnet \
+  --skel-input U=outputs/snap_010/snap_010.U.NDskl \
+  --netconv-format vtu \
+  --skelconv-format vtp \
+  --skelconv-smooth 5
+```
+
+---
+
+## Workflow Summary
+
+1. **NDfield Creation**  
+   The script reads the snapshot (or uses `--coords-input`), applies optional cropping and decimation, and writes an `ANDFIELD COORDS` file. `--stop-after ndfield` lets you inspect this stage alone.
+
+2. **Delaunay Tessellation**  
+   Runs `delaunay_3D` on the NDfield to produce an NDnet (`*.NDnet` or `*_G.NDnet` with block mode). Pass `--stop-after delaunay` to examine the tessellation.
+
+3. **Morse–Smale Analysis**  
+   Runs `mse` on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with `--manifolds-input` or `--stop-after mse`.
+
+4. **Conversion**  
+   Converts manifolds (via `netconv`) and skeletons (via `skelconv`) into VTK family formats for visualization.
+
+5. **Summary & Cleanup**  
+   The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDnet, manifolds, converted meshes). Use `--keep-ndfield` to retain the coordinate catalog; otherwise it’s deleted automatically.
+
+With these options, novice users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.
