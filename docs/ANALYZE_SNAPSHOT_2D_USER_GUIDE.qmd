@@ -1,0 +1,141 @@
+---
+title: "`analyze_snapshot_2d.py` User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `analyze_snapshot_2d.py` User Guide
+
+This script replicates the 3D DisPerSE workflow in two dimensions. It projects a slab of a Gadget/Quijote snapshot onto a plane, builds a 2D NDfield catalog, runs `delaunay_2D`, applies `mse`, and converts manifolds/skeletons for visualization.
+
+---
+
+### Stage Overview
+
+1. **Slab extraction & projection** — read the snapshot (or reuse an NDfield), filter by `--crop-box` and `--projection-range`, drop the projection axis, and emit a `[2 N]` NDfield.
+2. **`delaunay_2D`** — triangulate the projected catalog with optional boundary settings.
+3. **`mse`** — compute 2D Morse–Smale manifolds/skeletons on the NDnet.
+4. **Conversion** — send manifolds to `netconv` and skeletons to `skelconv`.
+
+You can resume at any stage via `--coords-input`, `--network-input`, `--manifolds-input`, or `--skel-input`, mirroring the 3D script.
+
+---
+
+### Core Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--input PATH` | HDF5 snapshot (default `data/snap_010.hdf5`). |
+| `--output-dir DIR` | Directory for all generated artifacts. |
+| `--output-prefix NAME` | Basename for files inside `output-dir`. |
+| `--parttype NAME` | Particle group to sample (default `PartType1`). |
+| `--coords-input PATH` | Reuse an existing `[2 N]` NDfield catalog. |
+| `--network-input PATH` | Reuse an existing 2D NDnet (skip Delaunay). |
+| `--manifolds-input PATH` | Reuse manifolds (skip `mse`). |
+
+### Sampling & Projection
+
+* `--target-count N` — approximate number of particles to keep after filters.
+* `--stride N` — explicit decimation rate (overrides `--target-count`).
+* `--chunk-size N` — streaming chunk size for snapshot reads (default 2M).
+* `--crop-box xmin ymin zmin xmax ymax zmax` — optional 3D sub-volume before projection.
+* `--projection-axis {x,y,z}` — axis to collapse (default `z`; plane is the other two axes).
+* `--projection-range min max` — restrict the slab thickness along the projection axis.
+
+### Units
+
+* `--input-unit {kpc/h,mpc/h}` — units of snapshot coordinates.
+* `--output-unit {kpc/h,mpc/h}` — units stored in the NDfield and exported meshes.
+
+### Delaunay Options
+
+* `--periodic` — treat plane boundaries as periodic when calling `delaunay_2D`/`mse`.
+* `--delaunay-blocks NCHUNKS NTHREADS` — DisPerSE block decomposition (memory reduction).
+* `--delaunay-btype {mirror,periodic,smooth,void}` — boundary extrapolation passed to `-btype`.
+* `--export-delaunay` — convert the raw 2D NDnet via `netconv`.
+  * `--delaunay-format ...` — output format for the above (VTU, PLY, etc.).
+  * `--delaunay-smooth N` — smoothing iterations for the exported triangulation.
+
+### Morse–Smale / Manifolds
+
+* `--mse-nsig s1 [s2 ...]` — sigma thresholds for `mse -nsig`.
+* `--persistence-cut c1 [c2 ...]` — absolute persistence cuts (override `--mse-nsig`).
+* `--mse-threads N` — OpenMP threads for `mse`.
+* `--mse-vertex-as-minima` — forward `-vertexAsMinima`.
+* `--dump-manifolds SPEC` — descriptor for `-dumpManifolds` (default `JD1d`).
+* `--dump-arcs CUID` — repeat to request multiple skeleton tags.
+
+### Conversion & Reuse
+
+* `--netconv-format ...` / `--netconv-smooth N` / `--skip-netconv`.
+* `--skel-input TAG=PATH` — convert existing NDskl files.
+* `--skelconv-format ...` / `--skelconv-smooth N` / `--skip-skelconv`.
+* `--stop-after {ndfield,delaunay,mse}` — exit early.
+* `--keep-ndfield` — retain the intermediate `coords_stride*.AND`.
+* `--disperse-bin-dir DIR` — directory containing `delaunay_2D`, `mse`, `netconv`, `skelconv`.
+
+---
+
+### Example Workflows
+
+**1. Full 2D analysis of a slab**
+
+```bash
+python scripts/analyze_snapshot_2d.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_2d \
+  --projection-axis z --projection-range 400 600 \
+  --target-count 2_000_000 \
+  --mse-nsig 3.5 \
+  --dump-manifolds JD1d \
+  --dump-arcs U \
+  --netconv-format vtu \
+  --skelconv-format vtp
+```
+
+**2. Cropped sub-volume before projection**
+
+```bash
+python scripts/analyze_snapshot_2d.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_2d_subbox \
+  --crop-box 0 0 0 500 500 1000 \
+  --projection-axis y --projection-range 250 350 \
+  --target-count 300000 \
+  --mse-nsig 3.0 \
+  --dump-manifolds JD0a
+```
+
+**3. Conversion-only reuse**
+
+```bash
+python scripts/analyze_snapshot_2d.py \
+  --output-dir outputs/snap_010_2d \
+  --manifolds-input outputs/snap_010_2d/snap_010_manifolds_JD1d.NDnet \
+  --skel-input U=outputs/snap_010_2d/snap_010.U.NDskl \
+  --netconv-format ply_ascii \
+  --skelconv-format vtk \
+  --skelconv-smooth 5
+```
+
+---
+
+### Workflow Summary
+
+1. **NDfield Stage**  
+   Streams coordinates, filters through the crop box and slab, applies stride decimation, and writes a 2D NDfield. Use `--stop-after ndfield` if you only need the projected catalog.
+
+2. **Delaunay Stage**  
+   Runs `delaunay_2D` (unless `--network-input` was supplied) to produce an NDnet suitable for `mse`. `--stop-after delaunay` outputs only the triangulation.
+
+3. **Morse–Smale Stage**  
+   Invokes `mse` with the requested thresholds, dumps manifolds and optional arcs, and records the resulting filenames for reuse.
+
+4. **Conversion Stage**  
+   Uses `netconv`/`skelconv` to emit VTU/VTP/etc. for ParaView or other visualization tools. Skip via `--skip-netconv` / `--skip-skelconv` if you only need NDnet/NDskl.
+
+5. **Summary & Cleanup**  
+   Prints a recap of all generated artifacts and removes the NDfield unless `--keep-ndfield` is set. Projection metadata (axis and range) is also listed for traceability.
+
+With these options you can carve out thin slabs, build 2D DisPerSE analyses, and visualize the resulting manifolds or skeletons just like in the 3D workflow—only faster and with less memory pressure.

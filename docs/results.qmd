@@ -1,0 +1,146 @@
+---
+title: "Results"
+format:
+  html:
+    embed-resources: true
+---
+
+# Disperse workflow results
+
+## Data description
+
+The data were obtained from Quijote simulations: [Big Sobol Sequence](https://quijote-simulations.readthedocs.io/en/latest/bsq.html). The following results are based on the snapshot at `/Snapshots/BSQ/0/snap_010.hdf5`. 
+
+## Replicate disperse tutorial on point sample: 3D walls and filaments
+
+[See the disperse version here.](https://www.iap.fr/useriap/sousbie/web/html/indexf6f1.html?post/Example-2) 
+All visualization is done with [Paraview](https://www.paraview.org/). For each analysis the Python commands with arguments are listed below.
+
+### Thinned sample (of the 134M points keep 2M points)
+
+```bash
+python scripts/analyze_snapshot.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_thinned \
+  --target-count 2_000_000 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+Full cube. Smoothed 20x, walls and filaments. NDnet as points.
+![Full cube. Smoothed 20x, walls and filaments. NDnet as points.](/outputs/snap_010_thinned/full_cube.png)
+
+Clip at x = 50 and zoom in. Smoothed 20x, walls and filaments. NDnet as points.
+![Clip at x = 50 and zoom in. Smoothed 20x, walls and filaments. NDnet as points.](/outputs/snap_010_thinned/x50clip.png)
+
+
+### Cropped sample (0.5 x 0.5 x 0.1 Gpc box) at full resolution (smoothed at the end)
+
+```bash
+python scripts/analyze_snapshot.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_cropped \
+  --crop-box 0 0 0 500000 500000 100000 \
+  --stride 1 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+Full cube (thinned) and crop (at full resolution). Smoothed 20x, walls only. The full cube is based on a thinned sample of 2M points. The crop is a subbox of the full 134M points.
+![Full cube and crop. Smoothed 20x, walls only.](/outputs/snap_010_cropped/full_cube_and_crop.png)
+
+Full cube and crop zoom front. Smoothed 20x, walls only.
+![Full cube and crop zoom front. Smoothed 20x, walls only.](/outputs/snap_010_cropped/full_cube_and_crop_zoom_front.png)
+
+Full cube and crop zoom side. Smoothed 20x, walls only. Notice the difference in resolution compared to the thinned sample.
+![Full cube and crop zoom side. Smoothed 20x, walls only.](/outputs/snap_010_cropped/full_cube_and_crop_zoom_side.png)
+
+Full crop. Smoothed 20x, walls and filaments. NDnet as points.
+![Full crop. Smoothed 20x, walls and filaments. NDnet as points.](/outputs/snap_010_cropped/full_crop.png)
+
+Zoom crop. Smoothed 20x, walls and filaments. NDnet as points.
+![Zoom crop. Smoothed 20x, walls and filaments. NDnet as points.](/outputs/snap_010_cropped/zoom_crop.png)
+
+
+## Replicate disperse tutorial on point sample: 2D voids and filaments
+
+[See the disperse version here.](https://www.iap.fr/useriap/sousbie/web/html/index2d20.html?post/Example-1)
+
+### Thinned sample (of the 134M points keep 2M points)
+
+```bash
+python scripts/analyze_snapshot_2d.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_thinned_2D \
+  --projection-axis z --projection-range 0 10000 \
+  --target-count 2_000_000 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --mse-vertex-as-minima \
+  --dump-manifolds J0a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.
+![Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.](/outputs/snap_010_thinned_2D/delaunay.png)
+
+Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_thinned_2D/delaunay_and_filaments.png)
+
+Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_thinned_2D/delaunay_and_filaments_zoom.png)
+
+Full plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
+![Full plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_thinned_2D/filaments_and_source_index.png)
+
+Zoom plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
+![Zoom plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_thinned_2D/filaments_and_source_index_zoom.png)
+
+
+### Cropped sample (0.5 x 0.5 x 0.1 Gpc box) at full resolution (smoothed at the end)
+
+```bash
+python scripts/analyze_snapshot_2d.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_cropped_2D \
+  --projection-axis z --projection-range 0 10000 \
+  --crop-box 0 0 0 500000 500000 100000 \
+  --stride 1 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --mse-vertex-as-minima \
+  --dump-manifolds J0a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.
+![Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.](/outputs/snap_010_cropped_2D/delaunay.png)
+
+Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_cropped_2D/delaunay_and_filaments.png)
+
+Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_cropped_2D/delaunay_and_filaments_zoom.png)
+
+Crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
+![Crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_cropped_2D/filaments_and_source_index.png)
+
+Zoom crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
+![Zoom crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_cropped_2D/filaments_and_source_index_zoom.png)
+

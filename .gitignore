@@ -23,3 +23,7 @@ outputs/
 .DS_Store
 Thumbs.db
 
+bkp
+
+
+/.quarto/
