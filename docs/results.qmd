@@ -100,11 +100,11 @@ Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.
 Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
 ![Full plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_thinned_2D/delaunay_and_filaments.png)
 
-Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
-![Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_thinned_2D/delaunay_and_filaments_zoom.png)
-
 Full plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
 ![Full plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_thinned_2D/filaments_and_source_index.png)
+
+Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Zoomed plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_thinned_2D/delaunay_and_filaments_zoom.png)
 
 Zoom plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
 ![Zoom plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_thinned_2D/filaments_and_source_index_zoom.png)
@@ -135,12 +135,88 @@ Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet as surface.
 Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
 ![Crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_cropped_2D/delaunay_and_filaments.png)
 
-Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
-![Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_cropped_2D/delaunay_and_filaments_zoom.png)
-
 Crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
 ![Crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_cropped_2D/filaments_and_source_index.png)
 
+Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.
+![Zoomed crop plane, z-projection 0-10000. Smoothed 20x. Delaunay NDnet and filaments as surface.](/outputs/snap_010_cropped_2D/delaunay_and_filaments_zoom.png)
+
 Zoom crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.
 ![Zoom crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian points and filaments as surface.](/outputs/snap_010_cropped_2D/filaments_and_source_index_zoom.png)
+
+
+## Visualize walls and filaments in 2D by projecting topological structures from a 3D clip onto the 2D face of the clip
+
+With the results from analyze_snapshot.py in hand, visualize the walls and filaments in 2D. Specifically, generate a clip of a given thickness and project all topological structures onto the 2D face of the clip, while keeping info about the specific type of the topology (e.g. filament and wall). Then visualize the 2D result in paraview coloring the different topologies with different colors.
+
+ParaView-friendly workflow using the outputs we already have (snap_010_manifolds_vtu_JE1a_smooth20.S020.vtu for walls and snap_010_filaments_U_vtp_smooth20.S020.vtp for filaments). Goal: take a slab of given thickness, project to 2D, keep a type tag, and color by type.
+
+- Load both files.
+  - File > Open the manifolds VTU (walls) and the filaments VTP (arcs).
+- Extract a slab (clip by thickness).
+  - For each source: Filters > Clip, choose a plane normal to the axis you want, set Crinkle OFF (keep surfaces), adjust origin. To bound thickness, either:
+    - Do two clips (one at z = z0, another at z = z0+Δ) with Inside Out toggled appropriately, or
+    - Use Filters > Extract Subset (Box) if you prefer a box selection.
+  - Apply. You now have a thin 3D slab of walls/filaments.
+- Tag topology type (for coloring later).
+  - On the clipped wall dataset: Filters > Calculator, name it topology_type, expression 1, Attribute Location = Cell Data (or Point Data; be consistent across both). Apply.
+  - On the clipped filament dataset: same, but expression 2. Apply.
+- Project to 2D (flatten).
+  - Quick way: Filters > Transform on each clipped+tagged dataset, set Scale Z = 0 (X=1, Y=1, Z=0). This collapses the slab to the XY plane at its midplane.
+  - Alternatively (if you want an explicit projection array): Filters > Python Calculator, Expression make_vector(coordsX, coordsY, 0) named ProjectedCoords, then Filters > Programmable Filter to set output.GetPoints().SetData(input.PointData['ProjectedCoords']). The Transform approach is usually sufficient.
+- Combine walls and filaments (optional).
+  - Select the flattened wall result and flattened filament result, then Filters > Append Datasets. Apply. You now have one dataset carrying both geometries with topology_type = 1 (walls) or 2 (filaments).
+- Visualize in 2D.
+  - In the Properties of the appended dataset, set Coloring to topology_type and choose a two-color discrete map. Switch to 2D view (toolbar), pick the XY plane. If you want outlines, enable Surface With Edges; adjust opacity separately for walls vs filaments by making two display representations from the same appended dataset using Extract Block on topology_type == 1/2 or by duplicating the pipeline before append.
+
+- Notes/variants:
+
+  - If you want to preserve thickness instead of collapsing, just skip the Transform; use a very thin slab in step 2.
+  - If you also need per-structure IDs (e.g., arc_id on filaments), keep those arrays; they’ll survive the append and can be used for labeling or further filtering (Threshold by arc_id, etc.).
+
+### Cropped sample (0.5 x 0.5 x 0.1 Gpc box) at full resolution with parsistence cut at 6 sigma and smoothed 20x during conversion
+
+```bash
+python scripts/analyze_snapshot.py \
+  --input data/snap_010.hdf5 \
+  --output-dir outputs/snap_010_cropped_s6 \
+  --crop-box 0 0 0 500000 500000 100000 \
+  --stride 1 \
+  --delaunay-btype periodic \
+  --export-delaunay \
+  --mse-nsig 6.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
+```
+
+Full crop. Smoothed 20x thoughout.
+Walls only in 3D.
+![Walls only in 3D.](/outputs/snap_010_cropped_s6/walls_3D.png)
+
+Filaments only in 3D.
+![Filaments only in 3D.](/outputs/snap_010_cropped_s6/filaments_3D.png)
+
+Walls clipped to `0<z<10` in paraview, still in 3D.
+![Walls clipped to `0<z<10` in paraview, still in 3D.](/outputs/snap_010_cropped_s6/walls_clip_3D.png)
+
+Walls clipped to `0<z<10` in paraview, projected into 2D.
+![Walls clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/walls_clip_2D.png)
+
+Filaments clipped to `0<z<10` in paraview, projected into 2D.
+![Filaments clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/filaments_clip_2D.png)
+
+Walls and filaments clipped to `0<z<10` in paraview, projected into 2D.
+![Walls and filaments clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/walls_filaments_clip_2D.png)
+
+Density clipped to `0<z<10` in paraview, projected into 2D.
+![Density clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/density_clip_2D.png)
+
+Density and filaments clipped to `0<z<10` in paraview, projected into 2D.
+![Density and filaments clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/density_filaments_clip_2D.png)
+
+Density, walls and filaments clipped to `0<z<10` in paraview, projected into 2D.
+![Density, walls and filaments clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/density_walls_filaments_clip_2D.png)
+
 

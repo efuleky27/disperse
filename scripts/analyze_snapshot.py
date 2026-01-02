@@ -81,6 +81,18 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
+import numpy.typing as npt
+
+try:  # Local-only: used for optional summary statistics on VTK outputs.
+    from vtkmodules.numpy_interface import dataset_adapter as dsa
+    from vtkmodules.util.numpy_support import vtk_to_numpy
+    from vtkmodules.vtkCommonDataModel import vtkDataSet
+    from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLUnstructuredGridReader
+    from vtkmodules.vtkIOLegacy import vtkDataSetReader
+except Exception:  # pragma: no cover - optional dependency
+    dsa = None  # type: ignore
+    vtk_to_numpy = None  # type: ignore
+
 # Ensure HDF5 plugin directory exists to avoid hdf5 trying to open /usr/local/hdf5/lib/plugin.
 # HDF5 sometimes tries to look for compression plugins in a system-wide directory
 # that may not exist on the target laptop. This block pre-creates a lightweight
@@ -134,6 +146,22 @@ SUPPORTED_SKELETON_FORMATS = (
     "vtp",
     "vtp_ascii",
 )
+
+
+def run_netconv(netconv_bin: str, src: Path, out_name: str, out_dir: Path, fmt: str, smooth_iters: int) -> None:
+    cmd = [
+        netconv_bin,
+        str(src),
+        "-outName",
+        out_name,
+        "-outDir",
+        str(out_dir),
+        "-to",
+        fmt,
+    ]
+    if smooth_iters and smooth_iters > 0:
+        cmd.extend(["-smooth", str(smooth_iters)])
+    run_command(cmd)
 
 
 def parse_args() -> argparse.Namespace:
@@ -503,6 +531,24 @@ def count_particles_in_box(
     return count
 
 
+def expand_optional_path(path: Optional[Path]) -> Optional[Path]:
+    """Return an expanded Path if provided, otherwise None."""
+    return Path(path).expanduser() if path else None
+
+
+def parse_crop_box(raw: Optional[Sequence[float]]) -> Optional[Tuple[float, float, float, float, float, float]]:
+    """Validate and normalize the user-provided crop box."""
+    if raw is None:
+        return None
+    if len(raw) != 6:
+        raise SystemExit("Provide exactly 6 values to --crop-box (xmin ymin zmin xmax ymax zmax).")
+    mins = np.array(raw[:3], dtype=float)
+    maxs = np.array(raw[3:], dtype=float)
+    if np.any(maxs <= mins):
+        raise SystemExit("--crop-box max values must be greater than mins.")
+    return (mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2])
+
+
 def write_ndfield_coords(
     coords_dataset: h5py.Dataset,
     out_path: Path,
@@ -713,23 +759,17 @@ def convert_manifolds(
     if manifolds_tag:
         tag_bits.append(sanitize_tag(manifolds_tag))
     base_name = f"{prefix}_manifolds_{'_'.join(tag_bits)}"
-    if smooth_iters and smooth_iters > 0:
-        base_name += f"_smooth{smooth_iters}"
-    cmd = [
-        netconv_bin,
-        str(manifolds_file),
-        "-outName",
-        base_name,
-        "-outDir",
-        str(output_dir),
-        "-to",
-        fmt,
-    ]
-    if smooth_iters and smooth_iters > 0:
-        cmd.extend(["-smooth", str(smooth_iters)])
-    run_command(cmd)
-    suffix = ".NDnet" if fmt.startswith("ndnet") else f".{fmt}"
-    return output_dir / f"{base_name}{suffix}"
+    run_netconv(netconv_bin, manifolds_file, base_name, output_dir, fmt, smooth_iters)
+    ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
+    candidate = output_dir / f"{base_name}{ext}"
+    if not candidate.exists():
+        matches = sorted(output_dir.glob(f"{base_name}*{ext}"))
+        if matches:
+            return matches[-1]
+        raise FileNotFoundError(
+            f"netconv completed but the manifolds output file was not found. Expected {candidate.name}."
+        )
+    return candidate
 
 
 def convert_network(
@@ -743,23 +783,17 @@ def convert_network(
 ) -> Path:
     fmt_tag = fmt.lower()
     base = f"{prefix}_{tag}_{fmt_tag}"
-    if smooth_iters and smooth_iters > 0:
-        base += f"_smooth{smooth_iters}"
-    cmd = [
-        netconv_bin,
-        str(ndnet_file),
-        "-outName",
-        base,
-        "-outDir",
-        str(output_dir),
-        "-to",
-        fmt,
-    ]
-    if smooth_iters and smooth_iters > 0:
-        cmd.extend(["-smooth", str(smooth_iters)])
-    run_command(cmd)
-    suffix = ".NDnet" if fmt.startswith("ndnet") else f".{fmt}"
-    return output_dir / f"{base}{suffix}"
+    run_netconv(netconv_bin, ndnet_file, base, output_dir, fmt, smooth_iters)
+    ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
+    candidate = output_dir / f"{base}{ext}"
+    if not candidate.exists():
+        matches = sorted(output_dir.glob(f"{base}*{ext}"))
+        if matches:
+            return matches[-1]
+        raise FileNotFoundError(
+            f"netconv completed but the Delaunay output file was not found. Expected {candidate.name}."
+        )
+    return candidate
 
 
 def skeleton_suffix_for_format(fmt: str) -> str:
@@ -792,8 +826,6 @@ def convert_skeleton(
     if fmt_clean == "ndskl":
         return skeleton_path
     out_name = f"{prefix}_filaments_{label_tag}_{fmt_clean}"
-    if smooth_iters and smooth_iters > 0:
-        out_name += f"_smooth{smooth_iters}"
     cmd = [
         skelconv_bin,
         str(skeleton_path),
@@ -819,55 +851,129 @@ def convert_skeleton(
     return candidate
 
 
-def emit_summary(summary: Dict[str, str]) -> None:
-    """Print a consistent recap of the artifacts produced in this run."""
-    print("[info] Pipeline complete:")
-    for key, value in summary.items():
-        print(f"    - {key}: {value}")
+def cleanup_ndfield(
+    ndfield_created: bool, ndfield_path: Optional[Path], keep_ndfield: bool, summary: Dict[str, str]
+) -> None:
+    """Remove the temporary NDfield catalog when requested."""
+    if ndfield_created and not keep_ndfield and ndfield_path and ndfield_path.exists():
+        try:
+            ndfield_path.unlink()
+            summary["ndfield"] = "(removed)"
+        except Exception as exc:  # pragma: no cover
+            print(f"[warn] Could not remove {ndfield_path}: {exc}")
 
 
-def main() -> None:
-    """Glue the entire workflow together in a readable, linear narrative."""
-    args = parse_args()
-    manual_skel_inputs = parse_label_path_pairs(args.skel_input)
-    output_dir = Path(args.output_dir).expanduser()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    prefix = args.output_prefix
-    stop_after = args.stop_after
-    # `summary` collects a human-readable receipt of everything produced during
-    # the run so the user can quickly inspect which files correspond to which
-    # parameter choices.
-    summary: Dict[str, str] = {"dump_manifolds": args.dump_manifolds}
+def _compute_array_stats(arr: npt.NDArray[np.float64]) -> Dict[str, float]:
+    return {
+        "count": int(arr.size),
+        "sum": float(np.sum(arr)),
+        "mean": float(np.mean(arr)),
+        "median": float(np.median(arr)),
+        "q25": float(np.quantile(arr, 0.25)),
+        "q75": float(np.quantile(arr, 0.75)),
+        "min": float(np.min(arr)),
+        "max": float(np.max(arr)),
+        "std": float(np.std(arr)),
+    }
 
-    coords_path = Path(args.coords_input).expanduser() if args.coords_input else None
-    network_path = Path(args.network_input).expanduser() if args.network_input else None
-    manifolds_path = Path(args.manifolds_input).expanduser() if args.manifolds_input else None
-    skel_native_paths: Dict[str, Path] = {}
 
+def _read_vtk_dataset(path: Path) -> Optional[vtkDataSet]:
+    if dsa is None or vtk_to_numpy is None:  # pragma: no cover - optional
+        return None
+    reader: Optional[vtkDataSetReader]
+    if path.suffix.lower() == ".vtu":
+        reader = vtkXMLUnstructuredGridReader()
+    elif path.suffix.lower() == ".vtp":
+        reader = vtkXMLPolyDataReader()
+    elif path.suffix.lower() == ".vtk":
+        reader = vtkDataSetReader()
+    else:
+        return None
+    reader.SetFileName(str(path))
+    reader.Update()
+    return reader.GetOutput()
+
+
+def summarize_vtk(path: Path) -> List[Dict[str, object]]:
+    """Return summary stats for all point/cell arrays in a VTK data set."""
+    ds = _read_vtk_dataset(path)
+    if ds is None:
+        return []
+    wrapper = dsa.WrapDataObject(ds)
+    bounds = ds.GetBounds() if hasattr(ds, "GetBounds") else None
+    dx = dy = dz = vol = None
+    if bounds:
+        dx = bounds[1] - bounds[0]
+        dy = bounds[3] - bounds[2]
+        dz = bounds[5] - bounds[4]
+        vol = dx * dy * dz
+
+    rows: List[Dict[str, object]] = []
+    for location, collection in (("points", wrapper.PointData), ("cells", wrapper.CellData)):
+        for name in collection.keys():
+            arr = np.asarray(collection[name]).ravel()
+            if arr.size == 0 or not np.issubdtype(arr.dtype, np.number):
+                continue
+            stats = _compute_array_stats(arr.astype(np.float64, copy=False))
+            row: Dict[str, object] = {
+                "file": str(path),
+                "location": location,
+                "array": name,
+                **stats,
+            }
+            if bounds:
+                row.update({"bbox_dx": dx, "bbox_dy": dy, "bbox_dz": dz, "bbox_volume": vol})
+            rows.append(row)
+    return rows
+
+
+def write_stats_csv(rows: List[Dict[str, object]], out_path: Path) -> None:
+    if not rows:
+        return
+    import csv
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "file",
+        "location",
+        "array",
+        "count",
+        "sum",
+        "mean",
+        "median",
+        "q25",
+        "q75",
+        "min",
+        "max",
+        "std",
+        "bbox_dx",
+        "bbox_dy",
+        "bbox_dz",
+        "bbox_volume",
+    ]
+    with open(out_path, "w", newline="", encoding="ascii") as sink:
+        writer = csv.DictWriter(sink, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def ensure_catalog(
+    args: argparse.Namespace,
+    summary: Dict[str, str],
+    coords_path: Optional[Path],
+    network_path: Optional[Path],
+    manifolds_path: Optional[Path],
+) -> Tuple[Optional[Path], bool, Optional[int], Optional[Dict[str, float]], Optional[float], Optional[Tuple[float, float, float, float, float, float]]]:
+    """Generate or reuse the NDfield catalog and update summary/meta information."""
+    crop_box = parse_crop_box(args.crop_box)
     ndfield_created = False
     actual_written: Optional[int] = None
     meta: Optional[Dict[str, float]] = None
     box_scaled: Optional[float] = None
 
-    ndfield_path: Optional[Path] = coords_path
-    crop_box: Optional[Tuple[float, float, float, float, float, float]] = None
-
-    def cleanup_ndfield_if_needed() -> None:
-        if ndfield_created and not args.keep_ndfield and ndfield_path and ndfield_path.exists():
-            try:
-                ndfield_path.unlink()
-                summary["ndfield"] = "(removed)"
-            except Exception as exc:  # pragma: no cover
-                print(f"[warn] Could not remove {ndfield_path}: {exc}")
-
-    # Step 1: generate (or reuse) the NDfield catalog. This step is skipped when
-    # --coords-input is supplied or when an upstream artifact (NDnet/manifolds)
-    # already exists. Setting --stop-after ndfield forces the script to halt
-    # after writing the decimated coordinates so you can inspect them. The crop
-    # logic (if provided) is handled entirely in this block so the downstream
-    # DisPerSE binaries see a catalog bounded to the requested sub-volume.
     need_ndfield = coords_path is None and network_path is None and manifolds_path is None
-    if stop_after == "ndfield" and coords_path is None:
+    if args.stop_after == "ndfield" and coords_path is None:
         need_ndfield = True
 
     if need_ndfield:
@@ -876,15 +982,6 @@ def main() -> None:
         meta = read_snapshot_metadata(snapshot_path, args.parttype)
         box_size_native = meta["box_size"]
         total_particles = meta["num_particles"]
-        crop_box = None
-        if args.crop_box:
-            if len(args.crop_box) != 6:
-                raise SystemExit("Provide exactly 6 values to --crop-box (xmin ymin zmin xmax ymax zmax).")
-            mins = np.array(args.crop_box[:3], dtype=float)
-            maxs = np.array(args.crop_box[3:], dtype=float)
-            if np.any(maxs <= mins):
-                raise SystemExit("--crop-box max values must be greater than mins.")
-            crop_box = (mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2])
         effective_total = total_particles
         if crop_box:
             with h5py.File(snapshot_path, "r") as snap:
@@ -910,7 +1007,7 @@ def main() -> None:
             bbox_max_native = np.array(crop_box[3:], dtype=float)
         bbox_min_scaled = bbox_min_native * scale
         bbox_max_scaled = bbox_max_native * scale
-        ndfield_path = output_dir / f"{prefix}_coords_stride{stride}.AND"
+        ndfield_path = Path(args.output_dir).expanduser() / f"{args.output_prefix}_coords_stride{stride}.AND"
         print(f"[info] Writing NDfield catalog to {ndfield_path}")
         with h5py.File(snapshot_path, "r") as snap:
             coords = snap[args.parttype]["Coordinates"]
@@ -940,6 +1037,8 @@ def main() -> None:
     if actual_written is not None:
         summary["particles_written"] = f"{actual_written}"
     if meta is not None:
+        scale = unit_scale(args.input_unit, args.output_unit)
+        box_scaled = meta["box_size"] * scale
         summary["box_size"] = f"{box_scaled:.3f} {args.output_unit}"
         summary["redshift"] = f"{meta['redshift']}"
     if crop_box:
@@ -948,8 +1047,40 @@ def main() -> None:
             f"[{crop_box[3]:g} {crop_box[4]:g} {crop_box[5]:g}] {args.input_unit}"
         )
 
+    return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box
+
+
+def emit_summary(summary: Dict[str, str]) -> None:
+    """Print a consistent recap of the artifacts produced in this run."""
+    print("[info] Pipeline complete:")
+    for key, value in summary.items():
+        print(f"    - {key}: {value}")
+
+
+def main() -> None:
+    """Glue the entire workflow together in a readable, linear narrative."""
+    args = parse_args()
+    manual_skel_inputs = parse_label_path_pairs(args.skel_input)
+    output_dir = Path(args.output_dir).expanduser()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    prefix = args.output_prefix
+    stop_after = args.stop_after
+    # `summary` collects a human-readable receipt of everything produced during
+    # the run so the user can quickly inspect which files correspond to which
+    # parameter choices.
+    summary: Dict[str, str] = {"dump_manifolds": args.dump_manifolds}
+
+    coords_path = expand_optional_path(args.coords_input)
+    network_path = expand_optional_path(args.network_input)
+    manifolds_path = expand_optional_path(args.manifolds_input)
+    skel_native_paths: Dict[str, Path] = {}
+
+    coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box = ensure_catalog(
+        args, summary, coords_path, network_path, manifolds_path
+    )
+
     if stop_after == "ndfield":
-        cleanup_ndfield_if_needed()
+        cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
         emit_summary(summary)
         return
 
@@ -995,7 +1126,7 @@ def main() -> None:
             summary["delaunay_mesh"] = str(delaunay_mesh_path)
 
     if stop_after == "delaunay":
-        cleanup_ndfield_if_needed()
+        cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
         emit_summary(summary)
         return
 
@@ -1040,7 +1171,7 @@ def main() -> None:
         )
 
     if stop_after == "mse":
-        cleanup_ndfield_if_needed()
+        cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
         emit_summary(summary)
         return
 
@@ -1049,6 +1180,7 @@ def main() -> None:
     # rely on external conversion scripts.
     manifolds_mesh_path: Optional[Path] = None
     manifolds_label = sanitize_tag(args.dump_manifolds) if manifolds_path else ""
+    stats_rows: List[Dict[str, object]] = []
     if args.run_netconv and manifolds_path is not None:
         netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
         manifolds_mesh_path = convert_manifolds(
@@ -1062,6 +1194,7 @@ def main() -> None:
         )
         print(f"[info] Manifolds exported to {manifolds_mesh_path}")
         summary["manifolds_mesh"] = str(manifolds_mesh_path)
+        stats_rows.extend(summarize_vtk(manifolds_mesh_path))
 
     # Step 5: convert skeletons (skelconv) if requested. Skeleton conversion is
     # decoupled from extraction, so you can rerun skelconv alone on previously
@@ -1087,9 +1220,21 @@ def main() -> None:
         summary[f"skeletons_{fmt_tag}"] = ", ".join(
             f"{label}:{path}" for label, path in skeleton_mesh_paths.items()
         )
+        for path in skeleton_mesh_paths.values():
+            stats_rows.extend(summarize_vtk(path))
+
+    # Delaunay mesh stats if exported.
+    if delaunay_mesh_path:
+        stats_rows.extend(summarize_vtk(delaunay_mesh_path))
+
+    # Write summary statistics CSV (VTK scalars) if available.
+    if stats_rows:
+        stats_path = output_dir / f"{prefix}_summary_stats.csv"
+        write_stats_csv(stats_rows, stats_path)
+        summary["vtk_stats"] = str(stats_path)
 
     # Optional cleanup if we generated the NDfield catalog in this run.
-    cleanup_ndfield_if_needed()
+    cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
     emit_summary(summary)
 
 

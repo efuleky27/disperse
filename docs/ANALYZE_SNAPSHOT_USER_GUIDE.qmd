@@ -14,7 +14,7 @@ This script automates a full DisPerSE workflow for Gadget/Quijote snapshots. It:
 3. **Runs `mse`** to compute the Morse–Smale complex and dump manifolds/filaments.
 4. **Converts DisPerSE outputs** to VTK-family formats (VTU/VTP/etc.) via `netconv`/`skelconv`.
 
-Below is a novice-friendly description of every argument and the overall workflow.
+Below is a description of every argument and the overall workflow.
 
 ---
 
@@ -144,4 +144,7 @@ python scripts/analyze_snapshot.py \
 5. **Summary & Cleanup**  
    The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDnet, manifolds, converted meshes). Use `--keep-ndfield` to retain the coordinate catalog; otherwise it’s deleted automatically.
 
-With these options, novice users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.
+6. **Validation**  
+   Crop boxes are sanity-checked, projection parameters are normalized, and any reuse paths are expanded up front so errors surface early.
+
+With these options, users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.
