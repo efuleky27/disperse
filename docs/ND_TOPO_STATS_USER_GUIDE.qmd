@@ -1,0 +1,73 @@
+---
+title: "`ndtopo_stats.py` User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `ndtopo_stats.py` User Guide
+
+Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
+
+### What it does
+- Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (`--write-vtk` via `netconv`/`skelconv`).
+- Loads the Delaunay VTU (universe), walls VTU, and filaments VTP.
+- Matches point IDs (`true_index` by default; filaments use integer part of `cell`) and splits them into: shared (wall∩filament), wall_only, filament_only, unassigned.
+- Aggregates selected scalar fields (default: `mass`, `field_value`, `log_field_value`) from the Delaunay mesh for each category and writes a CSV.
+
+### Requirements
+- Python with `vtkmodules` available in the active environment.
+- Optional: `netconv`, `skelconv` on PATH (or pointed to via `--netconv-bin` / `--skelconv-bin`) if you want `--write-vtk`.
+
+### CLI
+```bash
+python scripts/ndtopo_stats.py \
+  --delaunay-ndnet <Delaunay.vtu|NDnet> \
+  --walls-ndnet <Walls.vtu|NDnet> \
+  --filaments-ndskl <Filaments.vtp|NDskl> \
+  --output-csv <stats.csv> \
+  [--write-vtk] \
+  [--netconv-bin /path/to/netconv] \
+  [--skelconv-bin /path/to/skelconv] \
+  [--walls-id-field true_index] \
+  [--filaments-id-field cell] \
+  [--scalar-fields mass field_value log_field_value] \
+  [--verbose]
+```
+- `--write-vtk` converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including `.S000` variants).
+- Filament IDs use `int(cell)` by default to bucket arc samples with their source cell.
+- Scalars are read only from the Delaunay file, regardless of what walls/filaments store.
+
+### Output
+- A single CSV at `--output-csv` with columns: `category`, `count`, and for each scalar `<name>_sum`, `<name>_mean`. Categories: `shared`, `wall_only`, `filament_only`, `unassigned`.
+
+### Examples
+Use preexisting VTU/VTP:
+```bash
+python scripts/ndtopo_stats.py --verbose \
+  --delaunay-ndnet outputs/snap_010_cropped_test/snap_010_nosmooth.vtu \
+  --walls-ndnet    outputs/snap_010_cropped_test/snap_010_s3_manifolds_JE1a_nosmooth.vtu \
+  --filaments-ndskl outputs/snap_010_cropped_test/snap_010_s3.U_nosmooth.S000.vtp \
+  --walls-id-field true_index --filaments-id-field cell \
+  --scalar-fields mass field_value log_field_value \
+  --output-csv outputs/snap_010_cropped_test/topology_stats.csv
+```
+
+Convert native NDnet/NDskl on the fly (no smoothing):
+```bash
+python scripts/ndtopo_stats.py --verbose --write-vtk \
+  --delaunay-ndnet outputs/snap_010_cropped_test/snap_010.NDnet \
+  --walls-ndnet    outputs/snap_010_cropped_test/snap_010_s3_manifolds_JE1a.NDnet \
+  --filaments-ndskl outputs/snap_010_cropped_test/snap_010_s3.U.NDskl \
+  --netconv-bin /Users/fules/miniforge3/envs/disperse/bin/netconv \
+  --skelconv-bin /Users/fules/miniforge3/envs/disperse/bin/skelconv \
+  --walls-id-field true_index --filaments-id-field cell \
+  --scalar-fields mass field_value log_field_value \
+  --output-csv outputs/snap_010_cropped_test/topology_stats.csv
+```
+
+### Tips
+- Ensure `vtkmodules` is importable (`python - <<'PY'\nimport vtkmodules; print('vtk ok')\nPY`).
+- Stick to unsmoothed VTU/VTP if you want closer scalar agreement; the script still uses Delaunay scalars to avoid interpolation differences in walls/filaments.
+- If you change ID field names, confirm they exist with `vtkInfo` or by printing `PointData.keys()` in a small snippet.
+- Expect filament counts to exceed “filament mass” if many filament points don’t map back to Delaunay IDs: `cell` in the skeleton includes interpolated arc samples whose integer part may not exist in the Delaunay `true_index` set. Only filament IDs that match Delaunay IDs can contribute to scalar sums.***

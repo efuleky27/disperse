@@ -2203,8 +2203,9 @@ vertical-align: -.125em;
 <li><strong>Runs <code>delaunay_3D</code></strong> to reconstruct the Delaunay tessellation (with optional block decomposition).</li>
 <li><strong>Runs <code>mse</code></strong> to compute the Morse–Smale complex and dump manifolds/filaments.</li>
 <li><strong>Converts DisPerSE outputs</strong> to VTK-family formats (VTU/VTP/etc.) via <code>netconv</code>/<code>skelconv</code>.</li>
+<li>For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.</li>
 </ol>
-<p>Below is a novice-friendly description of every argument and the overall workflow.</p>
+<p>Below is a description of every argument and the overall workflow.</p>
 <hr>
 <section id="basic-inputs" class="level3">
 <h3 class="anchored" data-anchor-id="basic-inputs">Basic Inputs</h3>
@@ -2270,8 +2271,8 @@ vertical-align: -.125em;
 <section id="delaunay-stage" class="level3">
 <h3 class="anchored" data-anchor-id="delaunay-stage">Delaunay Stage</h3>
 <ul>
-<li><code>--periodic</code> — enforce periodic boundary conditions (THIS GENERATES ARTIFACTS, USE –delaunay-btype INSTEAD).</li>
-<li><code>--delaunay-blocks NCHUNKS NTHREADS</code> — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered <code>_G.NDnet</code> (DON’T USE, THROWS ERROR).</li>
+<li><code>--periodic</code> — enforce periodic boundary conditions (crops are rebased to the origin internally; VTK outputs are shifted back). (THIS GENERATES ARTIFACTS, USE –delaunay-btype INSTEAD).</li>
+<li><code>--delaunay-blocks NCHUNKS NTHREADS</code> — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered <code>_G.NDnet</code>. (DON’T USE, THROWS ERROR).</li>
 <li><code>--delaunay-btype {mirror,periodic,smooth,void}</code> — Delaunay boundary extrapolation.</li>
 <li><code>--export-delaunay</code> — convert the raw Delaunay NDnet via <code>netconv</code>.
 <ul>
@@ -2369,8 +2370,10 @@ Runs <code>mse</code> on the NDnet, applying persistence thresholds and dumping 
 Converts manifolds (via <code>netconv</code>) and skeletons (via <code>skelconv</code>) into VTK family formats for visualization.</p></li>
 <li><p><strong>Summary &amp; Cleanup</strong><br>
 The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDnet, manifolds, converted meshes). Use <code>--keep-ndfield</code> to retain the coordinate catalog; otherwise it’s deleted automatically.</p></li>
+<li><p><strong>Validation</strong><br>
+Crop boxes are sanity-checked, projection parameters are normalized, and any reuse paths are expanded up front so errors surface early.</p></li>
 </ol>
-<p>With these options, novice users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.</p>
+<p>With these options, users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.</p>
 </section>
 
 </main>

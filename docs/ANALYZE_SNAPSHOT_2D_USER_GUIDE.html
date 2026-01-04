@@ -2350,6 +2350,8 @@ Invokes <code>mse</code> with the requested thresholds, dumps manifolds and opti
 Uses <code>netconv</code>/<code>skelconv</code> to emit VTU/VTP/etc. for ParaView or other visualization tools. Skip via <code>--skip-netconv</code> / <code>--skip-skelconv</code> if you only need NDnet/NDskl.</p></li>
 <li><p><strong>Summary &amp; Cleanup</strong><br>
 Prints a recap of all generated artifacts and removes the NDfield unless <code>--keep-ndfield</code> is set. Projection metadata (axis and range) is also listed for traceability.</p></li>
+<li><p><strong>Validation</strong><br>
+Crop boxes and projection ranges are sanity-checked, and any reuse paths are expanded early so misconfigurations fail fast.</p></li>
 </ol>
 <p>With these options you can carve out thin slabs, build 2D DisPerSE analyses, and visualize the resulting manifolds or skeletons just like in the 3D workflow—only faster and with less memory pressure.</p>
 </section>

@@ -389,7 +389,8 @@ def main():
     # Density: clip/save, flatten, average; plus resampled VTI
     density_reader = XMLUnstructuredGridReader(FileName=[density_path])
     density_clip = clip_slab(density_reader, axis, z0, thick)
-    density_bounds = _compute_bounds(density_reader.GetDataInformation(), axis, z0, thick)
+    # Use the clipped bounds to keep sampling limited to the crop/slab footprint
+    density_bounds = density_clip.GetDataInformation().GetBounds()
     density_3d = os.path.join(out_dir, f"{prefix}_density_3d.vtu")
     SaveData(density_3d, proxy=density_clip)
     density_flat = flatten(density_clip, axis)

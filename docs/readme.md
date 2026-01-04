@@ -10,19 +10,24 @@ format:
 Concise reference for pulling Quijote data, running the DisPerSE pipelines, and exporting visualization-ready artifacts.
 
 ### Documentation
-- `docs/ANALYZE_SNAPSHOT_USER_GUIDE.md` (3D pipeline details)
-- `docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.md` (2D projections)
-- `docs/COMPUTE_DENSITY_FIELD_USER_GUIDE.md` (CIC density grids)
-- `docs/OTHER_TOOLS_USER_GUIDE.md` (utility scripts)
-- `docs/results.md` / `docs/results.html` (example outputs)
+- Core pipelines: `docs/ANALYZE_SNAPSHOT_USER_GUIDE.qmd` (3D) and `docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.qmd` (2D projections)
+- Slab + PNGs: `docs/BATCH_CLIP_USER_GUIDE.qmd`
+- Batch tiling + per-slab: `docs/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd`
+- Topology overlap stats: `docs/ND_TOPO_STATS_USER_GUIDE.qmd`
+- End-to-end runbook: `docs/TOPOLOGY_ANALYSIS_USER_GUIDE.qmd`
+- Methods summary: `docs/PROJECT_METHODS.qmd`
+- Utilities/other tools: `docs/OTHER_TOOLS_USER_GUIDE.qmd`
+- Results examples: `docs/results.qmd` / `docs/results.html`
 
 ### Project Layout
 - All scripts live in `scripts/`:
-  - `scripts/analyze_snapshot.py` / `scripts/analyze_snapshot_2d.py`: main 3D/2D pipelines (decimate/crop, Delaunay, MSE, convert to VTK/VTU/VTP).
+  - `scripts/analyze_snapshot.py` / `scripts/analyze_snapshot_2d.py`: main 3D/2D pipelines (decimate/crop, rebase for periodic Delaunay, MSE, convert to VTK/VTU/VTP with global shift-back).
   - `scripts/compute_density_field.py`: build a CIC density grid (HDF5).
   - `scripts/export_grid_vti.py`: wrap a 3D HDF5 grid as VTI for ParaView.
   - `scripts/export_snapshot_vtu.py`: stream snapshot particles to VTU (or VTI from an existing grid with `--density-field`).
-  - `scripts/visualize_walls_paraview.py`: ParaView helper for consistent coloring/thresholding.
+  - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
+  - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars, matches by `true_index`/`int(cell)`).
+  - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
 - `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
 
 ### Key Links
@@ -50,57 +55,29 @@ globus ls "$SRC:/3D_cubes/BSQ/0/"
 globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df_m_CIC_z=0.00.hdf5" --label "Quijote Density Field BSQ 0 z0"
 ```
 
-### Snapshot Pipeline (DisPerSE)
-Environment: `conda activate disperse`.
+### Snapshot → walls/filaments (DisPerSE)
+Environment: `conda activate disperse` (with `hdf5plugin`, `vtkmodules`).
 
-Full run (walls + filaments):
-```bash
-python scripts/analyze_snapshot.py \
-  --input data/snap_010.hdf5 \
-  --output-dir outputs/snap_010_full \
-  --target-count 2000000 \
-  --delaunay-btype periodic \
-  --mse-nsig 3.5 \
-  --dump-manifolds JD0a \
-  --dump-arcs U \
-  --netconv-format vtu --netconv-smooth 10 \
-  --skelconv-format vtp --skelconv-smooth 10
-```
-Resume conversions only (reuse existing manifolds/skeletons):
-```bash
-python scripts/analyze_snapshot.py \
-  --output-dir outputs/snap_010_full \
-  --manifolds-input outputs/snap_010_full/snap_010_manifolds_JD1a.NDnet \
-  --skel-input U=outputs/snap_010_full/snap_010.U.NDskl \
-  --netconv-format vtu --netconv-smooth 10 \
-  --skelconv-format vtp --skelconv-smooth 10
-```
-Walls/filaments presets:
-- Voids/filaments: `--dump-manifolds J0a --dump-arcs U`
-- Walls/filaments: `--dump-manifolds JE1a --dump-arcs U`
-
-Delaunay export (as density proxy):
-```bash
-python scripts/analyze_snapshot.py \
-  --input data/snap_010.hdf5 \
-  --output-dir outputs/snap_010 \
-  --export-delaunay --delaunay-format vtu \
-  --netconv-format vtu \
-  --dump-manifolds JD1d
-```
-Subbox example:
+Typical run (cropped, periodic, rebased for tessellation, shifted VTK outputs):
 ```bash
 python scripts/analyze_snapshot.py \
   --input data/snap_010.hdf5 \
   --output-dir outputs/snap_010_subbox \
-  --export-delaunay --delaunay-format vtu \
+  --output-prefix snap_010 \
+  --crop-box 0 0 0 500000 500000 100000 \
+  --stride 1 \ 
   --delaunay-btype periodic \
-  --netconv-format vtu \
-  --crop-box 0 0 0 50000 50000 50000 \
-  --stride 1 \
-  --nsig 3.0 \
-  --dump-manifolds JE1a
+  --export-delaunay \
+  --mse-nsig 3.0 \
+  --dump-manifolds JE1a \
+  --dump-arcs U \
+  --netconv-smooth 20 \
+  --skelconv-smooth 20
 ```
+Notes:
+- Coordinates are rebased to the crop origin for `-periodic` tessellation, then VTKs are shifted back to global.
+- Outputs include shifted VTKs (`*_delaunay.vtu`, `*_manifolds_<TAG>.vtu`, `*_filaments_<ARC>.vtp`) plus per-file summary stats CSV.
+- You can replace `--stride 1` with `--target-count 2000000` to auto-pick a stride near 2M particles.
 
 ### Density Workflows
 From snapshot to density grid:
@@ -131,6 +108,54 @@ python scripts/export_grid_vti.py \
   --origin 0 0 0 \
   --field-name density
 ```
+
+### Slab clip + PNGs
+Clip a slab, flatten, average density, and render overlays:
+```bash
+PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
+  --input-dir outputs/snap_010_subbox \
+  --walls snap_010_manifolds_JE1a.vtu \
+  --filaments snap_010_filaments_U.vtp \
+  --delaunay snap_010_delaunay.vtu \
+  --output-dir outputs/snap_010_subbox/auto2d \
+  --output-prefix snap_010 \
+  --slab-axis z --slab-origin 0 --slab-thickness 10 \
+  --resample-dims 512 512 64 \
+  --scalar-name log_field_value \
+  --save-pngs
+```
+Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.
+
+### Topology overlap stats
+Use Delaunay scalars to quantify shared/unique/unassigned topology membership:
+```bash
+python scripts/ndtopo_stats.py \
+  --delaunay-vtk outputs/snap_010_subbox/snap_010_delaunay.vtu \
+  --walls-vtk    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu \
+  --filaments-vtk outputs/snap_010_subbox/snap_010_filaments_U.vtp \
+  --walls-id-field true_index \
+  --filaments-id-field cell \
+  --scalar-fields mass field_value log_field_value \
+  --output-csv outputs/snap_010_subbox/snap_010_topology_stats.csv
+```
+`--write-vtk` will auto-convert NDnet/NDskl (unsmoothed) if VTKs are not present.
+
+### Batch crops + slabs
+Tile the box, run analyze → stats → slab clips for each crop:
+```bash
+python scripts/batch_crop_and_clip.py \
+  --snapshot data/snap_010.hdf5 \
+  --output-root outputs/quijote_batches \
+  --crop-size 500000 500000 100000 \
+  --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
+  --mse-nsig 5.0 \
+  --dump-manifolds JE1a --dump-arcs U \
+  --netconv-smooth 20 --skelconv-smooth 20 \
+  --slab-step 10 --slab-thickness 10 \
+  --resample-dims 500 500 100 \
+  --scalar-name log_field_value
+```
+Outputs are organized per crop (`*_delaunay.vtu`, walls/filaments VTKs, per-crop topology stats) and per slab subfolder (flattened VTKs, PNGs, stats).
 
 ### Other Utilities
 - CosmoFlow snapshot prep:

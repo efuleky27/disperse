@@ -39,6 +39,7 @@ pvpython scripts/batch_clip.py \
 - `--resample-dims` controls the regular grid used before clipping and averaging density (default 512 512 64).
 - `--scalar-name` chooses which point scalar to average for density (default `log_field_value`).
 - `--save-pngs` also renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). `--png-resolution WIDTH HEIGHT` sets image size (default 1600×1200). `--composite-opacity` controls wall/filament overlay opacity in the composite (default 0.6).
+- Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>.S###.vtu`, `*_filaments_<arc>.S###.vtp`, `*_delaunay.vtu`.
 
 ### Outputs (all in `--output-dir`)
 - `<PREFIX>_walls_3d.vtu` – clipped 3D walls (point-data `topology_type=1`).
@@ -63,9 +64,9 @@ pvpython scripts/batch_clip.py \
 ```bash
 PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_cropped \
-  --walls snap_010_manifolds_vtu_JE1a.S020.vtu \
-  --filaments snap_010_filaments_U_vtp.S020.vtp \
-  --delaunay snap_010_delaunay_vtu.vtu \
+  --walls snap_010_manifolds_JE1a.S020.vtu \
+  --filaments snap_010_filaments_U.S020.vtp \
+  --delaunay snap_010_delaunay.vtu \
   --output-dir outputs/snap_010_cropped/auto2d \
   --output-prefix snap_010 \
   --slab-axis z --slab-origin 0 --slab-thickness 10 \

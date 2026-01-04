@@ -13,6 +13,7 @@ This script automates a full DisPerSE workflow for Gadget/Quijote snapshots. It:
 2. **Runs `delaunay_3D`** to reconstruct the Delaunay tessellation (with optional block decomposition).
 3. **Runs `mse`** to compute the Morse–Smale complex and dump manifolds/filaments.
 4. **Converts DisPerSE outputs** to VTK-family formats (VTU/VTP/etc.) via `netconv`/`skelconv`.
+5. For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.
 
 Below is a description of every argument and the overall workflow.
 
@@ -44,8 +45,8 @@ Below is a description of every argument and the overall workflow.
 
 ### Delaunay Stage
 
-* `--periodic` — enforce periodic boundary conditions (THIS GENERATES ARTIFACTS, USE --delaunay-btype INSTEAD).
-* `--delaunay-blocks NCHUNKS NTHREADS` — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered `_G.NDnet` (DON'T USE, THROWS ERROR).
+* `--periodic` — enforce periodic boundary conditions (crops are rebased to the origin internally; VTK outputs are shifted back).  (THIS GENERATES ARTIFACTS, USE --delaunay-btype INSTEAD).
+* `--delaunay-blocks NCHUNKS NTHREADS` — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered `_G.NDnet`.  (DON'T USE, THROWS ERROR).
 * `--delaunay-btype {mirror,periodic,smooth,void}` — Delaunay boundary extrapolation.
 * `--export-delaunay` — convert the raw Delaunay NDnet via `netconv`.
   * `--delaunay-format ...` — output format for the above (defaults to VTU).

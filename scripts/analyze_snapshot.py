@@ -82,6 +82,22 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy.typing as npt
+try:  # Optional: used for post-export coordinate shifts on VTK outputs.
+    from vtkmodules.vtkIOXML import (
+        vtkXMLImageDataReader,
+        vtkXMLImageDataWriter,
+        vtkXMLPolyDataReader,
+        vtkXMLPolyDataWriter,
+        vtkXMLUnstructuredGridReader,
+        vtkXMLUnstructuredGridWriter,
+    )
+except Exception:  # pragma: no cover
+    vtkXMLImageDataReader = None  # type: ignore
+    vtkXMLImageDataWriter = None  # type: ignore
+    vtkXMLPolyDataReader = None  # type: ignore
+    vtkXMLPolyDataWriter = None  # type: ignore
+    vtkXMLUnstructuredGridReader = None  # type: ignore
+    vtkXMLUnstructuredGridWriter = None  # type: ignore
 
 try:  # Local-only: used for optional summary statistics on VTK outputs.
     from vtkmodules.numpy_interface import dataset_adapter as dsa
@@ -559,6 +575,7 @@ def write_ndfield_coords(
     bbox_min_scaled: np.ndarray,
     bbox_max_scaled: np.ndarray,
     crop_box: Optional[Tuple[float, float, float, float, float, float]] = None,
+    rebase_origin: Optional[np.ndarray] = None,
 ) -> int:
     """Stream the particle coordinates into the ASCII catalog DisPerSE expects.
 
@@ -573,6 +590,7 @@ def write_ndfield_coords(
     written = 0
     mins = np.array(crop_box[:3], dtype=np.float64) if crop_box else None
     maxs = np.array(crop_box[3:], dtype=np.float64) if crop_box else None
+    shift = np.array(rebase_origin, dtype=np.float64) if rebase_origin is not None else None
     with open(out_path, "w", encoding="ascii") as sink:
         sink.write("ANDFIELD COORDS\n")
         sink.write(f"[3 {expected_count}]\n")
@@ -609,6 +627,8 @@ def write_ndfield_coords(
                 if not np.any(mask):
                     continue
                 sampled = chunk[mask].astype(np.float64, copy=False)
+            if shift is not None:
+                sampled -= shift
             if scale != 1.0:
                 sampled *= scale
             np.savetxt(sink, sampled, fmt="%.8f")
@@ -726,16 +746,18 @@ def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
     matches = []
     if canonical.exists():
         matches.append(canonical)
-    pattern = f"{prefix}_*{tag}.NDskl"
-    matches.extend(output_dir.glob(pattern))
-    if not matches:
-        pattern = f"{prefix}*{tag}.NDskl"
+    patterns = [
+        f"{prefix}_*{tag}.NDskl",
+        f"{prefix}*{tag}.NDskl",
+        f"{prefix}*.NDskl",  # fallback for builds that omit the tag entirely (e.g., sX.MSC.backup.NDskl)
+    ]
+    for pattern in patterns:
         matches.extend(output_dir.glob(pattern))
     if matches:
         return max(matches, key=lambda path: path.stat().st_mtime)
     raise FileNotFoundError(
         "DisPerSE completed but no skeleton file was found. "
-        f"Searched for '{canonical.name}' and patterns '{prefix}_*{tag}.NDskl'."
+        f"Searched for '{canonical.name}' and patterns '{patterns[0]}', '{patterns[1]}', '{patterns[2]}'."
     )
 
 
@@ -755,10 +777,12 @@ def convert_manifolds(
     the resulting file path so the final summary can list it.
     """
     fmt_tag = sanitize_tag(fmt.lower())
-    tag_bits = [fmt_tag]
+    tag_bits: List[str] = []
     if manifolds_tag:
         tag_bits.append(sanitize_tag(manifolds_tag))
-    base_name = f"{prefix}_manifolds_{'_'.join(tag_bits)}"
+    base_name = f"{prefix}_manifolds"
+    if tag_bits:
+        base_name = f"{base_name}_{'_'.join(tag_bits)}"
     run_netconv(netconv_bin, manifolds_file, base_name, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
     candidate = output_dir / f"{base_name}{ext}"
@@ -782,7 +806,7 @@ def convert_network(
     smooth_iters: int,
 ) -> Path:
     fmt_tag = fmt.lower()
-    base = f"{prefix}_{tag}_{fmt_tag}"
+    base = f"{prefix}_{tag}"
     run_netconv(netconv_bin, ndnet_file, base, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
     candidate = output_dir / f"{base}{ext}"
@@ -825,7 +849,7 @@ def convert_skeleton(
     label_tag = sanitize_tag(label)
     if fmt_clean == "ndskl":
         return skeleton_path
-    out_name = f"{prefix}_filaments_{label_tag}_{fmt_clean}"
+    out_name = f"{prefix}_filaments_{label_tag}"
     cmd = [
         skelconv_bin,
         str(skeleton_path),
@@ -958,19 +982,63 @@ def write_stats_csv(rows: List[Dict[str, object]], out_path: Path) -> None:
             writer.writerow(row)
 
 
+def shift_vtk_points(path: Path, offset: np.ndarray) -> None:
+    """Translate point coordinates in place by the given offset (in VTK units)."""
+    if offset is None or np.allclose(offset, 0):
+        return
+    if vtkXMLUnstructuredGridReader is None:
+        print(f"[warn] vtkmodules not available; skipping shift for {path}")
+        return
+    ext = path.suffix.lower()
+    if ext == ".vtu":
+        reader = vtkXMLUnstructuredGridReader()
+        writer = vtkXMLUnstructuredGridWriter()
+    elif ext == ".vtp":
+        reader = vtkXMLPolyDataReader()
+        writer = vtkXMLPolyDataWriter()
+    elif ext == ".vti":
+        reader = vtkXMLImageDataReader()
+        writer = vtkXMLImageDataWriter()
+    else:
+        return
+    reader.SetFileName(str(path))
+    reader.Update()
+    data = reader.GetOutput()
+    pts = data.GetPoints()
+    if pts is None:
+        return
+    arr = pts.GetData()
+    if arr is None:
+        return
+    np_arr = np.array(arr, copy=False)
+    np_arr += offset
+    writer.SetFileName(str(path))
+    writer.SetInputData(data)
+    writer.Write()
+
+
 def ensure_catalog(
     args: argparse.Namespace,
     summary: Dict[str, str],
     coords_path: Optional[Path],
     network_path: Optional[Path],
     manifolds_path: Optional[Path],
-) -> Tuple[Optional[Path], bool, Optional[int], Optional[Dict[str, float]], Optional[float], Optional[Tuple[float, float, float, float, float, float]]]:
+) -> Tuple[
+    Optional[Path],
+    bool,
+    Optional[int],
+    Optional[Dict[str, float]],
+    Optional[float],
+    Optional[Tuple[float, float, float, float, float, float]],
+    Optional[np.ndarray],
+]:
     """Generate or reuse the NDfield catalog and update summary/meta information."""
     crop_box = parse_crop_box(args.crop_box)
     ndfield_created = False
     actual_written: Optional[int] = None
     meta: Optional[Dict[str, float]] = None
     box_scaled: Optional[float] = None
+    crop_min_scaled: Optional[np.ndarray] = None
 
     need_ndfield = coords_path is None and network_path is None and manifolds_path is None
     if args.stop_after == "ndfield" and coords_path is None:
@@ -1000,13 +1068,21 @@ def ensure_catalog(
         print(info_msg)
         scale = unit_scale(args.input_unit, args.output_unit)
         box_scaled = box_size_native * scale
-        bbox_min_native = np.zeros(3, dtype=float)
-        bbox_max_native = np.full(3, box_size_native, dtype=float)
+        rebase = crop_box is not None
         if crop_box:
-            bbox_min_native = np.array(crop_box[:3], dtype=float)
-            bbox_max_native = np.array(crop_box[3:], dtype=float)
+            # Rebase crop to origin so periodic tessellation stays within the crop extents
+            crop_min = np.array(crop_box[:3], dtype=float)
+            crop_max = np.array(crop_box[3:], dtype=float)
+            crop_size = crop_max - crop_min
+            bbox_min_native = np.zeros(3, dtype=float)
+            bbox_max_native = crop_size
+        else:
+            bbox_min_native = np.zeros(3, dtype=float)
+            bbox_max_native = np.full(3, box_size_native, dtype=float)
         bbox_min_scaled = bbox_min_native * scale
         bbox_max_scaled = bbox_max_native * scale
+        if crop_min is not None:
+            crop_min_scaled = crop_min * scale
         ndfield_path = Path(args.output_dir).expanduser() / f"{args.output_prefix}_coords_stride{stride}.AND"
         print(f"[info] Writing NDfield catalog to {ndfield_path}")
         with h5py.File(snapshot_path, "r") as snap:
@@ -1021,11 +1097,14 @@ def ensure_catalog(
                 bbox_min_scaled=bbox_min_scaled,
                 bbox_max_scaled=bbox_max_scaled,
                 crop_box=crop_box,
+                rebase_origin=crop_min if crop_box else None,
             )
         print(f"[info] NDfield ready ({actual_written:,} particles in {args.output_unit}).")
         coords_path = ndfield_path
         ndfield_created = True
         summary["snapshot"] = str(snapshot_path)
+        if crop_min_scaled is not None:
+            summary["crop_origin"] = str(crop_min_scaled)
     elif coords_path is None and network_path is None and manifolds_path is None:
         raise SystemExit(
             "No coordinate catalog available. Provide a snapshot/--coords-input or skip "
@@ -1047,7 +1126,7 @@ def ensure_catalog(
             f"[{crop_box[3]:g} {crop_box[4]:g} {crop_box[5]:g}] {args.input_unit}"
         )
 
-    return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box
+    return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled
 
 
 def emit_summary(summary: Dict[str, str]) -> None:
@@ -1075,7 +1154,7 @@ def main() -> None:
     manifolds_path = expand_optional_path(args.manifolds_input)
     skel_native_paths: Dict[str, Path] = {}
 
-    coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box = ensure_catalog(
+    coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled = ensure_catalog(
         args, summary, coords_path, network_path, manifolds_path
     )
 
@@ -1192,6 +1271,8 @@ def main() -> None:
             smooth_iters=args.netconv_smooth,
             manifolds_tag=manifolds_label,
         )
+        if crop_min_scaled is not None:
+            shift_vtk_points(manifolds_mesh_path, crop_min_scaled)
         print(f"[info] Manifolds exported to {manifolds_mesh_path}")
         summary["manifolds_mesh"] = str(manifolds_mesh_path)
         stats_rows.extend(summarize_vtk(manifolds_mesh_path))
@@ -1217,6 +1298,8 @@ def main() -> None:
                     fmt,
                     smooth_iters=args.skelconv_smooth,
                 )
+                if crop_min_scaled is not None:
+                    shift_vtk_points(skeleton_mesh_paths[label], crop_min_scaled)
         summary[f"skeletons_{fmt_tag}"] = ", ".join(
             f"{label}:{path}" for label, path in skeleton_mesh_paths.items()
         )
@@ -1225,6 +1308,8 @@ def main() -> None:
 
     # Delaunay mesh stats if exported.
     if delaunay_mesh_path:
+        if crop_min_scaled is not None:
+            shift_vtk_points(delaunay_mesh_path, crop_min_scaled)
         stats_rows.extend(summarize_vtk(delaunay_mesh_path))
 
     # Write summary statistics CSV (VTK scalars) if available.
