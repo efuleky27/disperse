@@ -1,0 +1,86 @@
+---
+title: "`spin_render.py` User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `spin_render.py` User Guide
+
+Use `scripts/spin_render.py` to render a rotating camera animation of a VTK dataset and write a PNG sequence suitable for stitching into a movie.
+
+### What it does
+- Loads a VTU/VTP/VTI/VTR dataset and orbits the camera around its bounds.
+- Colors by a chosen point-data scalar (default `log_field_value`) using a ParaView colormap preset (default `Fast`).
+- Writes numbered PNG frames that can be stitched into an MP4 with `ffmpeg`.
+- Optionally animates elevation and zoom during the rotation.
+
+### Requirements
+- ParaView `pvpython` (e.g., `/Applications/ParaView-6.0.1.app/Contents/bin/pvpython`).
+- A readable VTK file (VTU/VTP/VTI/VTR).
+- `ffmpeg` (optional, for MP4 stitching).
+
+### CLI
+```bash
+pvpython scripts/spin_render.py \
+  --input <INPUT_VTK> \
+  --output <OUTPUT_PATH> \
+  [--frames N] \
+  [--elev DEG] \
+  [--zoom Z] \
+  [--scalar NAME] \
+  [--range-min MIN --range-max MAX] \
+  [--colormap PRESET]
+```
+
+### Key options
+- `--input` – VTK file to render.
+- `--output` – Output path used as the PNG prefix; the script writes `<OUTPUT_BASE>_0000.png`, `<OUTPUT_BASE>_0001.png`, ...
+- `--frames` – Number of frames (default 180).
+- `--elev` – Camera elevation in degrees for the orbit (default 20).
+- `--zoom` – Zoom factor baked into the orbit radius (default 1.2).
+- `--scalar` – Point-data array to color by (default `log_field_value`).
+- `--range-min/--range-max` – Fixed color range. If omitted, auto-range is used.
+- `--colormap` – ParaView preset name (default `Fast`).
+
+### Animated elevation + zoom
+```bash
+pvpython scripts/spin_render.py \
+  --input <INPUT_VTK> \
+  --output <OUTPUT_PATH> \
+  --frames 180 \
+  --animate-elev-zoom \
+  --elev-start 20 --elev-peak 60 \
+  --zoom-start 0.6 --zoom-peak 2.0
+```
+This animates elevation and zoom in four phases while the camera continues to rotate:
+1) rise from `elev-start` to `elev-peak`
+2) zoom in from `zoom-start` to `zoom-peak`
+3) zoom back out
+4) return to `elev-start`
+
+### Outputs
+- `<OUTPUT_BASE>_0000.png` ... `<OUTPUT_BASE>_####.png` – PNG frames of the rotation.
+
+### Stitch frames to MP4
+```bash
+ffmpeg -framerate 30 \
+  -i <OUTPUT_BASE>_%04d.png \
+  -c:v libx264 -pix_fmt yuv420p \
+  <OUTPUT_BASE>.mp4
+```
+
+### Example
+```bash
+/Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/spin_render.py \
+  --input outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S020.vtu \
+  --output outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/spin.mp4 \
+  --frames 180 \
+  --scalar log_field_value \
+  --colormap Fast
+```
+
+### Notes
+- Coloring uses **point-data** arrays. If your scalar is only in cell data, convert to point data before rendering.
+- If colors look washed out, try a tighter range with `--range-min/--range-max`.
+- If you’re re-running with different settings, change the output prefix or remove old `*_####.png` frames first.

@@ -62,6 +62,12 @@ output-root/
       <prefix>_summary_stats.csv
       PNGs if batch_clip was called with --save-pngs (the driver passes it by default)
 ```
+Naming notes:
+- Manifolds: `<crop_prefix>_sX_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).
+- Filaments: `<crop_prefix>_sX_arcs_<ARC>.S###.vtp` (persistence tag + smoothing).
+- Delaunay: `<crop_prefix>_delaunay.S###.vtu` (smoothing tag).
+- Unsmooothed conversions (e.g., via `ndtopo_stats.py --write-vtk`) use `_S000`.
+- DisPerSE concatenates multiple manifold tags into one file (e.g., `JE1a2a`). Run per-tag if you need separate manifold outputs.
 Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.
 
 ### Examples

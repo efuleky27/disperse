@@ -450,6 +450,39 @@ def sanitize_tag(tag: str) -> str:
     return "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in tag.strip())
 
 
+def sanitize_filename(path: Path) -> Path:
+    """Replace dots in the stem with underscores, keeping only the extension dot."""
+    stem_sanitized = path.stem.replace(".", "_")
+    new_path = path.with_name(f"{stem_sanitized}{path.suffix}")
+    if new_path == path:
+        return path
+    try:
+        if new_path.exists():
+            new_path.unlink()
+        path.rename(new_path)
+        return new_path
+    except Exception:
+        # As a fallback, leave the original path unchanged
+        return path
+
+
+def reorder_arcs_stem(stem: str) -> str:
+    """Ensure skeleton stems follow <prefix>_sX_arcs_<TAG> ordering."""
+    parts = stem.replace(".", "_").split("_")
+    # already in desired order
+    if len(parts) >= 3 and parts[-2] == "arcs":
+        return "_".join(parts)
+    if len(parts) < 2:
+        return "_".join(parts)
+    # assume last token is arc tag; second-to-last may be persistence (sX or sX.Y)
+    arc_tag = parts[-1]
+    prefix_parts = parts[:-1]
+    # If prefix_parts already contain arcs/sX, preserve their order; otherwise insert arcs before tag.
+    if "arcs" not in prefix_parts:
+        prefix_parts.append("arcs")
+    return "_".join(prefix_parts + [arc_tag])
+
+
 def unit_scale(input_unit: str, output_unit: str) -> float:
     """Translate between kiloparsecs and megaparsecs per h.
 
@@ -733,11 +766,29 @@ def run_mse(
             "Check the mse output for the exact filename and pass it via "
             "--output-prefix if needed."
         )
-    manifolds_result = max(matches, key=lambda path: path.stat().st_mtime)
+    manifolds_result = sanitize_filename(max(matches, key=lambda path: path.stat().st_mtime))
     skeleton_paths: Dict[str, Path] = {}
     for tag in requested_skeletons:
         skeleton_paths[tag] = locate_dump_arcs_file(output_dir, prefix, tag)
     return manifolds_result, skeleton_paths
+
+
+def _extract_persistence_tag(path: Path, prefix: str, marker: str) -> Optional[str]:
+    """Extract the persistence token that mse injects (e.g., s5, s3.5) from a filename."""
+    import re
+
+    stem = path.stem
+    # Look for prefix_<token>_<marker>
+    pattern = re.compile(re.escape(prefix) + r"_([^_]+)_" + re.escape(marker))
+    m = pattern.search(stem)
+    if m:
+        return m.group(1)
+    # For skeletons with dots (e.g., prefix_s5.U)
+    pattern_dot = re.compile(re.escape(prefix) + r"_([^_.]+)\." + re.escape(marker))
+    m = pattern_dot.search(stem)
+    if m:
+        return m.group(1)
+    return None
 
 
 def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
@@ -747,6 +798,7 @@ def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
     if canonical.exists():
         matches.append(canonical)
     patterns = [
+        f"{prefix}_*arcs_{tag}.NDskl",
         f"{prefix}_*{tag}.NDskl",
         f"{prefix}*{tag}.NDskl",
         f"{prefix}*.NDskl",  # fallback for builds that omit the tag entirely (e.g., sX.MSC.backup.NDskl)
@@ -754,7 +806,18 @@ def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
     for pattern in patterns:
         matches.extend(output_dir.glob(pattern))
     if matches:
-        return max(matches, key=lambda path: path.stat().st_mtime)
+        best = max(matches, key=lambda path: path.stat().st_mtime)
+        # enforce arcs ordering if missing
+        stem_reordered = reorder_arcs_stem(best.stem)
+        target = best.with_name(f"{stem_reordered}{best.suffix}")
+        if target != best:
+            if not target.exists():
+                try:
+                    best.rename(target)
+                    best = target
+                except Exception:
+                    best = best
+        return sanitize_filename(best)
     raise FileNotFoundError(
         "DisPerSE completed but no skeleton file was found. "
         f"Searched for '{canonical.name}' and patterns '{patterns[0]}', '{patterns[1]}', '{patterns[2]}'."
@@ -769,6 +832,7 @@ def convert_manifolds(
     fmt: str,
     smooth_iters: int,
     manifolds_tag: Optional[str] = None,
+    persistence_tag: Optional[str] = None,
 ) -> Path:
     """Convert the manifolds network into a visualization-friendly surface.
 
@@ -777,23 +841,25 @@ def convert_manifolds(
     the resulting file path so the final summary can list it.
     """
     fmt_tag = sanitize_tag(fmt.lower())
-    tag_bits: List[str] = []
+    parts: List[str] = [prefix]
+    if persistence_tag:
+        parts.append(sanitize_tag(persistence_tag))
+    parts.append("manifolds")
     if manifolds_tag:
-        tag_bits.append(sanitize_tag(manifolds_tag))
-    base_name = f"{prefix}_manifolds"
-    if tag_bits:
-        base_name = f"{base_name}_{'_'.join(tag_bits)}"
+        parts.append(sanitize_tag(manifolds_tag))
+    base_name = "_".join(parts)
     run_netconv(netconv_bin, manifolds_file, base_name, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
     candidate = output_dir / f"{base_name}{ext}"
     if not candidate.exists():
         matches = sorted(output_dir.glob(f"{base_name}*{ext}"))
         if matches:
-            return matches[-1]
-        raise FileNotFoundError(
-            f"netconv completed but the manifolds output file was not found. Expected {candidate.name}."
-        )
-    return candidate
+            candidate = matches[-1]
+        else:
+            raise FileNotFoundError(
+                f"netconv completed but the manifolds output file was not found. Expected {candidate.name}."
+            )
+    return sanitize_filename(candidate)
 
 
 def convert_network(
@@ -804,20 +870,26 @@ def convert_network(
     tag: str,
     fmt: str,
     smooth_iters: int,
+    persistence_tag: Optional[str] = None,
 ) -> Path:
     fmt_tag = fmt.lower()
-    base = f"{prefix}_{tag}"
+    base_parts = [prefix]
+    if persistence_tag:
+        base_parts.append(sanitize_tag(persistence_tag))
+    base_parts.append(tag)
+    base = "_".join(base_parts)
     run_netconv(netconv_bin, ndnet_file, base, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
     candidate = output_dir / f"{base}{ext}"
     if not candidate.exists():
         matches = sorted(output_dir.glob(f"{base}*{ext}"))
         if matches:
-            return matches[-1]
-        raise FileNotFoundError(
-            f"netconv completed but the Delaunay output file was not found. Expected {candidate.name}."
-        )
-    return candidate
+            candidate = matches[-1]
+        else:
+            raise FileNotFoundError(
+                f"netconv completed but the Delaunay output file was not found. Expected {candidate.name}."
+            )
+    return sanitize_filename(candidate)
 
 
 def skeleton_suffix_for_format(fmt: str) -> str:
@@ -843,13 +915,19 @@ def convert_skeleton(
     label: str,
     fmt: str,
     smooth_iters: int,
+    persistence_tag: Optional[str] = None,
 ) -> Path:
     """Convert NDskl filaments into a VTK/ASCII format using skelconv."""
     fmt_clean = sanitize_tag(fmt.lower())
     label_tag = sanitize_tag(label)
     if fmt_clean == "ndskl":
         return skeleton_path
-    out_name = f"{prefix}_filaments_{label_tag}"
+    parts = [prefix]
+    if persistence_tag:
+        parts.append(sanitize_tag(persistence_tag))
+    parts.append("arcs")
+    parts.append(label_tag)
+    out_name = "_".join(parts)
     cmd = [
         skelconv_bin,
         str(skeleton_path),
@@ -867,12 +945,13 @@ def convert_skeleton(
     if not candidate.exists():
         matches = sorted(output_dir.glob(f"{out_name}*"))
         if matches:
-            return matches[-1]
-        raise FileNotFoundError(
-            "skelconv completed but the skeleton output file was not found. "
-            f"Searched for '{candidate.name}'."
-        )
-    return candidate
+            candidate = matches[-1]
+        else:
+            raise FileNotFoundError(
+                "skelconv completed but the skeleton output file was not found. "
+                f"Searched for '{candidate.name}'."
+            )
+    return sanitize_filename(candidate)
 
 
 def cleanup_ndfield(
@@ -1259,6 +1338,7 @@ def main() -> None:
     # rely on external conversion scripts.
     manifolds_mesh_path: Optional[Path] = None
     manifolds_label = sanitize_tag(args.dump_manifolds) if manifolds_path else ""
+    persistence_tag = _extract_persistence_tag(manifolds_path, prefix, "manifolds") if manifolds_path else None
     stats_rows: List[Dict[str, object]] = []
     if args.run_netconv and manifolds_path is not None:
         netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
@@ -1270,6 +1350,7 @@ def main() -> None:
             fmt=args.netconv_format,
             smooth_iters=args.netconv_smooth,
             manifolds_tag=manifolds_label,
+            persistence_tag=persistence_tag,
         )
         if crop_min_scaled is not None:
             shift_vtk_points(manifolds_mesh_path, crop_min_scaled)
@@ -1289,6 +1370,7 @@ def main() -> None:
         else:
             skelconv_bin = resolve_command("skelconv", args.disperse_bin_dir)
             for label, path in skel_native_paths.items():
+                skel_persistence = _extract_persistence_tag(path, prefix, label) or persistence_tag
                 skeleton_mesh_paths[label] = convert_skeleton(
                     skelconv_bin,
                     path,
@@ -1297,6 +1379,7 @@ def main() -> None:
                     label,
                     fmt,
                     smooth_iters=args.skelconv_smooth,
+                    persistence_tag=skel_persistence,
                 )
                 if crop_min_scaled is not None:
                     shift_vtk_points(skeleton_mesh_paths[label], crop_min_scaled)

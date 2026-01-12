@@ -1,0 +1,48 @@
+---
+title: "Workflow Flowchart"
+format:
+  html:
+    embed-resources: true
+---
+
+```{mermaid}
+%%{init: {'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}}}%%
+graph TD
+    A[Data acquisition<br/>Download Quijote snapshot - HDF5] --> B[analyze_snapshot.py<br/>Stage 1: Stream, crop, stride and target count<br/>Write NDfield - rebased crop]
+    B --> C[delaunay_3D<br/>Build Delaunay NDnet<br/>DTFE density]
+    C --> D[mse<br/>Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump arcs - filaments]
+    D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>Delaunay: density]
+    E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>shared/wall_only/filament_only/unassigned<br/>stats CSV]
+    E --> F2[batch_clip.py<br/>Clip slab - axis/origin/thickness<br/>Flatten walls/filaments<br/>Average density<br/>Resample/grid]
+    F2 --> G[PNG outputs<br/>2D/3D density, walls, filaments, composite]
+    E --> H[batch_crop_and_clip.py<br/>Tile multiple crops/slabs<br/>Runs Stage 1-3 per crop<br/>Runs slab clips per slab]
+    H --> I[Per-crop outputs<br/>VTKs, summary stats, topology stats<br/>Per-slab VTKs/PNGs/stats]
+```
+
+### Legend
+- **analyze_snapshot.py**: Streams/crops/decimates particles; rebases crop for periodic Delaunay; runs `delaunay_3D` and `mse`; exports shifted VTKs (walls/filaments/delaunay) with persistence/smoothing tags.
+- **ndtopo_stats.py**: Optional; aggregates Delaunay scalars over shared/wall_only/filament_only/unassigned (plus full walls/filaments) into a CSV; accepts VTK or NDnet/NDskl.
+- **batch_clip.py**: Clips a slab, flattens walls/filaments, averages/resamples density, writes VTKs and PNGs.
+- **batch_crop_and_clip.py**: Tiles the snapshot into crops, runs `analyze_snapshot.py`, `ndtopo_stats.py`, and `batch_clip.py` per crop/slab; organizes outputs by crop/slab.
+
+### Notes
+- Walls: descending manifolds (e.g., JE1a); Filaments: arcs (e.g., U).
+- Naming: `<prefix>_sX_manifolds_<TAG>_S###.vtu`, `<prefix>_sX_arcs_<TAG>_S###.vtp`, `<prefix>_delaunay_S###.vtu`; unsmoothed conversions use `_S000`.
+- Use shifted Delaunay VTKs (non-`_S000`) for slabs to avoid origin offsets.
+
+### Technologies used
+- Apple M1 Pro, 16GB, MacOS Tahoe - hardware
+- Terminal - interaction with scripts and command line utilities
+- Globus - data transfer via CLI
+- DisPerSE - Discrete Persistent Structures Extractor
+- Paraview - post-processing visualization engine
+- VS Code, Positron - IDE for python code development and documentation
+- python, pvpython - batch scripting for workflow orchestration, visualization
+- Quarto - documentation (markdown)
+- mermaid - flowchart generation (markdown)
+- Git, Github - version control, public sharing
+- ChatGPT-5.2, Codex, Github copilot - learning support, coding assistance
+- YouTube - learning resources
+
+
+

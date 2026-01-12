@@ -19,9 +19,12 @@ from typing import Dict, Iterable, List, Tuple
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Overlap stats between NDnet/NDskl (VTU/VTP or native).")
-    p.add_argument("--delaunay-ndnet", required=True, help="Delaunay mesh (VTU/NDnet).")
-    p.add_argument("--walls-ndnet", required=True, help="Walls mesh (VTU/NDnet).")
-    p.add_argument("--filaments-ndskl", required=True, help="Filaments (VTP/NDskl).")
+    p.add_argument("--delaunay-ndnet", help="Delaunay mesh (NDnet).")
+    p.add_argument("--walls-ndnet", help="Walls mesh (NDnet).")
+    p.add_argument("--filaments-ndskl", help="Filaments (NDskl).")
+    p.add_argument("--delaunay-vtk", help="Delaunay mesh (VTU).")
+    p.add_argument("--walls-vtk", help="Walls mesh (VTU).")
+    p.add_argument("--filaments-vtk", help="Filaments (VTP).")
     p.add_argument("--output-csv", required=True, help="Path to write stats CSV.")
     p.add_argument("--netconv-bin", default="netconv", help="netconv executable (for auto-conversion).")
     p.add_argument("--skelconv-bin", default="skelconv", help="skelconv executable (for auto-conversion).")
@@ -43,35 +46,82 @@ def run_cmd(cmd: List[str]) -> None:
     subprocess.run(cmd, check=True)
 
 
-def ensure_vtu_from_ndnet(path: Path, netconv_bin: str) -> Path:
+def _strip_s_tag(stem: str) -> str:
+    """Strip trailing smoothing tokens like .S020 or _S020 from a stem."""
+    import re
+
+    return re.sub(r"[._]S\d{3}$", "", stem)
+
+
+def _sanitize_single_dot(path: Path) -> Path:
+    """Ensure only the final dot remains by replacing dots in the stem with underscores."""
+    clean_stem = path.stem.replace(".", "_")
+    new_path = path.with_name(f"{clean_stem}{path.suffix}")
+    if new_path == path:
+        return path
+    if new_path.exists():
+        return new_path
+    try:
+        path.rename(new_path)
+        return new_path
+    except Exception:
+        return path
+
+
+def ensure_vtu_from_ndnet(path: Path, netconv_bin: str, role: str) -> Path:
     if path.suffix.lower() != ".ndnet":
         return path
-    base = path.with_name(f"{path.stem}_nosmooth.vtu")
-    candidates = [base, base.with_name(f"{base.stem}.S000{base.suffix}"), base.with_name(f"{base.stem}_S000{base.suffix}")]
+    stem = _strip_s_tag(path.stem)
+    if role == "delaunay":
+        if "delaunay" not in stem:
+            stem = f"{stem}_delaunay"
+    elif role == "walls":
+        if "manifolds" not in stem:
+            stem = f"{stem}_manifolds"
+    base = path.with_name(f"{stem}_S000.vtu")
+    candidates = [base]
     for cand in candidates:
         if cand.exists():
-            return cand
+            return _sanitize_single_dot(cand)
     print(f"[info] Converting NDnet to unsmoothed VTU: {path} -> {base}")
     run_cmd([netconv_bin, str(path), "-outName", base.stem, "-outDir", str(base.parent), "-to", "vtu", "-smooth", "0"])
     for cand in candidates:
         if cand.exists():
-            return cand
+            return _sanitize_single_dot(cand)
     raise SystemExit(f"[error] Could not find converted VTU: {candidates}")
 
 
-def ensure_vtp_from_ndskl(path: Path, skelconv_bin: str) -> Path:
+def ensure_vtp_from_ndskl(path: Path, skelconv_bin: str, role: str) -> Path:
     if path.suffix.lower() != ".ndskl":
         return path
-    base = path.with_name(f"{path.stem}_nosmooth.vtp")
-    candidates = [base, base.with_name(f"{base.stem}.S000{base.suffix}"), base.with_name(f"{base.stem}_S000{base.suffix}")]
+    stem = _strip_s_tag(path.stem)
+    stem = stem.replace(".", "_")
+    if role == "filaments":
+        tokens = stem.split("_")
+        # target order: <prefix>_sX_arcs_<tag>
+        if len(tokens) >= 2:
+            arc_tag = tokens[-1]
+            prefix_tokens = tokens[:-1]
+            if "arcs" not in prefix_tokens:
+                prefix_tokens.append("arcs")
+            stem = "_".join(prefix_tokens + [arc_tag])
+        else:
+            stem = f"{stem}_arcs"
+    # skelconv with -smooth 0 appends .S000; keep outName clean and sanitize after
+    base = path.with_name(f"{stem}.vtp")
+    candidates = [
+        base,
+        base.with_name(f"{stem}_S000.vtp"),
+        base.with_name(f"{stem}.S000.vtp"),
+    ]
     for cand in candidates:
         if cand.exists():
-            return cand
+            return _sanitize_single_dot(cand)
     print(f"[info] Converting NDskl to unsmoothed VTP: {path} -> {base}")
-    run_cmd([skelconv_bin, str(path), "-outName", base.stem, "-outDir", str(base.parent), "-to", "vtp", "-smooth", "0"])
+    run_cmd([skelconv_bin, str(path), "-outName", stem, "-outDir", str(base.parent), "-to", "vtp", "-smooth", "0"])
     for cand in candidates:
         if cand.exists():
-            return cand
+            return _sanitize_single_dot(cand)
     raise SystemExit(f"[error] Could not find converted VTP: {candidates}")
 
 
@@ -109,8 +159,37 @@ def aggregate(ids: Iterable[int], universe: Dict[int, Dict[str, float]], scalar_
     out: Dict[str, float] = {"count": len(ids_list)}
     for name in scalar_fields:
         vals = [universe[i][name] for i in ids_list if i in universe and name in universe[i]]
-        out[f"{name}_sum"] = float(sum(vals)) if vals else 0.0
-        out[f"{name}_mean"] = float(sum(vals) / len(vals)) if vals else 0.0
+        if not vals:
+            out[f"{name}_sum"] = 0.0
+            out[f"{name}_mean"] = 0.0
+            out[f"{name}_min"] = 0.0
+            out[f"{name}_q25"] = 0.0
+            out[f"{name}_median"] = 0.0
+            out[f"{name}_q75"] = 0.0
+            out[f"{name}_max"] = 0.0
+            out[f"{name}_std"] = 0.0
+            continue
+        vals_sorted = sorted(vals)
+        n = len(vals_sorted)
+        out[f"{name}_sum"] = float(sum(vals_sorted))
+        out[f"{name}_mean"] = float(out[f"{name}_sum"] / n)
+        out[f"{name}_min"] = float(vals_sorted[0])
+        out[f"{name}_max"] = float(vals_sorted[-1])
+        # simple quantiles
+        def _quantile(q: float) -> float:
+            if n == 1:
+                return float(vals_sorted[0])
+            idx = q * (n - 1)
+            lo = int(idx)
+            hi = min(lo + 1, n - 1)
+            frac = idx - lo
+            return float(vals_sorted[lo] * (1 - frac) + vals_sorted[hi] * frac)
+        out[f"{name}_q25"] = _quantile(0.25)
+        out[f"{name}_median"] = _quantile(0.5)
+        out[f"{name}_q75"] = _quantile(0.75)
+        # std
+        mean_val = out[f"{name}_mean"]
+        out[f"{name}_std"] = float((sum((v - mean_val) ** 2 for v in vals_sorted) / n) ** 0.5)
     return out
 
 
@@ -118,21 +197,29 @@ def main() -> None:
     args = parse_args()
     if args.verbose:
         print("[info] Inputs:")
-        print(f"  delaunay: {args.delaunay_ndnet}")
-        print(f"  walls:    {args.walls_ndnet}")
-        print(f"  filaments:{args.filaments_ndskl}")
+        print(f"  delaunay: {args.delaunay_vtk or args.delaunay_ndnet}")
+        print(f"  walls:    {args.walls_vtk or args.walls_ndnet}")
+        print(f"  filaments:{args.filaments_vtk or args.filaments_ndskl}")
         print(f"  walls_id_field={args.walls_id_field}, filaments_id_field={args.filaments_id_field}, scalars={args.scalar_fields}")
-    for p in (args.delaunay_ndnet, args.walls_ndnet, args.filaments_ndskl):
-        if p and not Path(p).exists():
+    # Resolve inputs: prefer VTK if provided, otherwise require native
+    delaunay_path = Path(args.delaunay_vtk) if args.delaunay_vtk else Path(args.delaunay_ndnet) if args.delaunay_ndnet else None
+    walls_path = Path(args.walls_vtk) if args.walls_vtk else Path(args.walls_ndnet) if args.walls_ndnet else None
+    fils_path = Path(args.filaments_vtk) if args.filaments_vtk else Path(args.filaments_ndskl) if args.filaments_ndskl else None
+
+    if delaunay_path is None or walls_path is None or fils_path is None:
+        raise SystemExit("[error] Provide either VTK or NDnet/NDskl inputs for delaunay, walls, and filaments.")
+
+    for p in (delaunay_path, walls_path, fils_path):
+        if p and not p.exists():
             raise SystemExit(f"[error] Input file not found: {p}")
 
-    delaunay_path = Path(args.delaunay_ndnet)
-    walls_path = Path(args.walls_ndnet)
-    fils_path = Path(args.filaments_ndskl)
-    if args.write_vtk:
-        delaunay_path = ensure_vtu_from_ndnet(delaunay_path, args.netconv_bin)
-        walls_path = ensure_vtu_from_ndnet(walls_path, args.netconv_bin)
-        fils_path = ensure_vtp_from_ndskl(fils_path, args.skelconv_bin)
+    if args.write_vtk and (delaunay_path.suffix.lower() == ".ndnet" or walls_path.suffix.lower() == ".ndnet" or fils_path.suffix.lower() == ".ndskl"):
+        if delaunay_path.suffix.lower() == ".ndnet":
+            delaunay_path = ensure_vtu_from_ndnet(delaunay_path, args.netconv_bin, role="delaunay")
+        if walls_path.suffix.lower() == ".ndnet":
+            walls_path = ensure_vtu_from_ndnet(walls_path, args.netconv_bin, role="walls")
+        if fils_path.suffix.lower() == ".ndskl":
+            fils_path = ensure_vtp_from_ndskl(fils_path, args.skelconv_bin, role="filaments")
 
     id_field = args.walls_id_field
     skel_id_field = args.filaments_id_field
@@ -157,6 +244,8 @@ def main() -> None:
     unassigned = uni_ids - (wall_ids | fil_ids)
 
     categories = {
+        "walls": wall_ids,
+        "filaments": fil_ids,
         "shared": shared,
         "wall_only": wall_only,
         "filament_only": fil_only,
@@ -171,7 +260,18 @@ def main() -> None:
 
     fieldnames = ["category", "count"]
     for name in scalars:
-        fieldnames.extend([f"{name}_sum", f"{name}_mean"])
+        fieldnames.extend(
+            [
+                f"{name}_sum",
+                f"{name}_mean",
+                f"{name}_min",
+                f"{name}_q25",
+                f"{name}_median",
+                f"{name}_q75",
+                f"{name}_max",
+                f"{name}_std",
+            ]
+        )
     with open(args.output_csv, "w", newline="", encoding="ascii") as sink:
         writer = csv.DictWriter(sink, fieldnames=fieldnames)
         writer.writeheader()

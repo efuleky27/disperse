@@ -60,6 +60,7 @@ Below is a description of every argument and the overall workflow.
 * `--mse-vertex-as-minima` — forward `-vertexAsMinima`.
 * `--dump-manifolds SPEC` — descriptor for `mse -dumpManifolds` (default `JD1d`).
 * `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
+  - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). If you need separate files per tag, run `mse`/`analyze_snapshot.py` separately for each `--dump-manifolds`.
 
 ### Conversion / Output Formats
 
@@ -138,6 +139,12 @@ python scripts/analyze_snapshot.py \
 
 3. **Morse–Smale Analysis**  
    Runs `mse` on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with `--manifolds-input` or `--stop-after mse`.
+
+### Naming conventions (VTK/NDnet/NDskl)
+- Delaunay: `<prefix>_delaunay.S###.vtu` (or `_S000` for unsmoothed conversions).
+- Manifolds: `<prefix>_sX_manifolds_<TAG>.S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
+- Skeletons: `<prefix>_sX_arcs_<TAG>.S###.vtp` (NDskl: `<prefix>_sX_arcs_<TAG>.NDskl`).
+- Only one dot is used (before the extension); persistence (`sX`) precedes the role/tag; smoothing (`S###`) is appended by converters.
 
 4. **Conversion**  
    Converts manifolds (via `netconv`) and skeletons (via `skelconv`) into VTK family formats for visualization.

@@ -92,8 +92,15 @@ def _fmt_num(val: float) -> str:
 
 
 def fmt_box(box: Tuple[float, float, float, float, float, float]) -> str:
+    """Format box coords for folder/prefix names in Mpc/h (drop the 000s)."""
     x0, y0, z0, x1, y1, z1 = box
-    return f"x{_fmt_num(x0)}-{_fmt_num(x1)}_y{_fmt_num(y0)}-{_fmt_num(y1)}_z{_fmt_num(z0)}-{_fmt_num(z1)}"
+    def to_mpc(kpc_val: float) -> float:
+        return kpc_val / 1000.0
+    return (
+        f"x{_fmt_num(to_mpc(x0))}-{_fmt_num(to_mpc(x1))}"
+        f"_y{_fmt_num(to_mpc(y0))}-{_fmt_num(to_mpc(y1))}"
+        f"_z{_fmt_num(to_mpc(z0))}-{_fmt_num(to_mpc(z1))}"
+    )
 
 
 def run(cmd: List[str], allow_empty_crop: bool = False) -> bool:
@@ -195,13 +202,49 @@ def main() -> None:
         ]
         run(stats_cmd)
 
-        # Build expected filenames from smoothing tags (matches analyze_snapshot outputs)
-        manifolds_suffix = f".S{args.netconv_smooth:03d}" if args.netconv_smooth else ""
-        filaments_suffix = f".S{args.skelconv_smooth:03d}" if args.skelconv_smooth else ""
-        delaunay_suffix = f".S{args.delaunay_smooth:03d}" if args.delaunay_smooth else ""
-        walls_file = crop_dir / f"{crop_prefix}_manifolds_{args.dump_manifolds}{manifolds_suffix}.vtu"
-        filaments_file = crop_dir / f"{crop_prefix}_filaments_{args.dump_arcs}{filaments_suffix}.vtp"
-        delaunay_file = crop_dir / f"{crop_prefix}_delaunay{delaunay_suffix}.vtu"
+        # Build expected filenames deterministically
+        def expect_file(path: Path) -> Path:
+            if path.exists():
+                return path
+            raise FileNotFoundError(str(path))
+
+        # Persistence tags are embedded in native stems; pick from the native files
+        def _persist_from(stem: str) -> str:
+            tokens = [t for t in stem.split("_") if t.startswith("s")]
+            return tokens[0] if tokens else ""
+
+        persist_walls = _persist_from(walls_ndnet.stem)
+        persist_fils = _persist_from(fils_ndskl.stem)
+
+        if not persist_walls or not persist_fils:
+            print(f"[warn] Could not determine persistence tag (walls:{persist_walls}, fils:{persist_fils}), skipping slabs for {crop_prefix}")
+            continue
+
+        walls_name = f"{crop_prefix}_{persist_walls}_manifolds_{args.dump_manifolds}"
+        if args.netconv_smooth:
+            walls_name += f"_S{args.netconv_smooth:03d}"
+        walls_name += ".vtu"
+
+        fils_name = f"{crop_prefix}_{persist_fils}_arcs_{args.dump_arcs}"
+        if args.skelconv_smooth:
+            fils_name += f"_S{args.skelconv_smooth:03d}"
+        fils_name += ".vtp"
+
+        delaunay_name = f"{crop_prefix}_delaunay"
+        if args.delaunay_smooth:
+            delaunay_name += f"_S{args.delaunay_smooth:03d}"
+        # no smoothing tag appended when zero
+        delaunay_name += ".vtu"
+
+        try:
+            walls_file = expect_file(crop_dir / walls_name)
+            filaments_file = expect_file(crop_dir / fils_name)
+            delaunay_file = expect_file(crop_dir / delaunay_name)
+        except FileNotFoundError as exc:
+            print(f"[warn] Expected file not found ({exc}), skipping slabs for {crop_prefix}")
+            continue
+
+        print(f"[info] using walls={walls_file.name}, filaments={filaments_file.name}, density={delaunay_file.name}")
 
         # Slab origins for this crop (converted to output units for clipping)
         z0_out = box[2] * scale
