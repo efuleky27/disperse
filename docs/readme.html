@@ -2201,11 +2201,14 @@ vertical-align: -.125em;
 <section id="documentation" class="level3">
 <h3 class="anchored" data-anchor-id="documentation">Documentation</h3>
 <ul>
-<li><code>docs/ANALYZE_SNAPSHOT_USER_GUIDE.md</code> (3D pipeline details)</li>
-<li><code>docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.md</code> (2D projections)</li>
-<li><code>docs/COMPUTE_DENSITY_FIELD_USER_GUIDE.md</code> (CIC density grids)</li>
-<li><code>docs/OTHER_TOOLS_USER_GUIDE.md</code> (utility scripts)</li>
-<li><code>docs/results.md</code> / <code>docs/results.html</code> (example outputs)</li>
+<li>Core pipelines: <code>docs/ANALYZE_SNAPSHOT_USER_GUIDE.qmd</code> (3D) and <code>docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.qmd</code> (2D projections)</li>
+<li>Slab + PNGs: <code>docs/BATCH_CLIP_USER_GUIDE.qmd</code></li>
+<li>Batch tiling + per-slab: <code>docs/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd</code></li>
+<li>Topology overlap stats: <code>docs/ND_TOPO_STATS_USER_GUIDE.qmd</code></li>
+<li>End-to-end runbook: <code>docs/TOPOLOGY_ANALYSIS_USER_GUIDE.qmd</code></li>
+<li>Methods summary: <code>docs/PROJECT_METHODS.qmd</code></li>
+<li>Utilities/other tools: <code>docs/OTHER_TOOLS_USER_GUIDE.qmd</code></li>
+<li>Results examples: <code>docs/results.qmd</code> / <code>docs/results.html</code></li>
 </ul>
 </section>
 <section id="project-layout" class="level3">
@@ -2213,11 +2216,13 @@ vertical-align: -.125em;
 <ul>
 <li>All scripts live in <code>scripts/</code>:
 <ul>
-<li><code>scripts/analyze_snapshot.py</code> / <code>scripts/analyze_snapshot_2d.py</code>: main 3D/2D pipelines (decimate/crop, Delaunay, MSE, convert to VTK/VTU/VTP).</li>
+<li><code>scripts/analyze_snapshot.py</code> / <code>scripts/analyze_snapshot_2d.py</code>: main 3D/2D pipelines (decimate/crop, rebase for periodic Delaunay, MSE, convert to VTK/VTU/VTP with global shift-back).</li>
 <li><code>scripts/compute_density_field.py</code>: build a CIC density grid (HDF5).</li>
 <li><code>scripts/export_grid_vti.py</code>: wrap a 3D HDF5 grid as VTI for ParaView.</li>
 <li><code>scripts/export_snapshot_vtu.py</code>: stream snapshot particles to VTU (or VTI from an existing grid with <code>--density-field</code>).</li>
-<li><code>scripts/visualize_walls_paraview.py</code>: ParaView helper for consistent coloring/thresholding.</li>
+<li><code>scripts/batch_clip.py</code>: clip slabs, flatten to 2D, average density, and render PNGs.</li>
+<li><code>scripts/ndtopo_stats.py</code>: compute overlap/unique/unassigned stats (uses Delaunay scalars, matches by <code>true_index</code>/<code>int(cell)</code>).</li>
+<li><code>scripts/batch_crop_and_clip.py</code>: tile a snapshot into many crops, run analyze → stats → slab clips for each.</li>
 </ul></li>
 <li><code>data/</code>: place snapshots or density grids here. <code>outputs/</code>: per-run artifacts.</li>
 </ul>
@@ -2247,71 +2252,94 @@ vertical-align: -.125em;
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/&quot;</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Density Field BSQ 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="snapshot-pipeline-disperse" class="level3">
-<h3 class="anchored" data-anchor-id="snapshot-pipeline-disperse">Snapshot Pipeline (DisPerSE)</h3>
-<p>Environment: <code>conda activate disperse</code>.</p>
-<p>Full run (walls + filaments):</p>
+<section id="snapshot-wallsfilaments-disperse" class="level3">
+<h3 class="anchored" data-anchor-id="snapshot-wallsfilaments-disperse">Snapshot → walls/filaments (DisPerSE)</h3>
+<p>Environment: <code>conda activate disperse</code> (with <code>hdf5plugin</code>, <code>vtkmodules</code>).</p>
+<p>Typical run (cropped, periodic, rebased for tessellation, shifted VTK outputs):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_full <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 2000000 <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-btype</span> periodic <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.5 <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JD0a <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="at">--netconv-smooth</span> 10 <span class="dt">\</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-format</span> vtp <span class="at">--skelconv-smooth</span> 10</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Resume conversions only (reuse existing manifolds/skeletons):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_full <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifolds-input</span> outputs/snap_010_full/snap_010_manifolds_JD1a.NDnet <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skel-input</span> U=outputs/snap_010_full/snap_010.U.NDskl <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="at">--netconv-smooth</span> 10 <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-format</span> vtp <span class="at">--skelconv-smooth</span> 10</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Walls/filaments presets: - Voids/filaments: <code>--dump-manifolds J0a --dump-arcs U</code> - Walls/filaments: <code>--dump-manifolds JE1a --dump-arcs U</code></p>
-<p>Delaunay export (as density proxy):</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010 <span class="dt">\</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="at">--delaunay-format</span> vtu <span class="dt">\</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="dt">\</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JD1d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Subbox example:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="at">--delaunay-format</span> vtu <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-btype</span> periodic <span class="dt">\</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="dt">\</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 50000 50000 50000 <span class="dt">\</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--nsig</span> 3.0 <span class="dt">\</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500000 500000 100000 <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\ </span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">--delaunay-btype</span> periodic <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Notes: - Coordinates are rebased to the crop origin for <code>-periodic</code> tessellation, then VTKs are shifted back to global. - Outputs include shifted VTKs (<code>*_delaunay.vtu</code>, <code>*_manifolds_&lt;TAG&gt;.vtu</code>, <code>*_filaments_&lt;ARC&gt;.vtp</code>) plus per-file summary stats CSV. - You can replace <code>--stride 1</code> with <code>--target-count 2000000</code> to auto-pick a stride near 2M particles.</p>
 </section>
 <section id="density-workflows" class="level3">
 <h3 class="anchored" data-anchor-id="density-workflows">Density Workflows</h3>
 <p>From snapshot to density grid:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compute_density_field.py <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--parttype</span> PartType1 <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-size</span> 256 <span class="dt">\</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--chunk-size</span> 2000000 <span class="dt">\</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--store-contrast</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compute_density_field.py <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--parttype</span> PartType1 <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-size</span> 256 <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--chunk-size</span> 2000000 <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--store-contrast</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Visualize grid in ParaView (VTI):</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_snapshot_vtu.py <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--density-field</span> <span class="dt">\</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-dataset</span> DensityField/density <span class="dt">\</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_snapshot_vtu.py <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--density-field</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-dataset</span> DensityField/density <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Convert an existing grid directly:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_grid_vti.py <span class="dt">\</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/df_m_CIC_z_1_00.hdf5 <span class="dt">\</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset</span> df <span class="dt">\</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/df_m_CIC_z_1_00.vti <span class="dt">\</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--spacing</span> 1 1 1 <span class="dt">\</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--origin</span> 0 0 0 <span class="dt">\</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field-name</span> density</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_grid_vti.py <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/df_m_CIC_z_1_00.hdf5 <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset</span> df <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/df_m_CIC_z_1_00.vti <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--spacing</span> 1 1 1 <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--origin</span> 0 0 0 <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field-name</span> density</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="slab-clip-pngs" class="level3">
+<h3 class="anchored" data-anchor-id="slab-clip-pngs">Slab clip + PNGs</h3>
+<p>Clip a slab, flatten, average density, and render overlays:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_filaments_U.vtp <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox/auto2d <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.</p>
+</section>
+<section id="topology-overlap-stats" class="level3">
+<h3 class="anchored" data-anchor-id="topology-overlap-stats">Topology overlap stats</h3>
+<p>Use Delaunay scalars to quantify shared/unique/unassigned topology membership:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> outputs/snap_010_subbox/snap_010_filaments_U.vtp <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="dt">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/snap_010_topology_stats.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>--write-vtk</code> will auto-convert NDnet/NDskl (unsmoothed) if VTKs are not present.</p>
+</section>
+<section id="batch-crops-slabs" class="level3">
+<h3 class="anchored" data-anchor-id="batch-crops-slabs">Batch crops + slabs</h3>
+<p>Tile the box, run analyze → stats → slab clips for each crop:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> outputs/quijote_batches <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 200000 <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="at">--skelconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> 10 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Outputs are organized per crop (<code>*_delaunay.vtu</code>, walls/filaments VTKs, per-crop topology stats) and per slab subfolder (flattened VTKs, PNGs, stats).</p>
 </section>
 <section id="other-utilities" class="level3">
 <h3 class="anchored" data-anchor-id="other-utilities">Other Utilities</h3>

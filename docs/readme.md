@@ -41,6 +41,15 @@ Snapshot (BSQ/0):
 globus endpoint local-id
 export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
 globus endpoint search quijote
+export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437
+globus ls "$SRC:/Snapshots/fiducial/0/snapdir_000/"
+globus transfer "$SRC:/Snapshots/fiducial/0/snapdir_000/" "$DST:~/Downloads/snapdir_000/" --label "Quijote Snapshot Fiducial 0 z0"
+```
+Snapshot (BSQ/0):
+```bash
+globus endpoint local-id
+export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
+globus endpoint search quijote
 export SRC=f4863854-3819-11eb-b171-0ee0d5d9299f
 globus ls "$SRC:/Snapshots/BSQ/0/"
 globus transfer "$SRC:/Snapshots/BSQ/0/snap_010.hdf5" "$DST:~/Downloads/snap_010.hdf5" --label "Quijote Snapshot BSQ 0 z0"
