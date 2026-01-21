@@ -30,7 +30,6 @@ Key options
   - Select manifolds with `--dump-manifolds` (e.g., `JD1d` for walls,
     `JD0a` for voids); combine with `--mse-vertex-as-minima` if you want minima
     represented as vertices.
-  - Optional filament manifolds via `--dump-filament-manifolds` (e.g., `JE2a`).
   - Extract filaments by repeating `--dump-arcs` (e.g., `--dump-arcs U`
     and `--dump-arcs CUD`).
   - Resume from an existing NDnet via `--network-input` or reuse manifolds with
@@ -334,14 +333,6 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Descriptor forwarded to mse -dumpManifolds "
             "(e.g., JD1d for descending manifolds, JD0a for voids)."
-        ),
-    )
-    parser.add_argument(
-        "--dump-filament-manifolds",
-        metavar="TAG",
-        help=(
-            "Optional additional manifolds tag for filament surfaces (e.g., JE2a). "
-            "When set, mse is run a second time to dump these manifolds."
         ),
     )
     parser.add_argument(
@@ -972,7 +963,6 @@ def convert_manifolds(
     smooth_iters: int,
     manifolds_tag: Optional[str] = None,
     persistence_tag: Optional[str] = None,
-    role: str = "manifolds",
 ) -> Path:
     """Convert the manifolds network into a visualization-friendly surface.
 
@@ -984,7 +974,7 @@ def convert_manifolds(
     parts: List[str] = [prefix]
     if persistence_tag:
         parts.append(sanitize_tag(persistence_tag))
-    parts.append(sanitize_tag(role))
+    parts.append("manifolds")
     if manifolds_tag:
         parts.append(sanitize_tag(manifolds_tag))
     base_name = "_".join(parts)
@@ -1370,14 +1360,11 @@ def main() -> None:
     # the run so the user can quickly inspect which files correspond to which
     # parameter choices.
     summary: Dict[str, str] = {"dump_manifolds": args.dump_manifolds}
-    if args.dump_filament_manifolds:
-        summary["dump_filament_manifolds"] = args.dump_filament_manifolds
 
     coords_path = expand_optional_path(args.coords_input)
     network_path = expand_optional_path(args.network_input)
     manifolds_path = expand_optional_path(args.manifolds_input)
     skel_native_paths: Dict[str, Path] = {}
-    filament_manifolds_path: Optional[Path] = None
 
     coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled = ensure_catalog(
         args, summary, coords_path, network_path, manifolds_path
@@ -1466,30 +1453,6 @@ def main() -> None:
     if manifolds_path is not None:
         summary["manifolds_ndnet"] = str(manifolds_path)
 
-    if args.dump_filament_manifolds:
-        if args.manifolds_input is not None:
-            print("[warn] --dump-filament-manifolds ignored because --manifolds-input was provided.")
-        elif network_path is None:
-            print("[warn] --dump-filament-manifolds requested but no NDnet is available.")
-        else:
-            if mse_bin is None:
-                mse_bin = resolve_command("mse", args.disperse_bin_dir)
-            filament_manifolds_path, _ = run_mse(
-                mse_bin,
-                network_path,
-                output_dir,
-                prefix,
-                periodic=args.periodic,
-                nsig=args.mse_nsig,
-                persistence_cut=args.persistence_cut,
-                threads=args.mse_threads,
-                manifold_spec=args.dump_filament_manifolds,
-                vertex_as_minima=args.mse_vertex_as_minima,
-                skeletons=None,
-            )
-            print(f"[info] Filament manifolds saved to {filament_manifolds_path}")
-            summary["filament_manifolds_ndnet"] = str(filament_manifolds_path)
-
     skel_native_paths = skeleton_from_mse or {}
     if manual_skel_inputs:
         skel_native_paths.update(manual_skel_inputs)
@@ -1507,7 +1470,6 @@ def main() -> None:
     # (disable it with --skip-netconv) so that a batch run can stop after mse or
     # rely on external conversion scripts.
     manifolds_mesh_path: Optional[Path] = None
-    filament_manifolds_mesh_path: Optional[Path] = None
     manifolds_label = sanitize_tag(args.dump_manifolds) if manifolds_path else ""
     persistence_tag = _extract_persistence_tag(manifolds_path, prefix, "manifolds") if manifolds_path else None
     stats_rows: List[Dict[str, object]] = []
@@ -1528,26 +1490,6 @@ def main() -> None:
         print(f"[info] Manifolds exported to {manifolds_mesh_path}")
         summary["manifolds_mesh"] = str(manifolds_mesh_path)
         stats_rows.extend(summarize_vtk(manifolds_mesh_path))
-
-    if args.run_netconv and filament_manifolds_path is not None:
-        netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
-        filament_persistence = _extract_persistence_tag(filament_manifolds_path, prefix, "manifolds")
-        filament_manifolds_mesh_path = convert_manifolds(
-            netconv_bin,
-            filament_manifolds_path,
-            output_dir,
-            prefix,
-            fmt=args.netconv_format,
-            smooth_iters=args.netconv_smooth,
-            manifolds_tag=args.dump_filament_manifolds,
-            persistence_tag=filament_persistence,
-            role="filament_manifolds",
-        )
-        if crop_min_scaled is not None:
-            shift_vtk_points(filament_manifolds_mesh_path, crop_min_scaled)
-        print(f"[info] Filament manifolds exported to {filament_manifolds_mesh_path}")
-        summary["filament_manifolds_mesh"] = str(filament_manifolds_mesh_path)
-        stats_rows.extend(summarize_vtk(filament_manifolds_mesh_path))
 
     # Step 5: convert skeletons (skelconv) if requested. Skeleton conversion is
     # decoupled from extraction, so you can rerun skelconv alone on previously

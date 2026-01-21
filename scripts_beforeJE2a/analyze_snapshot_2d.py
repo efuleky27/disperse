@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""DisPerSE workflow helper for cosmological simulations.
+"""DisPerSE 2D workflow helper for cosmological simulations.
 
 USER GUIDE
 ==========
 Workflow overview
 -----------------
-1. **Coordinate catalog (NDfield)** – Stream particle positions from an HDF5
-   snapshot, optionally down-sampling to a target count, and write the ASCII
-   format that DisPerSE ingests.
-2. **Delaunay tessellation (NDnet)** – Run `delaunay_3D` on the catalog to
-   build the simplicial network with DTFE density estimates.
-3. **Morse–Smale analysis (`mse`)** – Apply persistence thresholds, dump
-   manifolds (voids, walls, etc.), and/or dump filamentary arcs (skeletons).
+1. **Coordinate catalog (NDfield)** – Load an HDF5 snapshot, crop a finite slab,
+   project it along a chosen axis, optionally down-sample the particles, and
+   write the 2D ASCII catalog DisPerSE ingests.
+2. **Delaunay tessellation (NDnet)** – Run `delaunay_2D` on the projected
+   catalog to build the triangulation with DTFE density estimates on the plane.
+3. **Morse–Smale analysis (`mse`)** – Apply persistence thresholds, dump 2D
+   manifolds (voids/regions), and/or dump skeleton polylines.
 4. **Format conversion** – Convert manifolds with `netconv` and skeletons with
    `skelconv` into formats that visualization tools can read.
 
@@ -23,6 +23,8 @@ Key options
 * **Particle control**: `--target-count` or `--stride` (decimation),
   `--input-unit`/`--output-unit`, `--parttype`.
   `https://quijote-simulations.readthedocs.io/en/latest/mg.html?highlight=parttype`
+* **Projection**: `--crop-box`, `--projection-axis`, `--projection-range`
+  define which slice of the 3D snapshot gets projected onto the 2D plane.
 * **Delaunay**: `--network-input` to skip, `--delaunay-btype`,
   `--delaunay-blocks`, `--periodic`.
 * **MSE / manifolds**:
@@ -30,7 +32,6 @@ Key options
   - Select manifolds with `--dump-manifolds` (e.g., `JD1d` for walls,
     `JD0a` for voids); combine with `--mse-vertex-as-minima` if you want minima
     represented as vertices.
-  - Optional filament manifolds via `--dump-filament-manifolds` (e.g., `JE2a`).
   - Extract filaments by repeating `--dump-arcs` (e.g., `--dump-arcs U`
     and `--dump-arcs CUD`).
   - Resume from an existing NDnet via `--network-input` or reuse manifolds with
@@ -45,9 +46,10 @@ Key options
 Example commands
 ----------------
 1. **Full manifolds + filaments:**
-    (disperse) $ python scripts/analyze_snapshot.py \
+    (disperse) $ python scripts/analyze_snapshot_2d.py \
         --input data/snap_010.hdf5 \
-        --output-dir outputs/snap_010_full \
+        --output-dir outputs/snap_010_2d \
+        --projection-axis z --projection-range 400 600 \
         --target-count 2000000 \
         --delaunay-btype periodic \
         --mse-nsig 3.5 \
@@ -60,10 +62,10 @@ Example commands
    smoothed VTP filament skeleton.
 
 2. **Resume conversions only (multi-type output):**
-    (disperse) $ python scripts/analyze_snapshot.py \
-        --output-dir outputs/snap_010_full \
-        --manifolds-input outputs/snap_010_full/snap_010_manifolds_JD1a.NDnet \
-        --skel-input U=outputs/snap_010_full/snap_010.U.NDskl \
+    (disperse) $ python scripts/analyze_snapshot_2d.py \
+        --output-dir outputs/snap_010_2d \
+        --manifolds-input outputs/snap_010_2d/snap_010_manifolds_JD1a.NDnet \
+        --skel-input U=outputs/snap_010_2d/snap_010.U.NDskl \
         --netconv-format ply_ascii \
         --skelconv-format vtk \
         --skelconv-smooth 10
@@ -83,22 +85,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy.typing as npt
-try:  # Optional: used for post-export coordinate shifts on VTK outputs.
-    from vtkmodules.vtkIOXML import (
-        vtkXMLImageDataReader,
-        vtkXMLImageDataWriter,
-        vtkXMLPolyDataReader,
-        vtkXMLPolyDataWriter,
-        vtkXMLUnstructuredGridReader,
-        vtkXMLUnstructuredGridWriter,
-    )
-except Exception:  # pragma: no cover
-    vtkXMLImageDataReader = None  # type: ignore
-    vtkXMLImageDataWriter = None  # type: ignore
-    vtkXMLPolyDataReader = None  # type: ignore
-    vtkXMLPolyDataWriter = None  # type: ignore
-    vtkXMLUnstructuredGridReader = None  # type: ignore
-    vtkXMLUnstructuredGridWriter = None  # type: ignore
 
 try:  # Local-only: used for optional summary statistics on VTK outputs.
     from vtkmodules.numpy_interface import dataset_adapter as dsa
@@ -134,7 +120,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover - depends on env
 
 import h5py
 import numpy as np
-import re
 
 
 # Default paths so that a newcomer can simply run the script without reading any
@@ -164,22 +149,7 @@ SUPPORTED_SKELETON_FORMATS = (
     "vtp",
     "vtp_ascii",
 )
-
-
-def run_netconv(netconv_bin: str, src: Path, out_name: str, out_dir: Path, fmt: str, smooth_iters: int) -> None:
-    cmd = [
-        netconv_bin,
-        str(src),
-        "-outName",
-        out_name,
-        "-outDir",
-        str(out_dir),
-        "-to",
-        fmt,
-    ]
-    if smooth_iters and smooth_iters > 0:
-        cmd.extend(["-smooth", str(smooth_iters)])
-    run_command(cmd)
+AXIS_TO_INDEX = {"x": 0, "y": 1, "z": 2}
 
 
 def parse_args() -> argparse.Namespace:
@@ -265,33 +235,50 @@ def parse_args() -> argparse.Namespace:
         help="Restrict the analysis to a sub-volume (input units).",
     )
     parser.add_argument(
+        "--projection-axis",
+        choices=("x", "y", "z"),
+        default="z",
+        help=(
+            "Axis to collapse when projecting into 2D. Remaining axes define the plane "
+            "(e.g., axis=z keeps X/Y coordinates)."
+        ),
+    )
+    parser.add_argument(
+        "--projection-range",
+        type=float,
+        nargs=2,
+        metavar=("MIN", "MAX"),
+        help="Optional slab bounds along the projection axis before collapsing (input units).",
+    )
+    parser.add_argument(
         "--periodic",
         action="store_true",
-        help="Treat the box as periodic when running Delaunay / MSE.",
+        help="Treat the projected plane as periodic when running Delaunay / MSE.",
     )
     parser.add_argument(
         "--network-input",
         type=Path,
-        help="Existing NDnet file to reuse (skip delaunay_3D).",
+        help="Existing NDnet file to reuse (skip delaunay_2D).",
     )
     parser.add_argument(
         "--delaunay-blocks",
         type=int,
         nargs=2,
         metavar=("NCHUNKS", "NTHREADS"),
-        help="Optional block decomposition for delaunay_3D (reduces memory usage).",
+        help="Optional block decomposition for delaunay_2D (reduces memory usage).",
     )
     parser.add_argument(
         "--delaunay-btype",
         choices=("mirror", "periodic", "smooth", "void"),
         default=None,
         help=(
-            "Boundary extrapolation model for delaunay_3D (-btype). "
+            "Boundary extrapolation model for delaunay_2D (-btype). "
             "Choices: mirror (default), periodic, smooth, void."
         ),
     )
     parser.add_argument(
         "--mse-nsig",
+        "--nsig",
         type=float,
         nargs="+",
         metavar="SIGMA",
@@ -304,6 +291,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--persistence-cut",
+        "--cut",
         type=float,
         nargs="+",
         metavar="VALUE",
@@ -334,14 +322,6 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Descriptor forwarded to mse -dumpManifolds "
             "(e.g., JD1d for descending manifolds, JD0a for voids)."
-        ),
-    )
-    parser.add_argument(
-        "--dump-filament-manifolds",
-        metavar="TAG",
-        help=(
-            "Optional additional manifolds tag for filament surfaces (e.g., JE2a). "
-            "When set, mse is run a second time to dump these manifolds."
         ),
     )
     parser.add_argument(
@@ -432,7 +412,7 @@ def parse_args() -> argparse.Namespace:
         "--disperse-bin-dir",
         type=Path,
         default=None,
-        help="Optional directory containing DisPerSE binaries (delaunay_3D, mse, netconv).",
+        help="Optional directory containing DisPerSE binaries (delaunay_2D, mse, netconv).",
     )
     parser.set_defaults(run_netconv=True, run_skelconv=True)
     return parser.parse_args()
@@ -460,39 +440,6 @@ def sanitize_tag(tag: str) -> str:
     return "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in tag.strip())
 
 
-def sanitize_filename(path: Path) -> Path:
-    """Replace dots in the stem with underscores, keeping only the extension dot."""
-    stem_sanitized = path.stem.replace(".", "_")
-    new_path = path.with_name(f"{stem_sanitized}{path.suffix}")
-    if new_path == path:
-        return path
-    try:
-        if new_path.exists():
-            new_path.unlink()
-        path.rename(new_path)
-        return new_path
-    except Exception:
-        # As a fallback, leave the original path unchanged
-        return path
-
-
-def reorder_arcs_stem(stem: str) -> str:
-    """Ensure skeleton stems follow <prefix>_sX_arcs_<TAG> ordering."""
-    parts = stem.replace(".", "_").split("_")
-    # already in desired order
-    if len(parts) >= 3 and parts[-2] == "arcs":
-        return "_".join(parts)
-    if len(parts) < 2:
-        return "_".join(parts)
-    # assume last token is arc tag; second-to-last may be persistence (sX or sX.Y)
-    arc_tag = parts[-1]
-    prefix_parts = parts[:-1]
-    # If prefix_parts already contain arcs/sX, preserve their order; otherwise insert arcs before tag.
-    if "arcs" not in prefix_parts:
-        prefix_parts.append("arcs")
-    return "_".join(prefix_parts + [arc_tag])
-
-
 def unit_scale(input_unit: str, output_unit: str) -> float:
     """Translate between kiloparsecs and megaparsecs per h.
 
@@ -510,146 +457,30 @@ def unit_scale(input_unit: str, output_unit: str) -> float:
     raise ValueError(f"Unsupported unit conversion {input_unit}->{output_unit}")
 
 
-def resolve_snapshot_parts(snapshot_path: Path) -> List[Path]:
-    """Resolve a multi-file snapshot into an ordered list of part files."""
-    path = snapshot_path.expanduser()
-    if path.is_dir():
-        zero_parts = sorted(path.glob("*.0.hdf5"))
-        if len(zero_parts) == 1:
-            return resolve_snapshot_parts(zero_parts[0])
-        if len(zero_parts) > 1:
-            raise SystemExit(
-                f"Multiple '*.0.hdf5' files found in {path}. "
-                "Pass the specific first part file instead."
-            )
-        h5_files = sorted(path.glob("*.hdf5"))
-        if len(h5_files) == 1:
-            return [h5_files[0]]
-        raise SystemExit(
-            f"Expected a single '*.0.hdf5' or one .hdf5 file in {path}; found {len(h5_files)}."
-        )
-    if not path.exists():
-        raise SystemExit(f"Snapshot path not found: {path}")
-    if path.suffix != ".hdf5":
-        return [path]
+def projection_axis_index(label: str) -> int:
+    """Map a user-provided axis label to its integer index."""
+    try:
+        return AXIS_TO_INDEX[label.lower()]
+    except KeyError as exc:  # pragma: no cover - argparse guards choices
+        raise ValueError(f"Invalid projection axis '{label}'.") from exc
+
+
+def read_snapshot_metadata(path: Path, parttype: str) -> Dict[str, float]:
+    """Open the HDF5 snapshot once to extract global information.
+
+    We look up the simulation box size (needed to write the catalog header),
+    the redshift (for the final summary), and how many particles live in the
+    chosen species (`PartType1`, `PartType2`, ...). This avoids loading the
+    entire particle array before we know whether we need all of it.
+    """
     with h5py.File(path, "r") as handle:
         header = handle["Header"].attrs
-        num_files = int(header.get("NumFilesPerSnapshot", 1))
-    if num_files <= 1:
-        return [path]
-    match = re.match(r"(.+)\.(\d+)\.hdf5$", path.name)
-    if not match:
-        raise SystemExit(
-            "Multi-file snapshot detected. Pass the directory or the first part (e.g. snap_000.0.hdf5)."
-        )
-    stem = match.group(1)
-    return [path.parent / f"{stem}.{i}.hdf5" for i in range(num_files)]
-
-
-def read_snapshot_metadata(paths: Sequence[Path], parttype: str) -> Dict[str, float]:
-    """Extract global information from a single-file or multi-file snapshot."""
-    with h5py.File(paths[0], "r") as handle:
-        header = handle["Header"].attrs
-        box_size = float(header["BoxSize"])
-        redshift = float(header["Redshift"])
-    total_particles = 0
-    for path in paths:
-        with h5py.File(path, "r") as handle:
-            coords = handle[parttype]["Coordinates"]
-            total_particles += int(coords.shape[0])
-    return {
-        "box_size": box_size,
-        "redshift": redshift,
-        "num_particles": total_particles,
-    }
-
-
-def count_particles_in_box_multi(
-    paths: Sequence[Path],
-    parttype: str,
-    crop_box: Tuple[float, float, float, float, float, float],
-    chunk_size: int,
-) -> int:
-    count = 0
-    for path in paths:
-        with h5py.File(path, "r") as snap:
-            coords = snap[parttype]["Coordinates"]
-            count += count_particles_in_box(coords, crop_box, chunk_size)
-    return count
-
-
-def write_ndfield_coords_multi(
-    paths: Sequence[Path],
-    parttype: str,
-    out_path: Path,
-    stride: int,
-    expected_count: int,
-    chunk_size: int,
-    scale: float,
-    bbox_min_scaled: np.ndarray,
-    bbox_max_scaled: np.ndarray,
-    crop_box: Optional[Tuple[float, float, float, float, float, float]] = None,
-    rebase_origin: Optional[np.ndarray] = None,
-) -> int:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    mins = np.array(crop_box[:3], dtype=np.float64) if crop_box else None
-    maxs = np.array(crop_box[3:], dtype=np.float64) if crop_box else None
-    shift = np.array(rebase_origin, dtype=np.float64) if rebase_origin is not None else None
-    written = 0
-    in_box_counter = 0
-    global_offset = 0
-    with open(out_path, "w", encoding="ascii") as sink:
-        sink.write("ANDFIELD COORDS\n")
-        sink.write(f"[3 {expected_count}]\n")
-        sink.write(
-            "BBOX "
-            f"[{bbox_min_scaled[0]:.6f} {bbox_min_scaled[1]:.6f} {bbox_min_scaled[2]:.6f}] "
-            f"[{bbox_max_scaled[0]:.6f} {bbox_max_scaled[1]:.6f} {bbox_max_scaled[2]:.6f}]\n"
-        )
-        for path in paths:
-            with h5py.File(path, "r") as snap:
-                coords_dataset = snap[parttype]["Coordinates"]
-                total = coords_dataset.shape[0]
-                for start in range(0, total, chunk_size):
-                    stop = min(total, start + chunk_size)
-                    chunk = coords_dataset[start:stop]
-                    if crop_box:
-                        mask_box = (
-                            (chunk[:, 0] >= mins[0])
-                            & (chunk[:, 0] < maxs[0])
-                            & (chunk[:, 1] >= mins[1])
-                            & (chunk[:, 1] < maxs[1])
-                            & (chunk[:, 2] >= mins[2])
-                            & (chunk[:, 2] < maxs[2])
-                        )
-                        if not np.any(mask_box):
-                            continue
-                        box_chunk = chunk[mask_box]
-                        positions = np.arange(box_chunk.shape[0], dtype=np.int64) + in_box_counter
-                        stride_mask = (positions % stride) == 0
-                        if not np.any(stride_mask):
-                            in_box_counter += box_chunk.shape[0]
-                            continue
-                        sampled = box_chunk[stride_mask].astype(np.float64, copy=False)
-                        in_box_counter += box_chunk.shape[0]
-                    else:
-                        indices = np.arange(start, stop, dtype=np.int64) + global_offset
-                        mask = (indices % stride) == 0
-                        if not np.any(mask):
-                            continue
-                        sampled = chunk[mask].astype(np.float64, copy=False)
-                    if shift is not None:
-                        sampled -= shift
-                    if scale != 1.0:
-                        sampled *= scale
-                    np.savetxt(sink, sampled, fmt="%.8f")
-                    written += sampled.shape[0]
-                global_offset += total
-    if written != expected_count:
-        raise RuntimeError(
-            f"NDfield write mismatch: expected {expected_count} coords but wrote {written}."
-        )
-    return written
+        coords = handle[parttype]["Coordinates"]
+        return {
+            "box_size": float(header["BoxSize"]),
+            "redshift": float(header["Redshift"]),
+            "num_particles": int(coords.shape[0]),
+        }
 
 
 def resolve_command(name: str, override_dir: Optional[Path]) -> str:
@@ -690,26 +521,35 @@ def determine_stride(total: int, requested_stride: Optional[int], target_count: 
     return stride, count
 
 
-def count_particles_in_box(
+def count_particles_in_region(
     coords_dataset: h5py.Dataset,
-    crop_box: Tuple[float, float, float, float, float, float],
     chunk_size: int,
+    crop_box: Optional[Tuple[float, float, float, float, float, float]],
+    projection_axis: int,
+    projection_range: Optional[Tuple[float, float]],
 ) -> int:
-    mins = np.array(crop_box[:3], dtype=np.float64)
-    maxs = np.array(crop_box[3:], dtype=np.float64)
+    """Count how many particles fall inside the crop box and slab."""
     total = coords_dataset.shape[0]
+    mins = np.array(crop_box[:3], dtype=np.float64) if crop_box else None
+    maxs = np.array(crop_box[3:], dtype=np.float64) if crop_box else None
+    proj_min = projection_range[0] if projection_range else None
+    proj_max = projection_range[1] if projection_range else None
     count = 0
     for start in range(0, total, chunk_size):
         stop = min(total, start + chunk_size)
         chunk = coords_dataset[start:stop]
-        mask = (
-            (chunk[:, 0] >= mins[0])
-            & (chunk[:, 0] < maxs[0])
-            & (chunk[:, 1] >= mins[1])
-            & (chunk[:, 1] < maxs[1])
-            & (chunk[:, 2] >= mins[2])
-            & (chunk[:, 2] < maxs[2])
-        )
+        mask = np.ones(chunk.shape[0], dtype=bool)
+        if crop_box:
+            mask &= (
+                (chunk[:, 0] >= mins[0])
+                & (chunk[:, 0] < maxs[0])
+                & (chunk[:, 1] >= mins[1])
+                & (chunk[:, 1] < maxs[1])
+                & (chunk[:, 2] >= mins[2])
+                & (chunk[:, 2] < maxs[2])
+            )
+        if projection_range:
+            mask &= (chunk[:, projection_axis] >= proj_min) & (chunk[:, projection_axis] < proj_max)
         count += int(np.count_nonzero(mask))
     return count
 
@@ -732,6 +572,18 @@ def parse_crop_box(raw: Optional[Sequence[float]]) -> Optional[Tuple[float, floa
     return (mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2])
 
 
+def parse_projection_range(raw: Optional[Sequence[float]]) -> Optional[Tuple[float, float]]:
+    """Validate and normalize the optional projection slab."""
+    if raw is None:
+        return None
+    if len(raw) != 2:
+        raise SystemExit("Provide exactly 2 values to --projection-range (min max).")
+    proj_min, proj_max = raw
+    if proj_max <= proj_min:
+        raise SystemExit("--projection-range MAX must be greater than MIN.")
+    return float(proj_min), float(proj_max)
+
+
 def write_ndfield_coords(
     coords_dataset: h5py.Dataset,
     out_path: Path,
@@ -741,37 +593,43 @@ def write_ndfield_coords(
     scale: float,
     bbox_min_scaled: np.ndarray,
     bbox_max_scaled: np.ndarray,
+    projection_axis: int,
+    projection_range: Optional[Tuple[float, float]],
     crop_box: Optional[Tuple[float, float, float, float, float, float]] = None,
-    rebase_origin: Optional[np.ndarray] = None,
 ) -> int:
-    """Stream the particle coordinates into the ASCII catalog DisPerSE expects.
+    """Stream the projected coordinates into the 2D ASCII catalog DisPerSE expects.
 
     Why streaming? Gadget snapshots are gigantic; loading all coordinates at
     once can exceed laptop memory. Instead we grab a manageable chunk,
     down-sample it according to the stride, convert to the desired units, and
-    append to the text file. The header lines ("ANDFIELD COORDS", bounding box,
-    etc.) are part of the simple format DisPerSE understands.
+    append to the text file. Before writing, the particles are filtered through
+    the optional 3D crop box and slab, then projected onto the requested plane.
+    The header lines ("ANDFIELD COORDS", bounding box, etc.) are part of the
+    simple format DisPerSE understands.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     total = coords_dataset.shape[0]
     written = 0
     mins = np.array(crop_box[:3], dtype=np.float64) if crop_box else None
     maxs = np.array(crop_box[3:], dtype=np.float64) if crop_box else None
-    shift = np.array(rebase_origin, dtype=np.float64) if rebase_origin is not None else None
+    proj_min = projection_range[0] if projection_range else None
+    proj_max = projection_range[1] if projection_range else None
+    plane_axes = tuple(idx for idx in range(3) if idx != projection_axis)
     with open(out_path, "w", encoding="ascii") as sink:
         sink.write("ANDFIELD COORDS\n")
-        sink.write(f"[3 {expected_count}]\n")
+        sink.write(f"[2 {expected_count}]\n")
         sink.write(
             "BBOX "
-            f"[{bbox_min_scaled[0]:.6f} {bbox_min_scaled[1]:.6f} {bbox_min_scaled[2]:.6f}] "
-            f"[{bbox_max_scaled[0]:.6f} {bbox_max_scaled[1]:.6f} {bbox_max_scaled[2]:.6f}]\n"
+            f"[{bbox_min_scaled[0]:.6f} {bbox_min_scaled[1]:.6f}] "
+            f"[{bbox_max_scaled[0]:.6f} {bbox_max_scaled[1]:.6f}]\n"
         )
-        in_box_counter = 0
+        in_slab_counter = 0
         for start in range(0, total, chunk_size):
             stop = min(total, start + chunk_size)
             chunk = coords_dataset[start:stop]
+            mask = np.ones(chunk.shape[0], dtype=bool)
             if crop_box:
-                mask_box = (
+                mask &= (
                     (chunk[:, 0] >= mins[0])
                     & (chunk[:, 0] < maxs[0])
                     & (chunk[:, 1] >= mins[1])
@@ -779,23 +637,18 @@ def write_ndfield_coords(
                     & (chunk[:, 2] >= mins[2])
                     & (chunk[:, 2] < maxs[2])
                 )
-                if not np.any(mask_box):
-                    continue
-                box_chunk = chunk[mask_box]
-                positions = np.arange(box_chunk.shape[0], dtype=np.int64) + in_box_counter
-                stride_mask = (positions % stride) == 0
-                if not np.any(stride_mask):
-                    in_box_counter += box_chunk.shape[0]
-                    continue
-                sampled = box_chunk[stride_mask].astype(np.float64, copy=False)
-                in_box_counter += box_chunk.shape[0]
-            else:
-                mask = (np.arange(start, stop) % stride) == 0
-                if not np.any(mask):
-                    continue
-                sampled = chunk[mask].astype(np.float64, copy=False)
-            if shift is not None:
-                sampled -= shift
+            if projection_range:
+                mask &= (chunk[:, projection_axis] >= proj_min) & (chunk[:, projection_axis] < proj_max)
+            if not np.any(mask):
+                continue
+            region_chunk = chunk[mask]
+            positions = np.arange(region_chunk.shape[0], dtype=np.int64) + in_slab_counter
+            stride_mask = (positions % stride) == 0
+            if not np.any(stride_mask):
+                in_slab_counter += region_chunk.shape[0]
+                continue
+            sampled = region_chunk[stride_mask][:, plane_axes].astype(np.float64, copy=False)
+            in_slab_counter += region_chunk.shape[0]
             if scale != 1.0:
                 sampled *= scale
             np.savetxt(sink, sampled, fmt="%.8f")
@@ -827,13 +680,14 @@ def run_delaunay(
     blocks: Optional[Sequence[int]],
     btype: Optional[str],
 ) -> Path:
-    """Launch DisPerSE's `delaunay_3D` program to build the simplicial network.
+    """Launch DisPerSE's `delaunay_2D` program to build the planar network.
 
-    This stage constructs the Delaunay tessellation of the particle set. It is
-    where the continuous density field gets reconstructed, so the options expose
-    only what DisPerSE itself offers: periodic boundaries and optional blocking
-    for reduced memory usage. The returned `.NDnet` file describes the entire
-    mesh and becomes the input for the persistence analysis step.
+    This stage constructs the Delaunay triangulation of the projected particle
+    set. It is where the continuous 2D density field gets reconstructed, so the
+    options expose only what DisPerSE itself offers: periodic boundaries,
+    optional blocking for reduced memory usage, and boundary extrapolation
+    choices. The returned `.NDnet` file becomes the input for the persistence
+    analysis step.
     """
     cmd = [delaunay_bin, str(coords_file), "-outName", prefix, "-outDir", str(output_dir)]
     if periodic:
@@ -900,66 +754,29 @@ def run_mse(
             "Check the mse output for the exact filename and pass it via "
             "--output-prefix if needed."
         )
-    manifolds_result = sanitize_filename(max(matches, key=lambda path: path.stat().st_mtime))
+    manifolds_result = max(matches, key=lambda path: path.stat().st_mtime)
     skeleton_paths: Dict[str, Path] = {}
     for tag in requested_skeletons:
         skeleton_paths[tag] = locate_dump_arcs_file(output_dir, prefix, tag)
     return manifolds_result, skeleton_paths
 
 
-def _extract_persistence_tag(path: Path, prefix: str, marker: str) -> Optional[str]:
-    """Extract the persistence token that mse injects (e.g., s5, s3.5) from a filename."""
-    stem = path.stem
-    normalized = stem.replace(".", "_")
-    # Look for prefix_<token>_<marker> where token is sN or sN_M
-    pattern = re.compile(re.escape(prefix) + r"_(s\d+(?:_\d+)?)_" + re.escape(marker))
-    m = pattern.search(normalized)
-    if m:
-        return m.group(1)
-    # If arcs are present in the stem, use the token before "arcs".
-    tokens = normalized.split("_")
-    if "arcs" in tokens:
-        idx = tokens.index("arcs")
-        if idx > 0 and tokens[idx - 1].startswith("s"):
-            return tokens[idx - 1]
-    # For skeletons with dot tags (prefix_s5.U) before normalization
-    pattern_dot = re.compile(re.escape(prefix) + r"_(s\d+(?:\.\d+)?)\." + re.escape(marker))
-    m = pattern_dot.search(stem)
-    if m:
-        return m.group(1).replace(".", "_")
-    return None
-
-
 def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
     """Find the NDskl file emitted by mse -dumpArcs <tag>."""
     canonical = output_dir / f"{prefix}.{tag}.NDskl"
-    matches = []
+    matches: List[Path] = []
     if canonical.exists():
         matches.append(canonical)
-    patterns = [
-        f"{prefix}_*arcs_{tag}.NDskl",
-        f"{prefix}_*{tag}.NDskl",
-        f"{prefix}*{tag}.NDskl",
-        f"{prefix}*.NDskl",  # fallback for builds that omit the tag entirely (e.g., sX.MSC.backup.NDskl)
-    ]
-    for pattern in patterns:
+    pattern = f"{prefix}_*{tag}.NDskl"
+    matches.extend(output_dir.glob(pattern))
+    if not matches:
+        pattern = f"{prefix}*{tag}.NDskl"
         matches.extend(output_dir.glob(pattern))
     if matches:
-        best = max(matches, key=lambda path: path.stat().st_mtime)
-        # enforce arcs ordering if missing
-        stem_reordered = reorder_arcs_stem(best.stem)
-        target = best.with_name(f"{stem_reordered}{best.suffix}")
-        if target != best:
-            if not target.exists():
-                try:
-                    best.rename(target)
-                    best = target
-                except Exception:
-                    best = best
-        return sanitize_filename(best)
+        return max(matches, key=lambda path: path.stat().st_mtime)
     raise FileNotFoundError(
         "DisPerSE completed but no skeleton file was found. "
-        f"Searched for '{canonical.name}' and patterns '{patterns[0]}', '{patterns[1]}', '{patterns[2]}'."
+        f"Searched for '{canonical.name}' and patterns '{prefix}_*{tag}.NDskl'."
     )
 
 
@@ -971,8 +788,6 @@ def convert_manifolds(
     fmt: str,
     smooth_iters: int,
     manifolds_tag: Optional[str] = None,
-    persistence_tag: Optional[str] = None,
-    role: str = "manifolds",
 ) -> Path:
     """Convert the manifolds network into a visualization-friendly surface.
 
@@ -981,25 +796,30 @@ def convert_manifolds(
     the resulting file path so the final summary can list it.
     """
     fmt_tag = sanitize_tag(fmt.lower())
-    parts: List[str] = [prefix]
-    if persistence_tag:
-        parts.append(sanitize_tag(persistence_tag))
-    parts.append(sanitize_tag(role))
+    tag_bits = [fmt_tag]
     if manifolds_tag:
-        parts.append(sanitize_tag(manifolds_tag))
-    base_name = "_".join(parts)
+        tag_bits.append(sanitize_tag(manifolds_tag))
+    base_name = f"{prefix}_manifolds_{'_'.join(tag_bits)}"
     run_netconv(netconv_bin, manifolds_file, base_name, output_dir, fmt, smooth_iters)
-    ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
-    candidate = output_dir / f"{base_name}{ext}"
-    if not candidate.exists():
-        matches = sorted(output_dir.glob(f"{base_name}*{ext}"))
-        if matches:
-            candidate = matches[-1]
-        else:
-            raise FileNotFoundError(
-                f"netconv completed but the manifolds output file was not found. Expected {candidate.name}."
-            )
-    return sanitize_filename(candidate)
+    suffix = ".NDnet" if fmt.startswith("ndnet") else f".{fmt}"
+    return output_dir / f"{base_name}{suffix}"
+
+
+def run_netconv(netconv_bin: str, src: Path, out_name: str, out_dir: Path, fmt: str, smooth_iters: int) -> None:
+    """Invoke netconv with optional smoothing."""
+    cmd = [
+        netconv_bin,
+        str(src),
+        "-outName",
+        out_name,
+        "-outDir",
+        str(out_dir),
+        "-to",
+        fmt,
+    ]
+    if smooth_iters and smooth_iters > 0:
+        cmd.extend(["-smooth", str(smooth_iters)])
+    run_command(cmd)
 
 
 def convert_network(
@@ -1010,26 +830,12 @@ def convert_network(
     tag: str,
     fmt: str,
     smooth_iters: int,
-    persistence_tag: Optional[str] = None,
 ) -> Path:
     fmt_tag = fmt.lower()
-    base_parts = [prefix]
-    if persistence_tag:
-        base_parts.append(sanitize_tag(persistence_tag))
-    base_parts.append(tag)
-    base = "_".join(base_parts)
+    base = f"{prefix}_{tag}_{fmt_tag}"
     run_netconv(netconv_bin, ndnet_file, base, output_dir, fmt, smooth_iters)
-    ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
-    candidate = output_dir / f"{base}{ext}"
-    if not candidate.exists():
-        matches = sorted(output_dir.glob(f"{base}*{ext}"))
-        if matches:
-            candidate = matches[-1]
-        else:
-            raise FileNotFoundError(
-                f"netconv completed but the Delaunay output file was not found. Expected {candidate.name}."
-            )
-    return sanitize_filename(candidate)
+    suffix = ".NDnet" if fmt.startswith("ndnet") else f".{fmt}"
+    return output_dir / f"{base}{suffix}"
 
 
 def skeleton_suffix_for_format(fmt: str) -> str:
@@ -1055,19 +861,13 @@ def convert_skeleton(
     label: str,
     fmt: str,
     smooth_iters: int,
-    persistence_tag: Optional[str] = None,
 ) -> Path:
     """Convert NDskl filaments into a VTK/ASCII format using skelconv."""
     fmt_clean = sanitize_tag(fmt.lower())
     label_tag = sanitize_tag(label)
     if fmt_clean == "ndskl":
         return skeleton_path
-    parts = [prefix]
-    if persistence_tag:
-        parts.append(sanitize_tag(persistence_tag))
-    parts.append("arcs")
-    parts.append(label_tag)
-    out_name = "_".join(parts)
+    out_name = f"{prefix}_filaments_{label_tag}_{fmt_clean}"
     cmd = [
         skelconv_bin,
         str(skeleton_path),
@@ -1083,15 +883,14 @@ def convert_skeleton(
     suffix = skeleton_suffix_for_format(fmt)
     candidate = output_dir / f"{out_name}{suffix}"
     if not candidate.exists():
-        matches = sorted(output_dir.glob(f"{out_name}*"))
+        matches = list(output_dir.glob(f"{out_name}*"))
         if matches:
-            candidate = matches[-1]
-        else:
-            raise FileNotFoundError(
-                "skelconv completed but the skeleton output file was not found. "
-                f"Searched for '{candidate.name}'."
-            )
-    return sanitize_filename(candidate)
+            return max(matches, key=lambda path: path.stat().st_mtime)
+        raise FileNotFoundError(
+            "skelconv completed but the skeleton output file was not found. "
+            f"Searched for '{candidate.name}'."
+        )
+    return candidate
 
 
 def cleanup_ndfield(
@@ -1123,7 +922,6 @@ def _compute_array_stats(arr: npt.NDArray[np.float64]) -> Dict[str, float]:
 def _read_vtk_dataset(path: Path) -> Optional[vtkDataSet]:
     if dsa is None or vtk_to_numpy is None:  # pragma: no cover - optional
         return None
-    reader: Optional[vtkDataSetReader]
     if path.suffix.lower() == ".vtu":
         reader = vtkXMLUnstructuredGridReader()
     elif path.suffix.lower() == ".vtp":
@@ -1154,9 +952,6 @@ def summarize_vtk(path: Path) -> List[Dict[str, object]]:
     rows: List[Dict[str, object]] = []
     for location, collection in (("points", wrapper.PointData), ("cells", wrapper.CellData)):
         for name in collection.keys():
-            # Persistence arrays can include extreme values that overflow summary aggregates.
-            if "persistence" in name.lower():
-                continue
             arr = np.asarray(collection[name]).ravel()
             if arr.size == 0 or not np.issubdtype(arr.dtype, np.number):
                 continue
@@ -1204,41 +999,6 @@ def write_stats_csv(rows: List[Dict[str, object]], out_path: Path) -> None:
             writer.writerow(row)
 
 
-def shift_vtk_points(path: Path, offset: np.ndarray) -> None:
-    """Translate point coordinates in place by the given offset (in VTK units)."""
-    if offset is None or np.allclose(offset, 0):
-        return
-    if vtkXMLUnstructuredGridReader is None:
-        print(f"[warn] vtkmodules not available; skipping shift for {path}")
-        return
-    ext = path.suffix.lower()
-    if ext == ".vtu":
-        reader = vtkXMLUnstructuredGridReader()
-        writer = vtkXMLUnstructuredGridWriter()
-    elif ext == ".vtp":
-        reader = vtkXMLPolyDataReader()
-        writer = vtkXMLPolyDataWriter()
-    elif ext == ".vti":
-        reader = vtkXMLImageDataReader()
-        writer = vtkXMLImageDataWriter()
-    else:
-        return
-    reader.SetFileName(str(path))
-    reader.Update()
-    data = reader.GetOutput()
-    pts = data.GetPoints()
-    if pts is None:
-        return
-    arr = pts.GetData()
-    if arr is None:
-        return
-    np_arr = np.array(arr, copy=False)
-    np_arr += offset
-    writer.SetFileName(str(path))
-    writer.SetInputData(data)
-    writer.Write()
-
-
 def ensure_catalog(
     args: argparse.Namespace,
     summary: Dict[str, str],
@@ -1252,15 +1012,17 @@ def ensure_catalog(
     Optional[Dict[str, float]],
     Optional[float],
     Optional[Tuple[float, float, float, float, float, float]],
-    Optional[np.ndarray],
+    Optional[Tuple[float, float]],
+    int,
 ]:
     """Generate or reuse the NDfield catalog and update summary/meta information."""
     crop_box = parse_crop_box(args.crop_box)
+    projection_range = parse_projection_range(args.projection_range)
+    proj_axis = projection_axis_index(args.projection_axis)
     ndfield_created = False
     actual_written: Optional[int] = None
     meta: Optional[Dict[str, float]] = None
     box_scaled: Optional[float] = None
-    crop_min_scaled: Optional[np.ndarray] = None
 
     need_ndfield = coords_path is None and network_path is None and manifolds_path is None
     if args.stop_after == "ndfield" and coords_path is None:
@@ -1268,18 +1030,23 @@ def ensure_catalog(
 
     if need_ndfield:
         snapshot_path = Path(args.input).expanduser()
-        snapshot_parts = resolve_snapshot_parts(snapshot_path)
         print(f"[info] Loading snapshot {snapshot_path}")
-        meta = read_snapshot_metadata(snapshot_parts, args.parttype)
+        meta = read_snapshot_metadata(snapshot_path, args.parttype)
         box_size_native = meta["box_size"]
         total_particles = meta["num_particles"]
         effective_total = total_particles
-        if crop_box:
-            effective_total = count_particles_in_box_multi(
-                snapshot_parts, args.parttype, crop_box, args.chunk_size
-            )
+        if crop_box or projection_range:
+            with h5py.File(snapshot_path, "r") as snap:
+                coords = snap[args.parttype]["Coordinates"]
+                effective_total = count_particles_in_region(
+                    coords,
+                    chunk_size=args.chunk_size,
+                    crop_box=crop_box,
+                    projection_axis=proj_axis,
+                    projection_range=projection_range,
+                )
             if effective_total == 0:
-                raise SystemExit("Crop box contains no particles.")
+                raise SystemExit("Crop/slab combination contains no particles.")
 
         stride, selected = determine_stride(effective_total, args.stride, args.target_count)
         info_msg = (
@@ -1288,45 +1055,44 @@ def ensure_catalog(
         )
         if crop_box:
             info_msg += f" Crop box contains {effective_total:,} particles."
+        if projection_range:
+            info_msg += (
+                f" Slab along {args.projection_axis.upper()}="
+                f"[{projection_range[0]:g},{projection_range[1]:g}) contains {effective_total:,} particles."
+            )
         print(info_msg)
         scale = unit_scale(args.input_unit, args.output_unit)
         box_scaled = box_size_native * scale
-        rebase = crop_box is not None
+        bbox_min_native = np.zeros(3, dtype=float)
+        bbox_max_native = np.full(3, box_size_native, dtype=float)
         if crop_box:
-            # Rebase crop to origin so periodic tessellation stays within the crop extents
-            crop_min = np.array(crop_box[:3], dtype=float)
-            crop_max = np.array(crop_box[3:], dtype=float)
-            crop_size = crop_max - crop_min
-            bbox_min_native = np.zeros(3, dtype=float)
-            bbox_max_native = crop_size
-        else:
-            bbox_min_native = np.zeros(3, dtype=float)
-            bbox_max_native = np.full(3, box_size_native, dtype=float)
-        bbox_min_scaled = bbox_min_native * scale
-        bbox_max_scaled = bbox_max_native * scale
-        if crop_min is not None:
-            crop_min_scaled = crop_min * scale
+            bbox_min_native = np.array(crop_box[:3], dtype=float)
+            bbox_max_native = np.array(crop_box[3:], dtype=float)
+        plane_axes = tuple(idx for idx in range(3) if idx != proj_axis)
+        axis_idx = list(plane_axes)
+        bbox_min_scaled = bbox_min_native[axis_idx] * scale
+        bbox_max_scaled = bbox_max_native[axis_idx] * scale
         ndfield_path = Path(args.output_dir).expanduser() / f"{args.output_prefix}_coords_stride{stride}.AND"
         print(f"[info] Writing NDfield catalog to {ndfield_path}")
-        actual_written = write_ndfield_coords_multi(
-            snapshot_parts,
-            args.parttype,
-            ndfield_path,
-            stride=stride,
-            expected_count=selected,
-            chunk_size=args.chunk_size,
-            scale=scale,
-            bbox_min_scaled=bbox_min_scaled,
-            bbox_max_scaled=bbox_max_scaled,
-            crop_box=crop_box,
-            rebase_origin=crop_min if crop_box else None,
-        )
+        with h5py.File(snapshot_path, "r") as snap:
+            coords = snap[args.parttype]["Coordinates"]
+            actual_written = write_ndfield_coords(
+                coords,
+                ndfield_path,
+                stride=stride,
+                expected_count=selected,
+                chunk_size=args.chunk_size,
+                scale=scale,
+                bbox_min_scaled=bbox_min_scaled,
+                bbox_max_scaled=bbox_max_scaled,
+                projection_axis=proj_axis,
+                projection_range=projection_range,
+                crop_box=crop_box,
+            )
         print(f"[info] NDfield ready ({actual_written:,} particles in {args.output_unit}).")
         coords_path = ndfield_path
         ndfield_created = True
         summary["snapshot"] = str(snapshot_path)
-        if crop_min_scaled is not None:
-            summary["crop_origin"] = str(crop_min_scaled)
     elif coords_path is None and network_path is None and manifolds_path is None:
         raise SystemExit(
             "No coordinate catalog available. Provide a snapshot/--coords-input or skip "
@@ -1347,8 +1113,11 @@ def ensure_catalog(
             f"[{crop_box[0]:g} {crop_box[1]:g} {crop_box[2]:g}] -> "
             f"[{crop_box[3]:g} {crop_box[4]:g} {crop_box[5]:g}] {args.input_unit}"
         )
+    summary["projection_axis"] = args.projection_axis
+    if projection_range:
+        summary["projection_range"] = f"[{projection_range[0]:g} {projection_range[1]:g}) {args.input_unit}"
 
-    return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled
+    return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, projection_range, proj_axis
 
 
 def emit_summary(summary: Dict[str, str]) -> None:
@@ -1370,25 +1139,29 @@ def main() -> None:
     # the run so the user can quickly inspect which files correspond to which
     # parameter choices.
     summary: Dict[str, str] = {"dump_manifolds": args.dump_manifolds}
-    if args.dump_filament_manifolds:
-        summary["dump_filament_manifolds"] = args.dump_filament_manifolds
 
     coords_path = expand_optional_path(args.coords_input)
     network_path = expand_optional_path(args.network_input)
     manifolds_path = expand_optional_path(args.manifolds_input)
     skel_native_paths: Dict[str, Path] = {}
-    filament_manifolds_path: Optional[Path] = None
 
-    coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled = ensure_catalog(
-        args, summary, coords_path, network_path, manifolds_path
-    )
+    (
+        coords_path,
+        ndfield_created,
+        actual_written,
+        meta,
+        box_scaled,
+        crop_box,
+        projection_range,
+        proj_axis,
+    ) = ensure_catalog(args, summary, coords_path, network_path, manifolds_path)
 
     if stop_after == "ndfield":
         cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
         emit_summary(summary)
         return
 
-    # Step 2: run delaunay_3D unless the user supplied --network-input. The
+    # Step 2: run delaunay_2D unless the user supplied --network-input. The
     # resulting NDnet is the prerequisite for mse, but you can quit here with
     # --stop-after delaunay to inspect the triangulation.
     delaunay_bin: Optional[str] = None
@@ -1396,8 +1169,8 @@ def main() -> None:
         print(f"[info] Reusing existing NDnet {network_path}")
     elif manifolds_path is None:
         if coords_path is None:
-            raise SystemExit("Need an NDfield catalog via --coords-input to run delaunay_3D.")
-        delaunay_bin = resolve_command("delaunay_3D", args.disperse_bin_dir)
+            raise SystemExit("Need an NDfield catalog via --coords-input to run delaunay_2D.")
+        delaunay_bin = resolve_command("delaunay_2D", args.disperse_bin_dir)
         network_path = run_delaunay(
             delaunay_bin,
             coords_path,
@@ -1460,35 +1233,11 @@ def main() -> None:
     elif manifolds_path is None and args.manifolds_input is None:
         raise SystemExit(
             "Unable to run mse because no NDnet is available. Provide --network-input "
-            "or allow the script to run delaunay_3D."
+            "or allow the script to run delaunay_2D."
         )
 
     if manifolds_path is not None:
         summary["manifolds_ndnet"] = str(manifolds_path)
-
-    if args.dump_filament_manifolds:
-        if args.manifolds_input is not None:
-            print("[warn] --dump-filament-manifolds ignored because --manifolds-input was provided.")
-        elif network_path is None:
-            print("[warn] --dump-filament-manifolds requested but no NDnet is available.")
-        else:
-            if mse_bin is None:
-                mse_bin = resolve_command("mse", args.disperse_bin_dir)
-            filament_manifolds_path, _ = run_mse(
-                mse_bin,
-                network_path,
-                output_dir,
-                prefix,
-                periodic=args.periodic,
-                nsig=args.mse_nsig,
-                persistence_cut=args.persistence_cut,
-                threads=args.mse_threads,
-                manifold_spec=args.dump_filament_manifolds,
-                vertex_as_minima=args.mse_vertex_as_minima,
-                skeletons=None,
-            )
-            print(f"[info] Filament manifolds saved to {filament_manifolds_path}")
-            summary["filament_manifolds_ndnet"] = str(filament_manifolds_path)
 
     skel_native_paths = skeleton_from_mse or {}
     if manual_skel_inputs:
@@ -1507,9 +1256,7 @@ def main() -> None:
     # (disable it with --skip-netconv) so that a batch run can stop after mse or
     # rely on external conversion scripts.
     manifolds_mesh_path: Optional[Path] = None
-    filament_manifolds_mesh_path: Optional[Path] = None
     manifolds_label = sanitize_tag(args.dump_manifolds) if manifolds_path else ""
-    persistence_tag = _extract_persistence_tag(manifolds_path, prefix, "manifolds") if manifolds_path else None
     stats_rows: List[Dict[str, object]] = []
     if args.run_netconv and manifolds_path is not None:
         netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
@@ -1521,33 +1268,10 @@ def main() -> None:
             fmt=args.netconv_format,
             smooth_iters=args.netconv_smooth,
             manifolds_tag=manifolds_label,
-            persistence_tag=persistence_tag,
         )
-        if crop_min_scaled is not None:
-            shift_vtk_points(manifolds_mesh_path, crop_min_scaled)
         print(f"[info] Manifolds exported to {manifolds_mesh_path}")
         summary["manifolds_mesh"] = str(manifolds_mesh_path)
         stats_rows.extend(summarize_vtk(manifolds_mesh_path))
-
-    if args.run_netconv and filament_manifolds_path is not None:
-        netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
-        filament_persistence = _extract_persistence_tag(filament_manifolds_path, prefix, "manifolds")
-        filament_manifolds_mesh_path = convert_manifolds(
-            netconv_bin,
-            filament_manifolds_path,
-            output_dir,
-            prefix,
-            fmt=args.netconv_format,
-            smooth_iters=args.netconv_smooth,
-            manifolds_tag=args.dump_filament_manifolds,
-            persistence_tag=filament_persistence,
-            role="filament_manifolds",
-        )
-        if crop_min_scaled is not None:
-            shift_vtk_points(filament_manifolds_mesh_path, crop_min_scaled)
-        print(f"[info] Filament manifolds exported to {filament_manifolds_mesh_path}")
-        summary["filament_manifolds_mesh"] = str(filament_manifolds_mesh_path)
-        stats_rows.extend(summarize_vtk(filament_manifolds_mesh_path))
 
     # Step 5: convert skeletons (skelconv) if requested. Skeleton conversion is
     # decoupled from extraction, so you can rerun skelconv alone on previously
@@ -1561,7 +1285,6 @@ def main() -> None:
         else:
             skelconv_bin = resolve_command("skelconv", args.disperse_bin_dir)
             for label, path in skel_native_paths.items():
-                skel_persistence = _extract_persistence_tag(path, prefix, label) or persistence_tag
                 skeleton_mesh_paths[label] = convert_skeleton(
                     skelconv_bin,
                     path,
@@ -1570,23 +1293,16 @@ def main() -> None:
                     label,
                     fmt,
                     smooth_iters=args.skelconv_smooth,
-                    persistence_tag=skel_persistence,
                 )
-                if crop_min_scaled is not None:
-                    shift_vtk_points(skeleton_mesh_paths[label], crop_min_scaled)
         summary[f"skeletons_{fmt_tag}"] = ", ".join(
             f"{label}:{path}" for label, path in skeleton_mesh_paths.items()
         )
         for path in skeleton_mesh_paths.values():
             stats_rows.extend(summarize_vtk(path))
 
-    # Delaunay mesh stats if exported.
     if delaunay_mesh_path:
-        if crop_min_scaled is not None:
-            shift_vtk_points(delaunay_mesh_path, crop_min_scaled)
         stats_rows.extend(summarize_vtk(delaunay_mesh_path))
 
-    # Write summary statistics CSV (VTK scalars) if available.
     if stats_rows:
         stats_path = output_dir / f"{prefix}_summary_stats.csv"
         write_stats_csv(stats_rows, stats_path)

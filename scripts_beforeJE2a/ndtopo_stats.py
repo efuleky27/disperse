@@ -22,16 +22,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--delaunay-ndnet", help="Delaunay mesh (NDnet).")
     p.add_argument("--walls-ndnet", help="Walls mesh (NDnet).")
     p.add_argument("--filaments-ndskl", help="Filaments (NDskl).")
-    p.add_argument("--filament-manifolds-ndnet", help="Filament manifolds (NDnet).")
     p.add_argument("--delaunay-vtk", help="Delaunay mesh (VTU).")
     p.add_argument("--walls-vtk", help="Walls mesh (VTU).")
     p.add_argument("--filaments-vtk", help="Filaments (VTP).")
-    p.add_argument("--filament-manifolds-vtk", help="Filament manifolds (VTU).")
     p.add_argument("--output-csv", required=True, help="Path to write stats CSV.")
-    p.add_argument(
-        "--per-point-csv",
-        help="Optional CSV with one row per Delaunay point (id, category, scalars).",
-    )
     p.add_argument("--netconv-bin", default="netconv", help="netconv executable (for auto-conversion).")
     p.add_argument("--skelconv-bin", default="skelconv", help="skelconv executable (for auto-conversion).")
     p.add_argument("--write-vtk", action="store_true", help="Convert NDnet/NDskl to unsmoothed VTU/VTP before parsing.")
@@ -44,11 +38,6 @@ def parse_args() -> argparse.Namespace:
         help="How to interpret delaunay cell IDs: all=int(cell) or zero=only .0 cells.",
     )
     p.add_argument("--walls-id-field", default="true_index", help="ID field for walls/universe (default: true_index).")
-    p.add_argument(
-        "--filament-manifolds-id-field",
-        default="true_index",
-        help="ID field for filament manifolds (default: true_index).",
-    )
     p.add_argument("--filaments-id-field", default="cell", help="ID field for filaments (default: cell -> int(cell)).")
     p.add_argument(
         "--walls-cell-mode",
@@ -61,12 +50,6 @@ def parse_args() -> argparse.Namespace:
         choices=["all", "zero"],
         default="all",
         help="How to interpret filament cell IDs: all=int(cell) or zero=only .0 cells.",
-    )
-    p.add_argument(
-        "--filament-manifolds-cell-mode",
-        choices=["all", "zero"],
-        default="all",
-        help="How to interpret filament manifold cell IDs: all=int(cell) or zero=only .0 cells.",
     )
     p.add_argument(
         "--scalar-fields",
@@ -114,9 +97,6 @@ def ensure_vtu_from_ndnet(path: Path, netconv_bin: str, role: str) -> Path:
     elif role == "walls":
         if "manifolds" not in stem:
             stem = f"{stem}_manifolds"
-    elif role == "filament_manifolds":
-        if "filament_manifolds" not in stem:
-            stem = f"{stem}_filament_manifolds"
     base = path.with_name(f"{stem}_S000.vtu")
     candidates = [base]
     for cand in candidates:
@@ -252,57 +232,38 @@ def main() -> None:
         print(f"  delaunay: {args.delaunay_vtk or args.delaunay_ndnet}")
         print(f"  walls:    {args.walls_vtk or args.walls_ndnet}")
         print(f"  filaments:{args.filaments_vtk or args.filaments_ndskl}")
-        if args.filament_manifolds_vtk or args.filament_manifolds_ndnet:
-            print(f"  filament_manifolds:{args.filament_manifolds_vtk or args.filament_manifolds_ndnet}")
         print(
             f"  delaunay_id_field={args.delaunay_id_field}, walls_id_field={args.walls_id_field}, "
             f"filaments_id_field={args.filaments_id_field}, "
-            f"filament_manifolds_id_field={args.filament_manifolds_id_field}, "
             f"delaunay_cell_mode={args.delaunay_cell_mode}, walls_cell_mode={args.walls_cell_mode}, "
-            f"filaments_cell_mode={args.filaments_cell_mode}, "
-            f"filament_manifolds_cell_mode={args.filament_manifolds_cell_mode}, "
-            f"scalars={args.scalar_fields}"
+            f"filaments_cell_mode={args.filaments_cell_mode}, scalars={args.scalar_fields}"
         )
     # Resolve inputs: prefer VTK if provided, otherwise require native
     delaunay_path = Path(args.delaunay_vtk) if args.delaunay_vtk else Path(args.delaunay_ndnet) if args.delaunay_ndnet else None
     walls_path = Path(args.walls_vtk) if args.walls_vtk else Path(args.walls_ndnet) if args.walls_ndnet else None
     fils_path = Path(args.filaments_vtk) if args.filaments_vtk else Path(args.filaments_ndskl) if args.filaments_ndskl else None
-    filman_path = (
-        Path(args.filament_manifolds_vtk)
-        if args.filament_manifolds_vtk
-        else Path(args.filament_manifolds_ndnet)
-        if args.filament_manifolds_ndnet
-        else None
-    )
 
     if delaunay_path is None or walls_path is None or fils_path is None:
         raise SystemExit("[error] Provide either VTK or NDnet/NDskl inputs for delaunay, walls, and filaments.")
 
-    for p in (delaunay_path, walls_path, fils_path, filman_path):
+    for p in (delaunay_path, walls_path, fils_path):
         if p and not p.exists():
             raise SystemExit(f"[error] Input file not found: {p}")
 
-    if args.write_vtk and (
-        delaunay_path.suffix.lower() == ".ndnet"
-        or walls_path.suffix.lower() == ".ndnet"
-        or fils_path.suffix.lower() == ".ndskl"
-        or (filman_path and filman_path.suffix.lower() == ".ndnet")
-    ):
+    if args.write_vtk and (delaunay_path.suffix.lower() == ".ndnet" or walls_path.suffix.lower() == ".ndnet" or fils_path.suffix.lower() == ".ndskl"):
         if delaunay_path.suffix.lower() == ".ndnet":
             delaunay_path = ensure_vtu_from_ndnet(delaunay_path, args.netconv_bin, role="delaunay")
         if walls_path.suffix.lower() == ".ndnet":
             walls_path = ensure_vtu_from_ndnet(walls_path, args.netconv_bin, role="walls")
         if fils_path.suffix.lower() == ".ndskl":
             fils_path = ensure_vtp_from_ndskl(fils_path, args.skelconv_bin, role="filaments")
-        if filman_path and filman_path.suffix.lower() == ".ndnet":
-            filman_path = ensure_vtu_from_ndnet(filman_path, args.netconv_bin, role="filament_manifolds")
 
     id_field = args.walls_id_field
     skel_id_field = args.filaments_id_field
     scalars = args.scalar_fields
     fallback_ids = ["true_index", "index", "source_index", "cell"]
 
-    universe, uni_ids_list, used_uni = read_vtk_ids(
+    universe, _, used_uni = read_vtk_ids(
         delaunay_path,
         args.delaunay_id_field,
         scalars,
@@ -323,62 +284,31 @@ def main() -> None:
         fallback_ids,
         cell_mode=args.filaments_cell_mode,
     )
-    filman_ids_list: List[int] = []
-    used_fm = ""
-    if filman_path is not None:
-        _, filman_ids_list, used_fm = read_vtk_ids(
-            filman_path,
-            args.filament_manifolds_id_field,
-            [],
-            fallback_ids,
-            cell_mode=args.filament_manifolds_cell_mode,
-        )
     wall_ids = set(wall_ids_list)
     fil_ids = set(fil_ids_list)
-    filman_ids = set(filman_ids_list)
 
     if args.verbose:
-        extra = f" filman:{len(filman_ids)} ({used_fm})" if filman_path is not None else ""
-        print(
-            f"[info] Loaded ids -> universe:{len(universe)} ({used_uni}) walls:{len(wall_ids)} ({used_w}) "
-            f"filaments:{len(fil_ids)} ({used_f}){extra}"
-        )
+        print(f"[info] Loaded ids -> universe:{len(universe)} ({used_uni}) walls:{len(wall_ids)} ({used_w}) filaments:{len(fil_ids)} ({used_f})")
     if len(universe) == 0 or len(wall_ids) == 0 or len(fil_ids) == 0:
         raise SystemExit("[error] Unable to load IDs from provided inputs. Check id fields and file formats.")
 
-    uni_ids = set(uni_ids_list or universe.keys())
-    shared_walls_filaments = wall_ids & fil_ids
-    walls_not_filaments = wall_ids - fil_ids
-    filaments_not_walls = fil_ids - wall_ids
-    unassigned = uni_ids - (wall_ids | fil_ids | filman_ids)
+    uni_ids = set(universe.keys())
+    shared = wall_ids & fil_ids
+    wall_only = wall_ids - fil_ids
+    fil_only = fil_ids - wall_ids
+    unassigned = uni_ids - (wall_ids | fil_ids)
 
-    category_list: List[Tuple[str, set[int]]] = [
-        ("walls", wall_ids),
-        ("filaments", fil_ids),
-        ("walls_not_filaments", walls_not_filaments),
-        ("filaments_not_walls", filaments_not_walls),
-        ("shared_walls_filaments", shared_walls_filaments),
-    ]
-
-    if filman_path is not None:
-        shared_walls_filament_manifolds = wall_ids & filman_ids
-        shared_filaments_filament_manifolds = fil_ids & filman_ids
-        walls_not_filament_manifolds = wall_ids - filman_ids
-        filament_manifolds_not_walls = filman_ids - wall_ids
-        category_list.extend(
-            [
-                ("filament_manifolds", filman_ids),
-                ("walls_not_filament_manifolds", walls_not_filament_manifolds),
-                ("filament_manifolds_not_walls", filament_manifolds_not_walls),
-                ("shared_walls_filament_manifolds", shared_walls_filament_manifolds),
-                ("shared_filaments_filament_manifolds", shared_filaments_filament_manifolds),
-            ]
-        )
-
-    category_list.append(("unassigned", unassigned))
+    categories = {
+        "walls": wall_ids,
+        "filaments": fil_ids,
+        "shared": shared,
+        "wall_only": wall_only,
+        "filament_only": fil_only,
+        "unassigned": unassigned,
+    }
 
     rows: List[Dict[str, object]] = []
-    for label, ids in category_list:
+    for label, ids in categories.items():
         stats = aggregate(ids, universe, scalars)
         stats["category"] = label
         rows.append(stats)
@@ -403,32 +333,6 @@ def main() -> None:
         for row in rows:
             writer.writerow(row)
     print(f"[done] wrote {args.output_csv}")
-
-    if args.per_point_csv:
-        per_point_fields = [
-            "delaunay_id",
-            "is_wall",
-            "is_filament",
-            "is_filament_manifold",
-        ] + scalars
-        with open(args.per_point_csv, "w", newline="", encoding="ascii") as sink:
-            writer = csv.DictWriter(sink, fieldnames=per_point_fields)
-            writer.writeheader()
-            for idx in sorted(uni_ids):
-                in_wall = idx in wall_ids
-                in_fil = idx in fil_ids
-                in_filman = filman_path is not None and idx in filman_ids
-                row = {
-                    "delaunay_id": idx,
-                    "is_wall": int(in_wall),
-                    "is_filament": int(in_fil),
-                    "is_filament_manifold": int(in_filman),
-                }
-                vals = universe.get(idx, {})
-                for name in scalars:
-                    row[name] = vals.get(name, 0.0)
-                writer.writerow(row)
-        print(f"[done] wrote {args.per_point_csv}")
 
 
 if __name__ == "__main__":

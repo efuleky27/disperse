@@ -1,0 +1,81 @@
+---
+title: "`aggregate_topology_points.py` User Guide"
+format:
+  html:
+    embed-resources: true
+---
+
+## `aggregate_topology_points.py` User Guide
+
+Use `scripts/aggregate_topology_points.py` to combine many `*_topology_points.csv` files into:
+- A single aggregated `topology_stats` CSV (same shape as per-crop stats).
+- Per-category histograms for each scalar (CSV, plus PNG if matplotlib is available).
+
+This is designed for large datasets (many crops and large per-point files).
+
+### What it does
+- Scans for `*_topology_points.csv` files (or uses explicit inputs).
+- Aggregates category statistics across all crops.
+- Writes histogram CSVs (and optional PNGs) per category and scalar.
+
+### Requirements
+- Python in your active environment.
+- Optional but recommended: `polars` (fast path, default).
+- Optional: `matplotlib` for PNG histogram plots.
+
+### CLI
+```bash
+python scripts/aggregate_topology_points.py \
+  --root <OUTPUT_ROOT> \
+  --output-dir <COMBINED_DIR> \
+  --output-prefix <PREFIX> \
+  [--glob "**/*_topology_points.csv"] \
+  [--inputs file1.csv file2.csv ...] \
+  [--bins 100] \
+  [--hist-percentile-range 1 99] \
+  [--engine polars|stream|python] \
+  [--no-plots]
+```
+
+### Engines
+- `polars` (default): fast, exact stats, scales well.
+- `stream`: fast and memory-light, approximate quantiles (uses histogram bins).
+- `python`: exact but slow on large files.
+
+### Output
+In `--output-dir` with `--output-prefix`:
+- `<prefix>_topology_stats.csv`
+- `<prefix>_<category>_<scalar>_hist.csv`
+- `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)
+
+Categories follow `ndtopo_stats.py`, including filament-manifold variants when present.
+
+### Examples
+Aggregate all crops under a root, fast path:
+```bash
+python scripts/aggregate_topology_points.py \
+  --root outputs/quijote_batches_000 \
+  --output-dir outputs/quijote_batches_000/combined \
+  --output-prefix quijote_batches_000 \
+  --engine polars \
+  --hist-percentile-range 1 99
+```
+
+Use explicit files and skip PNG plots:
+```bash
+python scripts/aggregate_topology_points.py \
+  --inputs outputs/crop_a/topology_points.csv outputs/crop_b/topology_points.csv \
+  --output-dir outputs/combined \
+  --output-prefix combined \
+  --no-plots
+```
+
+Streaming mode (approximate quantiles):
+```bash
+python scripts/aggregate_topology_points.py \
+  --root outputs/quijote_batches_000 \
+  --output-dir outputs/quijote_batches_000/combined \
+  --output-prefix quijote_batches_000 \
+  --engine stream \
+  --bins 50
+```

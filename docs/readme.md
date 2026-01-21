@@ -26,7 +26,7 @@ Concise reference for pulling Quijote data, running the DisPerSE pipelines, and 
   - `scripts/export_grid_vti.py`: wrap a 3D HDF5 grid as VTI for ParaView.
   - `scripts/export_snapshot_vtu.py`: stream snapshot particles to VTU (or VTI from an existing grid with `--density-field`).
   - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
-  - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars, matches by `true_index`/`int(cell)`).
+  - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and `cell` handling for Delaunay/walls/filaments).
   - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
 - `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
 
@@ -67,6 +67,21 @@ globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df
 ### Snapshot → walls/filaments (DisPerSE)
 Environment: `conda activate disperse` (with `hdf5plugin`, `vtkmodules`).
 
+To keep `pvpython` on PATH whenever you activate the environment:
+```bash
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
+
+cat > "$CONDA_PREFIX/etc/conda/activate.d/paraview_path.sh" <<'EOF'
+export _PV_OLD_PATH="$PATH"
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"
+EOF
+
+cat > "$CONDA_PREFIX/etc/conda/deactivate.d/paraview_path.sh" <<'EOF'
+export PATH="$_PV_OLD_PATH"
+unset _PV_OLD_PATH
+EOF
+```
+
 Typical run (cropped, periodic, rebased for tessellation, shifted VTK outputs):
 ```bash
 python scripts/analyze_snapshot.py \
@@ -79,6 +94,7 @@ python scripts/analyze_snapshot.py \
   --export-delaunay \
   --mse-nsig 3.0 \
   --dump-manifolds JE1a \
+  --dump-filament-manifolds JE2a \
   --dump-arcs U \
   --netconv-smooth 20 \
   --skelconv-smooth 20
@@ -142,6 +158,7 @@ python scripts/ndtopo_stats.py \
   --delaunay-vtk outputs/snap_010_subbox/snap_010_delaunay.vtu \
   --walls-vtk    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu \
   --filaments-vtk outputs/snap_010_subbox/snap_010_filaments_U.vtp \
+  --delaunay-id-field true_index \
   --walls-id-field true_index \
   --filaments-id-field cell \
   --scalar-fields mass field_value log_field_value \
@@ -158,7 +175,7 @@ python scripts/batch_crop_and_clip.py \
   --crop-size 500000 500000 100000 \
   --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
   --mse-nsig 5.0 \
-  --dump-manifolds JE1a --dump-arcs U \
+  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
   --netconv-smooth 20 --skelconv-smooth 20 \
   --slab-step 10 --slab-thickness 10 \
   --resample-dims 500 500 100 \
@@ -202,6 +219,7 @@ python scripts/prepare_cosmoflow_snapshot.py \
 - Boundaries: `--periodic`, `--delaunay-btype` (wraparound, block options).
 +- Persistence: `--mse-nsig` or `--persistence-cut` (higher → prune weaker features; multiple values allowed, e.g., `--nsig 3.5 4.0 5.0`).
 - Manifolds: `--dump-manifolds` (JD1d walls, J0a void minima, etc.).
+- Filament manifolds (optional): `--dump-filament-manifolds` (e.g., JE2a).
 - Threshold style: absolute (`--persistence-cut`) vs. sigma (`--mse-nsig`).
 - Units: `--input-unit` / `--output-unit` to keep coordinate scales consistent.
 - Post-visualization: `visualize_walls_paraview.py --threshold` can hide/show ranges.

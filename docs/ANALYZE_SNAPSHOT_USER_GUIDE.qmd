@@ -59,8 +59,9 @@ Below is a description of every argument and the overall workflow.
 * `--mse-threads N` — OpenMP threads for `mse`.
 * `--mse-vertex-as-minima` — forward `-vertexAsMinima`.
 * `--dump-manifolds SPEC` — descriptor for `mse -dumpManifolds` (default `JD1d`).
+* `--dump-filament-manifolds TAG` — optional second manifolds tag (e.g., `JE2a`) to dump filament manifolds; runs `mse` a second time.
 * `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
-  - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). If you need separate files per tag, run `mse`/`analyze_snapshot.py` separately for each `--dump-manifolds`.
+  - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). Use `--dump-filament-manifolds` for one extra tag, or run separate passes if you need more.
 
 ### Conversion / Output Formats
 
@@ -93,6 +94,7 @@ python scripts/analyze_snapshot.py \
   --export-delaunay \
   --mse-nsig 3.0 \
   --dump-manifolds JE1a \
+  --dump-filament-manifolds JE2a \
   --dump-arcs U \
   --netconv-smooth 20 \
   --skelconv-smooth 20
@@ -142,7 +144,8 @@ python scripts/analyze_snapshot.py \
 
 ### Naming conventions (VTK/NDnet/NDskl)
 - Delaunay: `<prefix>_delaunay.S###.vtu` (or `_S000` for unsmoothed conversions).
-- Manifolds: `<prefix>_sX_manifolds_<TAG>.S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
+- Manifolds (walls): `<prefix>_sX_manifolds_<TAG>.S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
+- Filament manifolds (optional): `<prefix>_sX_filament_manifolds_<TAG>.S###.vtu` (NDnet from `mse`: `<prefix>_sX_manifolds_<TAG>.NDnet`).
 - Skeletons: `<prefix>_sX_arcs_<TAG>.S###.vtp` (NDskl: `<prefix>_sX_arcs_<TAG>.NDskl`).
 - Only one dot is used (before the extension); persistence (`sX`) precedes the role/tag; smoothing (`S###`) is appended by converters.
 

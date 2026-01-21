@@ -50,6 +50,7 @@ python scripts/analyze_snapshot.py \
   --export-delaunay \
   --mse-nsig 3.0 \
   --dump-manifolds JE1a \
+  --dump-filament-manifolds JE2a \
   --dump-arcs U \
   --netconv-smooth 20 \
   --skelconv-smooth 20
@@ -57,7 +58,7 @@ python scripts/analyze_snapshot.py \
 
 **Outputs (per crop)**  
 - Native (rebased coords): `<prefix>.NDnet`, `<prefix>_s*.NDskl`.
-- VTK (shifted to global): `<prefix>_delaunay[.S###].vtu`, `<prefix>_manifolds_<TAG>[.S###].vtu`, `<prefix>_filaments_<ARC>[.S###].vtp`.
+- VTK (shifted to global): `<prefix>_delaunay[.S###].vtu`, `<prefix>_manifolds_<TAG>[.S###].vtu`, `<prefix>_filaments_<ARC>[.S###].vtp`, and optional `<prefix>_filament_manifolds_<TAG>[.S###].vtu`.
 - `<prefix>_summary_stats.csv` (VTK scalar stats).
 
 **Why it matters**  
@@ -66,7 +67,7 @@ Produces the authoritative density/topology datasets used by Stage 2 (slab clipp
 ## Stage 2: `batch_clip.py` (slab clip + 2D/3D views)
 
 **Purpose (what/why)**  
-Take the walls/filaments/density VTKs and make slab-focused products: clipped 3D, flattened 2D, averaged density, and PNGs. Once flattened, you can layer density, walls, and filaments in 2D to see where structures overlap or diverge.
+Take the walls/filaments/density VTKs (plus optional filament-manifold VTKs) and make slab-focused products: clipped 3D, flattened 2D, averaged density, and PNGs. Once flattened, you can layer density, walls, and filaments in 2D to see where structures overlap or diverge.
 
 **How it works (plain steps)**  
 1) **Clip** walls/filaments/density to the slab bounds.  
@@ -74,7 +75,7 @@ Take the walls/filaments/density VTKs and make slab-focused products: clipped 3D
 3) **Render** optional PNGs (3D slices, 2D flats, composite overlays).
 
 **Key inputs**  
-Walls VTU, Filaments VTP, Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.
+Walls VTU, Filaments VTP, optional filament manifolds VTU, Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.
 
 Example:
 ```bash
@@ -103,16 +104,17 @@ Provides ready-to-view 2D/3D slices aligned to a slab, and flattened 2D layers t
 ## Stage 3: `ndtopo_stats.py` (overlap/mass attribution)
 
 **Purpose (what/why)**  
-Compute how many IDs belong to walls, filaments, both, or neither, and aggregate scalar sums/means for those categories. Scalars always come from the Delaunay mesh; IDs come from walls (`true_index`) and filaments (`int(cell)`).
+Compute how many IDs belong to walls, filaments, both, or neither, and aggregate scalar sums/means for those categories. Scalars always come from the Delaunay mesh; ID fields and `cell` handling are configurable via flags (e.g., `true_index`, `cell` with optional `.0` filtering).
 
 **Inputs (VTK preferred; `--write-vtk` auto-converts native)**  
-- Delaunay VTU (or NDnet) with `true_index` and scalars (`mass`, `field_value`, `log_field_value`).  
-- Walls VTU (or NDnet) with `true_index`.  
-- Filaments VTP (or NDskl) with `cell` (integer part used as ID).
+- Delaunay VTU (or NDnet) with an ID field (`true_index` by default) and scalars (`mass`, `field_value`, `log_field_value`).  
+- Walls VTU (or NDnet) with an ID field (`true_index` by default).  
+- Filaments VTP (or NDskl) with an ID field (`cell` by default; can keep only `.0` cells if desired).
 
 **Key flags**  
 - `--write-vtk` (convert NDnet/NDskl to unsmoothed VTU/VTP if needed)  
-- `--walls-id-field true_index`, `--filaments-id-field cell`  
+- `--delaunay-id-field true_index`, `--walls-id-field true_index`, `--filaments-id-field cell`  
+- `--delaunay-cell-mode all|zero`, `--walls-cell-mode all|zero`, `--filaments-cell-mode all|zero`
 - `--scalar-fields mass field_value log_field_value`  
 - `--netconv-bin/--skelconv-bin` if conversion is required
 
@@ -122,14 +124,15 @@ python scripts/ndtopo_stats.py --verbose --write-vtk \
   --delaunay-ndnet outputs/snap_010_subbox/snap_010.NDnet \
   --walls-ndnet    outputs/snap_010_subbox/snap_010_s3_manifolds_JE1a.NDnet \
   --filaments-ndskl outputs/snap_010_subbox/snap_010_s3.U.NDskl \
-  --walls-id-field true_index --filaments-id-field cell \
+  --delaunay-id-field true_index --walls-id-field true_index --filaments-id-field cell \
+  --delaunay-cell-mode all --walls-cell-mode all --filaments-cell-mode all \
   --scalar-fields mass field_value log_field_value \
   --output-csv outputs/snap_010_subbox/topology_stats.csv \
   --netconv-bin /path/to/netconv --skelconv-bin /path/to/skelconv
 ```
 
 **Outputs**  
-- CSV with rows for `shared`, `wall_only`, `filament_only`, `unassigned`; columns: `count`, and `<scalar>_sum`/`<scalar>_mean` for each scalar.  
+- CSV with rows for `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament-manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`); columns: `count`, and `<scalar>_sum`/`<scalar>_mean` for each scalar.  
 - Note: Many filament `cell` IDs won’t match Delaunay `true_index` (interpolated arc samples), so filament mass can be < filament count.
 
 **Why it matters**  

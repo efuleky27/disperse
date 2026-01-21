@@ -33,7 +33,6 @@ def parse_args():
     parser.add_argument("--input-dir", default=".", help="Base directory for input paths (prepended when relative).")
     parser.add_argument("--walls", required=True, help="Input manifolds (walls) VTU.")
     parser.add_argument("--filaments", required=True, help="Input filaments VTP.")
-    parser.add_argument("--filament-manifolds", help="Optional filament manifolds VTU (e.g., JE2a).")
     parser.add_argument("--delaunay", required=True, help="Input Delaunay VTU for density.")
     parser.add_argument("--slab-axis", choices=["x", "y", "z"], default="z", help="Axis along which to clip/flatten.")
     parser.add_argument("--slab-origin", type=float, default=0.0, help="Lower bound of the slab along the chosen axis.")
@@ -332,7 +331,6 @@ def render_composite_png(
     resolution,
     opacity: float,
     percentile_range: Optional[Tuple[float, float]] = None,
-    filament_manifolds_path: Optional[str] = None,
 ):
     """Render density (log_field_value) with walls/filaments overlaid."""
     view = CreateRenderView()
@@ -387,26 +385,9 @@ def render_composite_png(
     fils_disp.RescaleTransferFunctionToDataRange(True, False)
     fils_disp.SetScalarBarVisibility(view, False)
 
-    filman = None
-    if filament_manifolds_path:
-        filman = OpenDataFile(filament_manifolds_path)
-        filman_disp = Show(filman, view)
-        filman_disp.Representation = "Surface"
-        filman_disp.Opacity = opacity
-        ColorBy(filman_disp, ('POINTS', 'topology_type'))
-        lut_m = GetColorTransferFunction('filament_manifolds_topology_type')
-        lut_m.RGBPoints = [0, 0.2, 0.5, 1.0, 1, 0.2, 0.5, 1.0]
-        lut_m.ColorSpace = 'RGB'
-        lut_m.ScalarRangeInitialized = 1.0
-        filman_disp.LookupTable = lut_m
-        filman_disp.RescaleTransferFunctionToDataRange(True, False)
-        filman_disp.SetScalarBarVisibility(view, False)
-
     view.ResetCamera()
     SaveScreenshot(png_path, view, ImageResolution=resolution)
     Delete(view); Delete(dens); Delete(walls); Delete(fils)
-    if filman is not None:
-        Delete(filman)
 
 
 def process_field(name, path, axis, z0, thick, dims, scalar_name, out_dir, prefix, tag_value=None):
@@ -436,13 +417,6 @@ def main():
     base_dir = args.input_dir
     walls_path = args.walls if os.path.isabs(args.walls) else os.path.join(base_dir, args.walls)
     filaments_path = args.filaments if os.path.isabs(args.filaments) else os.path.join(base_dir, args.filaments)
-    filament_manifolds_path = None
-    if args.filament_manifolds:
-        filament_manifolds_path = (
-            args.filament_manifolds
-            if os.path.isabs(args.filament_manifolds)
-            else os.path.join(base_dir, args.filament_manifolds)
-        )
     density_path = args.delaunay if os.path.isabs(args.delaunay) else os.path.join(base_dir, args.delaunay)
     axis = args.slab_axis
     z0 = args.slab_origin
@@ -456,34 +430,15 @@ def main():
     # Input summaries (if readable).
     stats_rows.extend(summarize_vtk(Path(walls_path)))
     stats_rows.extend(summarize_vtk(Path(filaments_path)))
-    if filament_manifolds_path:
-        stats_rows.extend(summarize_vtk(Path(filament_manifolds_path)))
     stats_rows.extend(summarize_vtk(Path(density_path)))
 
     # Walls and filaments
     walls_info = process_field("walls", walls_path, axis, z0, thick, [nx, ny], scalar_name, out_dir, prefix, tag_value=1)
     fils_info = process_field("filaments", filaments_path, axis, z0, thick, [nx, ny], scalar_name, out_dir, prefix, tag_value=2)
-    filman_info = None
-    if filament_manifolds_path:
-        filman_info = process_field(
-            "filament_manifolds",
-            filament_manifolds_path,
-            axis,
-            z0,
-            thick,
-            [nx, ny],
-            scalar_name,
-            out_dir,
-            prefix,
-            tag_value=3,
-        )
     stats_rows.extend(summarize_vtk(Path(walls_info["paths"]["3d"])))
     stats_rows.extend(summarize_vtk(Path(fils_info["paths"]["3d"])))
     stats_rows.extend(summarize_vtk(Path(walls_info["paths"]["flat"])))
     stats_rows.extend(summarize_vtk(Path(fils_info["paths"]["flat"])))
-    if filman_info:
-        stats_rows.extend(summarize_vtk(Path(filman_info["paths"]["3d"])))
-        stats_rows.extend(summarize_vtk(Path(filman_info["paths"]["flat"])))
 
     # Density: clip/save, flatten, average; plus resampled VTI
     density_reader = XMLUnstructuredGridReader(FileName=[density_path])
@@ -515,8 +470,6 @@ def main():
     # Logs
     print(f"[info] walls3d: points={walls_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={walls_info['clip'].GetDataInformation().GetNumberOfCells()}")
     print(f"[info] fils3d: points={fils_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={fils_info['clip'].GetDataInformation().GetNumberOfCells()}")
-    if filman_info:
-        print(f"[info] filman3d: points={filman_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={filman_info['clip'].GetDataInformation().GetNumberOfCells()}")
     print(f"[info] density3d (vti) dims: {density_vti.GetDimensions()}")
 
     # PNGs
@@ -539,15 +492,6 @@ def main():
             res,
             percentile_range=percentile_range,
         )
-        if filman_info:
-            render_png(
-                filman_info["paths"]["3d"],
-                os.path.join(out_dir, f"{prefix}_filament_manifolds_3d.png"),
-                scalar_name,
-                "3d",
-                res,
-                percentile_range=percentile_range,
-            )
         render_png(
             walls_info["paths"]["flat"],
             os.path.join(out_dir, f"{prefix}_walls_topology.png"),
@@ -578,22 +522,6 @@ def main():
             res,
             percentile_range=percentile_range,
         )
-        if filman_info:
-            render_png(
-                filman_info["paths"]["flat"],
-                os.path.join(out_dir, f"{prefix}_filament_manifolds_topology.png"),
-                "topology_type",
-                "2d",
-                res,
-            )
-            render_png(
-                filman_info["paths"]["flat"],
-                os.path.join(out_dir, f"{prefix}_filament_manifolds_logfield.png"),
-                scalar_name,
-                "2d",
-                res,
-                percentile_range=percentile_range,
-            )
         render_png(
             density_3d,
             os.path.join(out_dir, f"{prefix}_density_3d.png"),
@@ -620,32 +548,16 @@ def main():
             opacity=args.composite_opacity,
             percentile_range=percentile_range,
         )
-        if filman_info:
-            render_composite_png(
-                density_flat_path,
-                walls_info["paths"]["flat"],
-                fils_info["paths"]["flat"],
-                os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_filament_manifolds.png"),
-                res,
-                opacity=args.composite_opacity,
-                percentile_range=percentile_range,
-                filament_manifolds_path=filman_info["paths"]["flat"],
-            )
 
     # Combine walls+filaments flattened
     combined_2d = os.path.join(out_dir, f"{prefix}_walls_filaments.vtm")
     mb = GroupDatasets(Input=[walls_info["flat"], fils_info["flat"]])
     SaveData(combined_2d, proxy=mb)
-    combined_all = None
-    if filman_info:
-        combined_all = os.path.join(out_dir, f"{prefix}_walls_filaments_filament_manifolds.vtm")
-        mb_all = GroupDatasets(Input=[walls_info["flat"], fils_info["flat"], filman_info["flat"]])
-        SaveData(combined_all, proxy=mb_all)
     stats_path = os.path.join(out_dir, f"{prefix}_summary_stats.csv")
     write_stats_csv(stats_rows, Path(stats_path))
 
     print(f"[done] wrote:")
-    output_paths = [
+    for path in [
         walls_info["paths"]["3d"],
         fils_info["paths"]["3d"],
         walls_info["paths"]["flat"],
@@ -658,22 +570,7 @@ def main():
         density_avg_path,
         combined_2d,
         stats_path,
-    ]
-    if filman_info:
-        output_paths.extend(
-            [
-                filman_info["paths"]["3d"],
-                filman_info["paths"]["flat"],
-                filman_info["avg"],
-            ]
-        )
-    if combined_all:
-        output_paths.append(combined_all)
-    if args.save_pngs and filman_info:
-        output_paths.append(
-            os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_filament_manifolds.png")
-        )
-    for path in output_paths:
+    ]:
         print(f"  {path}")
 
 

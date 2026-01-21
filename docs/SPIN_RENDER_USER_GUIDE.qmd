@@ -20,6 +20,21 @@ Use `scripts/spin_render.py` to render a rotating camera animation of a VTK data
 - A readable VTK file (VTU/VTP/VTI/VTR).
 - `ffmpeg` (optional, for MP4 stitching).
 
+To keep `pvpython` on PATH whenever you activate the conda environment:
+```bash
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
+
+cat > "$CONDA_PREFIX/etc/conda/activate.d/paraview_path.sh" <<'EOF'
+export _PV_OLD_PATH="$PATH"
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"
+EOF
+
+cat > "$CONDA_PREFIX/etc/conda/deactivate.d/paraview_path.sh" <<'EOF'
+export PATH="$_PV_OLD_PATH"
+unset _PV_OLD_PATH
+EOF
+```
+
 ### CLI
 ```bash
 pvpython scripts/spin_render.py \
@@ -30,6 +45,7 @@ pvpython scripts/spin_render.py \
   [--zoom Z] \
   [--scalar NAME] \
   [--range-min MIN --range-max MAX] \
+  [--percentile-range PLOW PHIGH] \
   [--colormap PRESET]
 ```
 
@@ -41,6 +57,7 @@ pvpython scripts/spin_render.py \
 - `--zoom` – Zoom factor baked into the orbit radius (default 1.2).
 - `--scalar` – Point-data array to color by (default `log_field_value`).
 - `--range-min/--range-max` – Fixed color range. If omitted, auto-range is used.
+- `--percentile-range` – Clamp the colormap to the given percentiles (e.g., `1 99`). Mutually exclusive with fixed range.
 - `--colormap` – ParaView preset name (default `Fast`).
 
 ### Animated elevation + zoom

@@ -10,13 +10,28 @@ format:
 Use `scripts/batch_clip.py` to clip DisPerSE outputs to a slab, export clipped 3D data, and produce flattened 2D views plus a Z-averaged density map for ParaView or downstream tools.
 
 ### What it does
-- Clips walls (manifolds), filaments, and the Delaunay/density volume to a user-defined slab along x/y/z.
+- Clips walls (manifolds), filaments, optional filament manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.
 - Exports both the clipped 3D datasets and flattened 2D versions (walls/filaments/density scaled onto a plane, averaged over the slab depth - vti files).
 - Keeps topology tags as point data (`topology_type`) for easy coloring.
 
 ### Requirements
 - ParaView pvpython (e.g., `/Applications/ParaView-6.0.1.app/Contents/bin/pvpython`).
-- Inputs: walls VTU, filaments VTP, Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).
+- Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).
+
+To keep `pvpython` on PATH whenever you activate the conda environment:
+```bash
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
+
+cat > "$CONDA_PREFIX/etc/conda/activate.d/paraview_path.sh" <<'EOF'
+export _PV_OLD_PATH="$PATH"
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"
+EOF
+
+cat > "$CONDA_PREFIX/etc/conda/deactivate.d/paraview_path.sh" <<'EOF'
+export PATH="$_PV_OLD_PATH"
+unset _PV_OLD_PATH
+EOF
+```
 
 ### CLI
 ```bash
@@ -24,6 +39,7 @@ pvpython scripts/batch_clip.py \
   --input-dir <INPUT_DIR> \
   --walls <walls.vtu> \
   --filaments <filaments.vtp> \
+  [--filament-manifolds <filament_manifolds.vtu>] \
   --delaunay <delaunay.vtu> \
   --output-dir <OUTPUT_DIR> \
   --output-prefix <PREFIX> \
@@ -31,34 +47,41 @@ pvpython scripts/batch_clip.py \
   --slab-origin <VALUE> \
   --slab-thickness <VALUE> \
   [--resample-dims NX NY NZ] \
-  [--scalar-name log_field_value]
+  [--scalar-name log_field_value] \
+  [--png-percentile-range PLOW PHIGH]
 ```
-- `--walls/--filaments/--delaunay` are required; relative paths are joined to `--input-dir`.
+- `--walls/--filaments/--delaunay` are required; `--filament-manifolds` is optional. Relative paths are joined to `--input-dir`.
 - `--output-dir` is required. Files are named with the prefix you supply.
 - `--slab-axis`, `--slab-origin`, `--slab-thickness` define the clip.
 - `--resample-dims` controls the regular grid used before clipping and averaging density (default 512 512 64).
 - `--scalar-name` chooses which point scalar to average for density (default `log_field_value`).
+- `--png-percentile-range` clamps PNG coloring to the given percentile range (e.g., `1 99`) for scalar renders.
 - `--save-pngs` also renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). `--png-resolution WIDTH HEIGHT` sets image size (default 1600×1200). `--composite-opacity` controls wall/filament overlay opacity in the composite (default 0.6).
-- Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>.S###.vtu`, `*_filaments_<arc>.S###.vtp`, `*_delaunay.vtu`.
+- Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>.S###.vtu`, `*_filament_manifolds_<tag>.S###.vtu`, `*_filaments_<arc>.S###.vtp`, `*_delaunay.vtu`.
 
 ### Outputs (all in `--output-dir`)
 - `<PREFIX>_walls_3d.vtu` – clipped 3D walls (point-data `topology_type=1`).
 - `<PREFIX>_filaments_3d.vtp` – clipped 3D filaments (`topology_type=2`).
+- `<PREFIX>_filament_manifolds_3d.vtu` – clipped 3D filament manifolds (`topology_type=3`, if provided).
 - `<PREFIX>_walls.vtu` – walls flattened to the slab plane.
 - `<PREFIX>_filaments.vtp` – filaments flattened to the slab plane.
+- `<PREFIX>_filament_manifolds.vtu` – filament manifolds flattened to the slab plane (if provided).
 - `<PREFIX>_density_3d.vtu` – clipped density slab (unstructured).
 - `<PREFIX>_density.vtu` – flattened density slab.
 - `<PREFIX>_density_3d.vti` – resampled slab (structured) for clean volume/slice rendering.
 - `<PREFIX>_density_avg.vti` – density averaged over slab depth.
 - `<PREFIX>_walls_filaments.vtm` – multiblock of the flattened walls + filaments.
+- `<PREFIX>_walls_filaments_filament_manifolds.vtm` – multiblock including filament manifolds (if provided).
 - `<PREFIX>_summary_stats.csv` – per-array scalar stats (count, sum, mean, median, quartiles, min/max, std, bounding-box size/volume) for all readable VTU/VTP inputs/outputs.
 - PNGs (when `--save-pngs` is used):
-  - `<PREFIX>_walls_3d.png`, `<PREFIX>_filaments_3d.png` – 3D surfaces colored by `log_field_value`.
+  - `<PREFIX>_walls_3d.png`, `<PREFIX>_filaments_3d.png`, `<PREFIX>_filament_manifolds_3d.png` – 3D surfaces colored by `log_field_value`.
   - `<PREFIX>_walls_topology.png`, `<PREFIX>_walls_logfield.png` – 2D walls colored by `topology_type` / `log_field_value`.
   - `<PREFIX>_filaments_topology.png`, `<PREFIX>_filaments_logfield.png` – 2D filaments colored by `topology_type` / `log_field_value`.
+  - `<PREFIX>_filament_manifolds_topology.png`, `<PREFIX>_filament_manifolds_logfield.png` – 2D filament manifolds colored by `topology_type` / `log_field_value`.
   - `<PREFIX>_density_3d.png` – slice of the 3D density slab colored by `log_field_value`.
   - `<PREFIX>_density.png` – 2D flattened density colored by `log_field_value`.
   - `<PREFIX>_composite_density_walls_filaments.png` – composite: density base, walls light green, filaments red; overlay opacity controlled by `--composite-opacity`.
+  - `<PREFIX>_composite_density_walls_filaments_filament_manifolds.png` – composite that also includes filament manifolds (blue) when `--filament-manifolds` is provided.
 
 ### Example
 ```bash
@@ -66,6 +89,7 @@ PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch
   --input-dir outputs/snap_010_cropped \
   --walls snap_010_manifolds_JE1a.S020.vtu \
   --filaments snap_010_filaments_U.S020.vtp \
+  --filament-manifolds snap_010_filament_manifolds_JE2a.S020.vtu \
   --delaunay snap_010_delaunay.vtu \
   --output-dir outputs/snap_010_cropped/auto2d \
   --output-prefix snap_010 \

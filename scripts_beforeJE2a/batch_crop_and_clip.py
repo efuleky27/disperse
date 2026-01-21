@@ -11,7 +11,7 @@ Usage example:
       --mse-nsig 5.0 \
       --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
       --slab-step 10 --slab-thickness 10 \
-      --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
+      --dump-manifolds JE1a --dump-arcs U \
       --netconv-smooth 20 --skelconv-smooth 20
 """
 
@@ -40,10 +40,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--delaunay-btype", default="periodic")
     p.add_argument("--mse-nsig", type=float, default=5.0)
     p.add_argument("--dump-manifolds", default="JE1a")
-    p.add_argument(
-        "--dump-filament-manifolds",
-        help="Optional manifolds tag for filament surfaces (e.g., JE2a).",
-    )
     p.add_argument("--dump-arcs", default="U")
     p.add_argument("--netconv-smooth", type=int, default=20)
     p.add_argument("--skelconv-smooth", type=int, default=20)
@@ -62,16 +58,6 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--input-unit", choices=("kpc/h", "mpc/h"), default="kpc/h")
     p.add_argument("--output-unit", choices=("kpc/h", "mpc/h"), default="mpc/h")
     p.add_argument("--stats-script", default="scripts/ndtopo_stats.py", help="Path to ndtopo_stats.py.")
-    p.add_argument(
-        "--write-per-point-csv",
-        action="store_true",
-        help="Also write per-point topology CSVs (one per crop).",
-    )
-    p.add_argument(
-        "--skip-slabs",
-        action="store_true",
-        help="Skip running batch_clip.py slabs (analyze + stats only).",
-    )
     return p.parse_args()
 
 
@@ -175,7 +161,6 @@ def main() -> None:
             str(args.mse_nsig),
             "--dump-manifolds",
             args.dump_manifolds,
-            *(["--dump-filament-manifolds", args.dump_filament_manifolds] if args.dump_filament_manifolds else []),
             "--dump-arcs",
             args.dump_arcs,
             "--netconv-smooth",
@@ -204,19 +189,7 @@ def main() -> None:
             print(f"[warn] No skeleton NDskl found for tag {args.dump_arcs} in {crop_dir}, skipping stats.")
             continue
         fils_ndskl = skel_matches[-1]
-        filament_manifolds_ndnet = None
-        if args.dump_filament_manifolds:
-            filament_matches = sorted(
-                crop_dir.glob(f"{crop_prefix}*manifolds*{args.dump_filament_manifolds}*.NDnet")
-            )
-            if filament_matches:
-                filament_manifolds_ndnet = filament_matches[-1]
-            else:
-                print(
-                    f"[warn] No filament manifolds NDnet found for tag {args.dump_filament_manifolds} in {crop_dir}."
-                )
         stats_csv = crop_dir / f"{crop_prefix}_topology_stats.csv"
-        points_csv = crop_dir / f"{crop_prefix}_topology_points.csv"
         stats_cmd = [
             sys.executable,
             args.stats_script,
@@ -235,22 +208,7 @@ def main() -> None:
             "--output-csv",
             str(stats_csv),
         ]
-        if args.write_per_point_csv:
-            stats_cmd.extend(["--per-point-csv", str(points_csv)])
-        if filament_manifolds_ndnet:
-            stats_cmd.extend(
-                [
-                    "--filament-manifolds-ndnet",
-                    str(filament_manifolds_ndnet),
-                    "--filament-manifolds-id-field",
-                    "true_index",
-                ]
-            )
         run(stats_cmd)
-
-        if args.skip_slabs:
-            print(f"[info] skip-slabs enabled, skipping slab generation for {crop_prefix}")
-            continue
 
         # Build expected filenames deterministically
         def expect_file(path: Path) -> Path:
@@ -266,14 +224,10 @@ def main() -> None:
 
         persist_walls = _persist_from(walls_ndnet.stem)
         persist_fils = _persist_from(fils_ndskl.stem)
-        persist_filman = _persist_from(filament_manifolds_ndnet.stem) if filament_manifolds_ndnet else ""
 
         if not persist_walls or not persist_fils:
             print(f"[warn] Could not determine persistence tag (walls:{persist_walls}, fils:{persist_fils}), skipping slabs for {crop_prefix}")
             continue
-        if args.dump_filament_manifolds and not persist_filman:
-            print(f"[warn] Could not determine persistence tag for filament manifolds, skipping filament manifolds for {crop_prefix}")
-            filament_manifolds_ndnet = None
 
         walls_name = f"{crop_prefix}_{persist_walls}_manifolds_{args.dump_manifolds}"
         if args.netconv_smooth:
@@ -284,13 +238,6 @@ def main() -> None:
         if args.skelconv_smooth:
             fils_name += f"_S{args.skelconv_smooth:03d}"
         fils_name += ".vtp"
-
-        filman_name = None
-        if filament_manifolds_ndnet and persist_filman:
-            filman_name = f"{crop_prefix}_{persist_filman}_filament_manifolds_{args.dump_filament_manifolds}"
-            if args.netconv_smooth:
-                filman_name += f"_S{args.netconv_smooth:03d}"
-            filman_name += ".vtu"
 
         delaunay_name = f"{crop_prefix}_delaunay"
         if args.delaunay_smooth:
@@ -306,16 +253,7 @@ def main() -> None:
             print(f"[warn] Expected file not found ({exc}), skipping slabs for {crop_prefix}")
             continue
 
-        filament_manifolds_file = None
-        if filman_name:
-            candidate = crop_dir / filman_name
-            if candidate.exists():
-                filament_manifolds_file = candidate
-            else:
-                print(f"[warn] Expected filament manifolds file not found ({candidate}), continuing without it.")
-
-        extra = f", filament_manifolds={filament_manifolds_file.name}" if filament_manifolds_file else ""
-        print(f"[info] using walls={walls_file.name}, filaments={filaments_file.name}{extra}, density={delaunay_file.name}")
+        print(f"[info] using walls={walls_file.name}, filaments={filaments_file.name}, density={delaunay_file.name}")
 
         # Slab origins for this crop (converted to output units for clipping)
         z0_out = box[2] * scale
@@ -335,7 +273,6 @@ def main() -> None:
                 str(walls_file.name),
                 "--filaments",
                 str(filaments_file.name),
-                *(["--filament-manifolds", str(filament_manifolds_file.name)] if filament_manifolds_file else []),
                 "--delaunay",
                 str(delaunay_file.name),
                 "--output-dir",

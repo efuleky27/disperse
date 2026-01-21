@@ -16,6 +16,7 @@ Outputs are organized per-crop and per-slab so results do not overwrite.
 ### What it does
 - Tiles a user-specified volume with fixed-size crop boxes (skips partial edge tiles).
 - For each crop: calls `analyze_snapshot.py` with your smoothing, nsig, and export options.
+- If `--dump-filament-manifolds` is provided, it also exports the filament-manifold VTKs for each crop.
 - Within each crop: marches slab origins along z (or whichever axis you choose in `batch_clip.py`, default z) with a fixed step and thickness, calling `batch_clip.py` to produce 3D/2D clips and summary stats.
 - Handles unit conversion between input snapshot units and output units (e.g., kpc/h to mpc/h).
 - Skips crops that contain no particles (does not abort the batch).
@@ -26,6 +27,21 @@ Outputs are organized per-crop and per-slab so results do not overwrite.
 - DisPerSE binaries available to `analyze_snapshot.py` (as usual).
 - Per-crop topology stats CSVs are generated automatically via `ndtopo_stats.py`.
 
+To keep `pvpython` on PATH whenever you activate the conda environment:
+```bash
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
+
+cat > "$CONDA_PREFIX/etc/conda/activate.d/paraview_path.sh" <<'EOF'
+export _PV_OLD_PATH="$PATH"
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"
+EOF
+
+cat > "$CONDA_PREFIX/etc/conda/deactivate.d/paraview_path.sh" <<'EOF'
+export PATH="$_PV_OLD_PATH"
+unset _PV_OLD_PATH
+EOF
+```
+
 ### CLI
 ```bash
 python scripts/batch_crop_and_clip.py \
@@ -34,10 +50,13 @@ python scripts/batch_crop_and_clip.py \
   --crop-size DX DY DZ \
   --x-range XMIN XMAX --y-range YMIN YMAX --z-range ZMIN ZMAX \
   --slab-step <STEP> --slab-thickness <THICK> \
-  [--mse-nsig 5.0] [--dump-manifolds JE1a] [--dump-arcs U] \
+  [--mse-nsig 5.0] [--dump-manifolds JE1a] [--dump-filament-manifolds JE2a] [--dump-arcs U] \
   [--netconv-smooth 20] [--skelconv-smooth 20] \
   [--stride 1] [--delaunay-btype periodic] \
   [--resample-dims NX NY NZ] [--scalar-name log_field_value] \
+  [--png-percentile-range PLOW PHIGH] \
+  [--write-per-point-csv] \
+  [--skip-slabs] \
   [--input-unit kpc/h] [--output-unit mpc/h] \
   [--analyze-script path/to/analyze_snapshot.py] \
   [--clip-script path/to/batch_clip.py]
@@ -45,7 +64,11 @@ python scripts/batch_crop_and_clip.py \
 - Crop sizes/ranges and slab params use the same units as `--input-unit` (default kpc/h). Outputs and slab origins passed to `batch_clip.py` are converted to `--output-unit` (default mpc/h).
 - `--slab-step` sets spacing between slab origins; `--slab-thickness` sets the clip depth for each slab.
 - `--resample-dims` sets the grid for density resampling inside `batch_clip.py` (default 500 500 100).
+- `--png-percentile-range` clamps PNG coloring to the given percentile range when `batch_clip.py` renders images (e.g., `1 99`).
+- `--write-per-point-csv` adds a per‑point topology CSV (one row per Delaunay ID) next to the per‑crop stats file.
+- `--skip-slabs` runs only `analyze_snapshot.py` and topology stats for each crop, skipping `batch_clip.py`.
 - Smoothing tags for output filenames come from `--netconv-smooth` and `--skelconv-smooth`.
+- `ndtopo_stats.py` supports `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, and `--*-cell-mode` if you need to adjust how IDs are matched.
 
 ### Outputs and layout
 Under `--output-root`, each crop gets its own folder:
@@ -54,6 +77,7 @@ output-root/
   crop_x<x0>-<x1>_y<y0>-<y1>_z<z0>-<z1>/
     <crop_prefix>_*.vtu/vtp/...   # analyze_snapshot outputs
     <crop_prefix>_topology_stats.csv  # ndtopo_stats results for this crop
+    <crop_prefix>_topology_points.csv # per-point topology rows (optional)
     slab_z<origin>/
       <prefix>_walls_3d.vtu
       <prefix>_filaments_3d.vtp
@@ -64,6 +88,7 @@ output-root/
 ```
 Naming notes:
 - Manifolds: `<crop_prefix>_sX_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).
+- Filament manifolds (optional): `<crop_prefix>_sX_filament_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).
 - Filaments: `<crop_prefix>_sX_arcs_<ARC>.S###.vtp` (persistence tag + smoothing).
 - Delaunay: `<crop_prefix>_delaunay.S###.vtu` (smoothing tag).
 - Unsmooothed conversions (e.g., via `ndtopo_stats.py --write-vtk`) use `_S000`.
@@ -80,7 +105,7 @@ python scripts/batch_crop_and_clip.py \
   --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
   --slab-step 10 --slab-thickness 10 \
   --mse-nsig 5.0 \
-  --dump-manifolds JE1a --dump-arcs U \
+  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
   --netconv-smooth 20 --skelconv-smooth 20 \
   --resample-dims 500 500 100 \
   --scalar-name log_field_value

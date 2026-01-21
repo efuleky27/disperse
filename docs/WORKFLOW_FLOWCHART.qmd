@@ -12,7 +12,7 @@ graph TD
     B --> C[delaunay_3D<br/>Build Delaunay NDnet<br/>DTFE density]
     C --> D[mse<br/>Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump arcs - filaments]
     D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>Delaunay: density]
-    E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>shared/wall_only/filament_only/unassigned<br/>stats CSV]
+    E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>walls/filaments/walls_not_filaments/filaments_not_walls/shared_walls_filaments/shared_filaments_filament_manifolds/unassigned<br/>stats CSV]
     E --> F2[batch_clip.py<br/>Clip slab - axis/origin/thickness<br/>Flatten walls/filaments<br/>Average density<br/>Resample/grid]
     F2 --> G[PNG outputs<br/>2D/3D density, walls, filaments, composite]
     E --> H[batch_crop_and_clip.py<br/>Tile multiple crops/slabs<br/>Runs Stage 1-3 per crop<br/>Runs slab clips per slab]
@@ -21,7 +21,7 @@ graph TD
 
 ### Legend
 - **analyze_snapshot.py**: Streams/crops/decimates particles; rebases crop for periodic Delaunay; runs `delaunay_3D` and `mse`; exports shifted VTKs (walls/filaments/delaunay) with persistence/smoothing tags.
-- **ndtopo_stats.py**: Optional; aggregates Delaunay scalars over shared/wall_only/filament_only/unassigned (plus full walls/filaments) into a CSV; accepts VTK or NDnet/NDskl.
+- **ndtopo_stats.py**: Optional; aggregates Delaunay scalars over walls/filaments/walls_not_filaments/filaments_not_walls/shared_walls_filaments/shared_filaments_filament_manifolds/unassigned (plus filament-manifold variants) into a CSV; accepts VTK or NDnet/NDskl.
 - **batch_clip.py**: Clips a slab, flattens walls/filaments, averages/resamples density, writes VTKs and PNGs.
 - **batch_crop_and_clip.py**: Tiles the snapshot into crops, runs `analyze_snapshot.py`, `ndtopo_stats.py`, and `batch_clip.py` per crop/slab; organizes outputs by crop/slab.
 
@@ -43,6 +43,4 @@ graph TD
 - Git, Github - version control, public sharing
 - ChatGPT-5.2, Codex, Github copilot - learning support, coding assistance
 - YouTube - learning resources
-
-
 

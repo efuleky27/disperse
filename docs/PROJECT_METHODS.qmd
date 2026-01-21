@@ -88,7 +88,7 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
   - Match IDs:
     - Walls ↔ Delaunay: `true_index`.
     - Filaments ↔ Delaunay: `int(cell)` (critical point index); interpolated arc samples have IDs not present in Delaunay.
-  - Aggregate Delaunay scalars over categories: `shared` (wall∩filament), `wall_only`, `filament_only`, `unassigned`.
+  - Aggregate Delaunay scalars over categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament‑manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`).
   - Settings: `--walls-id-field true_index`, `--filaments-id-field cell`, `--scalar-fields mass field_value log_field_value`; add `--netconv-bin/--skelconv-bin` when paths are needed.
 - **Output**: `<prefix>_topology_stats.csv` with counts and `<scalar>_sum`/`<scalar>_mean` per category.
 - **Why**: Shows how much mass/field value sits in overlapping vs unique topology membership. Filament counts can exceed matched mass because many filament samples are interpolated along arcs and have no Delaunay node.
@@ -117,7 +117,7 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
 ### Troubleshooting (common issues seen)
 - **VTK import errors**: Ensure `vtkmodules` is on `PYTHONPATH` (e.g., via conda environment hooks) and ParaView’s Python is discoverable when using `pvpython`.
 - **HDF5 Blosc filter**: Install `hdf5plugin` in the environment that runs `analyze_snapshot.py`; otherwise HDF5 load fails.
-- **Interpolated filament IDs**: `filament_only` counts can exceed mass because many filament samples are interpolated along arcs and have no Delaunay node; this is expected.
+- **Interpolated filament IDs**: `filaments_not_walls` counts can exceed mass because many filament samples are interpolated along arcs and have no Delaunay node; this is expected.
 - **Clipping artifacts**: Use slab bounds for resampling (`batch_clip.py` already does) and verify crop rebasing/shift if density extends beyond the tile.
 - **File naming**: Stems no longer duplicate format tokens; if older files remain, prefer the non-duplicated names for downstream steps.
 

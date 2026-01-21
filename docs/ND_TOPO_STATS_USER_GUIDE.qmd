@@ -7,12 +7,12 @@ format:
 
 ## `ndtopo_stats.py` User Guide
 
-Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
+Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, filament manifolds (optional), both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
 
 ### What it does
 - Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (`--write-vtk` via `netconv`/`skelconv`).
-- Loads the Delaunay VTU (universe), walls VTU, and filaments VTP.
-- Matches point IDs (`true_index` by default; filaments use integer part of `cell`) and splits them into: shared (wall∩filament), wall_only, filament_only, unassigned.
+- Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament-manifolds VTU.
+- Matches point IDs (`true_index` by default; filaments use integer part of `cell` unless you filter to `.0` cells) and splits them into: walls, filaments, walls_not_filaments, filaments_not_walls, shared_walls_filaments, unassigned, plus filament‑manifold categories when provided.
 - Aggregates selected scalar fields (default: `mass`, `field_value`, `log_field_value`) from the Delaunay mesh for each category and writes a CSV.
 
 ### Requirements
@@ -25,25 +25,40 @@ python scripts/ndtopo_stats.py \
   --delaunay-vtk <Delaunay.vtu>   | --delaunay-ndnet <Delaunay.NDnet> \
   --walls-vtk    <Walls.vtu>      | --walls-ndnet    <Walls.NDnet> \
   --filaments-vtk <Filaments.vtp> | --filaments-ndskl <Filaments.NDskl> \
+  [--filament-manifolds-vtk <FilamentManifolds.vtu> | --filament-manifolds-ndnet <FilamentManifolds.NDnet>] \
   --output-csv <stats.csv> \
   [--write-vtk] \
   [--netconv-bin /path/to/netconv] \
   [--skelconv-bin /path/to/skelconv] \
+  [--delaunay-id-field true_index] \
+  [--delaunay-cell-mode all|zero] \
   [--walls-id-field true_index] \
+  [--walls-cell-mode all|zero] \
   [--filaments-id-field cell] \
+  [--filaments-cell-mode all|zero] \
+  [--filament-manifolds-id-field true_index] \
+  [--filament-manifolds-cell-mode all|zero] \
   [--scalar-fields mass field_value log_field_value] \
+  [--per-point-csv <per_point.csv>] \
   [--verbose]
 ```
 - `--write-vtk` converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including `.S000` variants).
-- Filament IDs use `int(cell)` by default to bucket arc samples with their source cell.
+- `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, and `--filament-manifolds-id-field` choose which point-data array defines IDs.
+- `--*-cell-mode zero` keeps only `.0` cell IDs (0-cells) when `cell` is used; `all` uses `int(cell)` for every point.
 - Scalars are read only from the Delaunay file, regardless of what walls/filaments store.
 
 ### Output
-- A single CSV at `--output-csv` with columns: `category`, `count`, and for each scalar `<name>_sum`, `<name>_mean`. Categories: `shared`, `wall_only`, `filament_only`, `unassigned`.
+- A single CSV at `--output-csv` with columns: `category`, `count`, and for each scalar `<name>_sum`, `<name>_mean`.
+- Base categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned`.
+- Extra filament-manifold categories (only if provided): `filament_manifolds`, `walls_not_filament_manifolds`, `filament_manifolds_not_walls`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`.
+- Optional per-point CSV (`--per-point-csv`) with one row per Delaunay ID and boolean membership flags:
+  - Columns: `delaunay_id`, `is_wall`, `is_filament`, `is_filament_manifold`, plus the requested scalar columns.
+  - Boolean flags preserve multi‑membership so downstream analyses can filter/aggregate by combination.
 
 ### Naming conventions for auto-converted files (`--write-vtk`)
 - Delaunay from NDnet: `<prefix>_delaunay_S000.vtu`.
 - Manifolds from NDnet: `<prefix>_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
+- Filament manifolds from NDnet: `<prefix>_filament_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
 - Filaments from NDskl: `<prefix>_arcs_<TAG>_S000.vtp` (with existing persistence token kept in the stem).
 - Stems are sanitized to use underscores (single dot before the extension).
 
@@ -54,9 +69,11 @@ python scripts/ndtopo_stats.py --verbose \
   --delaunay-vtk  outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_delaunay_S000.vtu \
   --walls-vtk     outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S000.vtu \
   --filaments-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_arcs_U.S000.vtp \
-  --walls-id-field true_index --filaments-id-field cell \
+  --filament-manifolds-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_filament_manifolds_JE2a_S000.vtu \
+  --delaunay-id-field true_index --walls-id-field true_index --filaments-id-field cell \
   --scalar-fields mass field_value log_field_value \
-  --output-csv outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_stats.csv
+  --output-csv outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_stats.csv \
+  --per-point-csv outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_points.csv
 ```
 
 Convert native NDnet/NDskl on the fly (no smoothing):
@@ -67,7 +84,7 @@ python scripts/ndtopo_stats.py --verbose --write-vtk \
   --filaments-ndskl outputs/snap_010_cropped_test/snap_010_s3_arcs_U.NDskl \
   --netconv-bin /Users/fules/miniforge3/envs/disperse/bin/netconv \
   --skelconv-bin /Users/fules/miniforge3/envs/disperse/bin/skelconv \
-  --walls-id-field true_index --filaments-id-field cell \
+  --delaunay-id-field true_index --walls-id-field true_index --filaments-id-field cell \
   --scalar-fields mass field_value log_field_value \
   --output-csv outputs/snap_010_cropped_test/topology_stats.csv
 ```
