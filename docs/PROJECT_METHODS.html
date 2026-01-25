@@ -2163,7 +2163,7 @@ vertical-align: -.125em;
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This project extracts, visualizes, and quantifies cosmic-web topology (walls and filaments) from large N-body snapshots using DisPerSE-based workflows. We combine command-line scripts to:<br>
+<p>This project extracts, visualizes, and quantifies cosmic-web topology (walls and filaments) from large N-body snapshots using DisPerSE-based workflows. Input snapshots can be provided either as a single HDF5 file or as a directory of split files (e.g., <code>snapdir_000</code>), which the reader traverses via header metadata. We combine command-line scripts to:<br>
 - Stream/crop particle data, tessellate density, and extract Morse–Smale structures.<br>
 - Clip slabs and flatten outputs for 2D overlays and PNGs.<br>
 - Compute overlap/unique/unassigned topology statistics using authoritative Delaunay scalars.<br>
@@ -2174,7 +2174,7 @@ vertical-align: -.125em;
 <section id="data-and-tools" class="level3">
 <h3 class="anchored" data-anchor-id="data-and-tools">Data and Tools</h3>
 <ul>
-<li><strong>Data</strong>: Quijote snapshot (e.g., <code>data/snap_010.hdf5</code>), 1 Gpc/h box, <code>PartType1</code> dark matter coordinates.</li>
+<li><strong>Data</strong>: Quijote snapshot (e.g., <code>data/snap_010.hdf5</code> or a multi-file folder such as <code>data/snapdir_000</code>), 1 Gpc/h box, <code>PartType1</code> dark matter coordinates.</li>
 <li><strong>Core tools</strong>:
 <ul>
 <li>DisPerSE binaries: <code>delaunay_3D</code>, <code>mse</code>, <code>netconv</code>, <code>skelconv</code> (installed in your environment or pointed via <code>--disperse-bin-dir</code>).</li>
@@ -2282,10 +2282,13 @@ vertical-align: -.125em;
 <li>Walls ↔︎ Delaunay: <code>true_index</code>.</li>
 <li>Filaments ↔︎ Delaunay: <code>int(cell)</code> (critical point index); interpolated arc samples have IDs not present in Delaunay.</li>
 </ul></li>
-<li>Aggregate Delaunay scalars over categories: <code>shared</code> (wall∩filament), <code>wall_only</code>, <code>filament_only</code>, <code>unassigned</code>.</li>
+<li>Aggregate Delaunay scalars over categories: <code>walls</code>, <code>filaments</code>, <code>walls_not_filaments</code>, <code>filaments_not_walls</code>, <code>shared_walls_filaments</code>, <code>unassigned</code> (plus filament‑manifold variants such as <code>filament_manifolds</code>, <code>shared_walls_filament_manifolds</code>, <code>shared_filaments_filament_manifolds</code>).</li>
 <li>Settings: <code>--walls-id-field true_index</code>, <code>--filaments-id-field cell</code>, <code>--scalar-fields mass field_value log_field_value</code>; add <code>--netconv-bin/--skelconv-bin</code> when paths are needed.</li>
 </ul></li>
-<li><strong>Output</strong>: <code>&lt;prefix&gt;_topology_stats.csv</code> with counts and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> per category.</li>
+<li><strong>Output</strong>: <code>&lt;prefix&gt;_topology_stats.csv</code> with counts and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> per category.
+<ul>
+<li>Optional per-point export: <code>&lt;prefix&gt;_topology_points.csv</code> (one row per Delaunay node with boolean membership flags and scalar values).</li>
+</ul></li>
 <li><strong>Why</strong>: Shows how much mass/field value sits in overlapping vs unique topology membership. Filament counts can exceed matched mass because many filament samples are interpolated along arcs and have no Delaunay node.</li>
 </ul>
 </section>
@@ -2305,7 +2308,9 @@ vertical-align: -.125em;
 <ul>
 <li>Run Stage 1 with chosen persistence and smoothing (e.g., <code>--mse-nsig 5.0</code>, <code>--dump-manifolds JE1a</code>, <code>--dump-arcs U</code>, <code>--netconv-smooth 20</code>, <code>--skelconv-smooth 20</code>).</li>
 <li>Run Stage 3 to write <code>&lt;crop_prefix&gt;_topology_stats.csv</code>.</li>
+<li>If enabled (<code>--write-per-point-csv</code>), also write <code>&lt;crop_prefix&gt;_topology_points.csv</code> for downstream aggregation.</li>
 <li>Derive slab origins from <code>--slab-step</code>/<code>--slab-thickness</code>; run Stage 2 for each slab (<code>--resample-dims</code> often 500×500×100 or 512×512×64; <code>--scalar-name log_field_value</code>).</li>
+<li>If you only need analysis + stats, <code>--skip-slabs</code> runs without any slab clipping.</li>
 </ul></li>
 <li>Output layout
 <ul>
@@ -2323,6 +2328,8 @@ vertical-align: -.125em;
 <li><strong>VTK files</strong>: shifted walls/filaments/density (3D and flattened 2D), plus averaged density grids for slice/overlay inspection.</li>
 <li><strong>PNGs</strong>: 3D slices, 2D flats, and composites that show layered density/walls/filaments to visually assess overlap and separation.</li>
 <li><strong>Summary stats</strong>: Per-file scalar stats (<code>*_summary_stats.csv</code>) and per-crop topology overlap stats (<code>*_topology_stats.csv</code>) to quantify counts, sums, and means in shared/unique/unassigned categories.</li>
+<li><strong>Per-point stats</strong>: Optional <code>*_topology_points.csv</code> files support histogramming and cross-crop aggregation.</li>
+<li><strong>Cross-crop aggregation</strong>: <code>aggregate_topology_points.py</code> combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). The default Polars engine is fast and exact; a streaming engine is available for approximate quantiles on very large datasets.</li>
 </ul>
 </section>
 <section id="troubleshooting-common-issues-seen" class="level3">
@@ -2330,7 +2337,7 @@ vertical-align: -.125em;
 <ul>
 <li><strong>VTK import errors</strong>: Ensure <code>vtkmodules</code> is on <code>PYTHONPATH</code> (e.g., via conda environment hooks) and ParaView’s Python is discoverable when using <code>pvpython</code>.</li>
 <li><strong>HDF5 Blosc filter</strong>: Install <code>hdf5plugin</code> in the environment that runs <code>analyze_snapshot.py</code>; otherwise HDF5 load fails.</li>
-<li><strong>Interpolated filament IDs</strong>: <code>filament_only</code> counts can exceed mass because many filament samples are interpolated along arcs and have no Delaunay node; this is expected.</li>
+<li><strong>Interpolated filament IDs</strong>: <code>filaments_not_walls</code> counts can exceed mass because many filament samples are interpolated along arcs and have no Delaunay node; this is expected.</li>
 <li><strong>Clipping artifacts</strong>: Use slab bounds for resampling (<code>batch_clip.py</code> already does) and verify crop rebasing/shift if density extends beyond the tile.</li>
 <li><strong>File naming</strong>: Stems no longer duplicate format tokens; if older files remain, prefer the non-duplicated names for downstream steps.</li>
 </ul>

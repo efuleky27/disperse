@@ -2201,7 +2201,7 @@ vertical-align: -.125em;
 <section id="what-it-does" class="level3">
 <h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
 <ul>
-<li>Clips walls (manifolds), filaments, and the Delaunay/density volume to a user-defined slab along x/y/z.</li>
+<li>Clips walls (manifolds), filaments, optional filament manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.</li>
 <li>Exports both the clipped 3D datasets and flattened 2D versions (walls/filaments/density scaled onto a plane, averaged over the slab depth - vti files).</li>
 <li>Keeps topology tags as point data (<code>topology_type</code>) for easy coloring.</li>
 </ul>
@@ -2210,31 +2210,46 @@ vertical-align: -.125em;
 <h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
 <ul>
 <li>ParaView pvpython (e.g., <code>/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</code>).</li>
-<li>Inputs: walls VTU, filaments VTP, Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).</li>
+<li>Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).</li>
 </ul>
+<p>To keep <code>pvpython</code> on PATH whenever you activate the conda environment:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d&quot;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">export _PV_OLD_PATH=&quot;$PATH&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;$_PV_OLD_PATH&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="cli" class="level3">
 <h3 class="anchored" data-anchor-id="cli">CLI</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> <span class="op">&lt;</span>INPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> <span class="op">&lt;</span>walls.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> <span class="op">&lt;</span>filaments.vtp<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> <span class="op">&lt;</span>delaunay.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> {x<span class="kw">|</span><span class="ex">y</span><span class="kw">|</span><span class="ex">z}</span> <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-origin</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-thickness</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  [--resample-dims NX NY NZ] <span class="dt">\</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  [--scalar-name log_field_value]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> <span class="op">&lt;</span>INPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> <span class="op">&lt;</span>walls.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> <span class="op">&lt;</span>filaments.vtp<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [--filament-manifolds <span class="op">&lt;</span>filament_manifolds.vtu<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> <span class="op">&lt;</span>delaunay.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> {x<span class="kw">|</span><span class="ex">y</span><span class="kw">|</span><span class="ex">z}</span> <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-origin</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-thickness</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  [--resample-dims NX NY NZ] <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  [--scalar-name log_field_value] <span class="dt">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  [--png-percentile-range PLOW PHIGH]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
-<li><code>--walls/--filaments/--delaunay</code> are required; relative paths are joined to <code>--input-dir</code>.</li>
+<li><code>--walls/--filaments/--delaunay</code> are required; <code>--filament-manifolds</code> is optional. Relative paths are joined to <code>--input-dir</code>.</li>
 <li><code>--output-dir</code> is required. Files are named with the prefix you supply.</li>
 <li><code>--slab-axis</code>, <code>--slab-origin</code>, <code>--slab-thickness</code> define the clip.</li>
 <li><code>--resample-dims</code> controls the regular grid used before clipping and averaging density (default 512 512 64).</li>
 <li><code>--scalar-name</code> chooses which point scalar to average for density (default <code>log_field_value</code>).</li>
+<li><code>--png-percentile-range</code> clamps PNG coloring to the given percentile range (e.g., <code>1 99</code>) for scalar renders.</li>
 <li><code>--save-pngs</code> also renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). <code>--png-resolution WIDTH HEIGHT</code> sets image size (default 1600×1200). <code>--composite-opacity</code> controls wall/filament overlay opacity in the composite (default 0.6).</li>
-<li>Expect input filenames to follow the simplified stems from <code>analyze_snapshot.py</code>, e.g., <code>*_manifolds_&lt;tag&gt;.S###.vtu</code>, <code>*_filaments_&lt;arc&gt;.S###.vtp</code>, <code>*_delaunay.vtu</code>.</li>
+<li>Expect input filenames to follow the simplified stems from <code>analyze_snapshot.py</code>, e.g., <code>*_manifolds_&lt;tag&gt;.S###.vtu</code>, <code>*_filament_manifolds_&lt;tag&gt;.S###.vtu</code>, <code>*_filaments_&lt;arc&gt;.S###.vtp</code>, <code>*_delaunay.vtu</code>.</li>
 </ul>
 </section>
 <section id="outputs-all-in---output-dir" class="level3">
@@ -2242,38 +2257,44 @@ vertical-align: -.125em;
 <ul>
 <li><code>&lt;PREFIX&gt;_walls_3d.vtu</code> – clipped 3D walls (point-data <code>topology_type=1</code>).</li>
 <li><code>&lt;PREFIX&gt;_filaments_3d.vtp</code> – clipped 3D filaments (<code>topology_type=2</code>).</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds_3d.vtu</code> – clipped 3D filament manifolds (<code>topology_type=3</code>, if provided).</li>
 <li><code>&lt;PREFIX&gt;_walls.vtu</code> – walls flattened to the slab plane.</li>
 <li><code>&lt;PREFIX&gt;_filaments.vtp</code> – filaments flattened to the slab plane.</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds.vtu</code> – filament manifolds flattened to the slab plane (if provided).</li>
 <li><code>&lt;PREFIX&gt;_density_3d.vtu</code> – clipped density slab (unstructured).</li>
 <li><code>&lt;PREFIX&gt;_density.vtu</code> – flattened density slab.</li>
 <li><code>&lt;PREFIX&gt;_density_3d.vti</code> – resampled slab (structured) for clean volume/slice rendering.</li>
 <li><code>&lt;PREFIX&gt;_density_avg.vti</code> – density averaged over slab depth.</li>
 <li><code>&lt;PREFIX&gt;_walls_filaments.vtm</code> – multiblock of the flattened walls + filaments.</li>
+<li><code>&lt;PREFIX&gt;_walls_filaments_filament_manifolds.vtm</code> – multiblock including filament manifolds (if provided).</li>
 <li><code>&lt;PREFIX&gt;_summary_stats.csv</code> – per-array scalar stats (count, sum, mean, median, quartiles, min/max, std, bounding-box size/volume) for all readable VTU/VTP inputs/outputs.</li>
 <li>PNGs (when <code>--save-pngs</code> is used):
 <ul>
-<li><code>&lt;PREFIX&gt;_walls_3d.png</code>, <code>&lt;PREFIX&gt;_filaments_3d.png</code> – 3D surfaces colored by <code>log_field_value</code>.</li>
+<li><code>&lt;PREFIX&gt;_walls_3d.png</code>, <code>&lt;PREFIX&gt;_filaments_3d.png</code>, <code>&lt;PREFIX&gt;_filament_manifolds_3d.png</code> – 3D surfaces colored by <code>log_field_value</code>.</li>
 <li><code>&lt;PREFIX&gt;_walls_topology.png</code>, <code>&lt;PREFIX&gt;_walls_logfield.png</code> – 2D walls colored by <code>topology_type</code> / <code>log_field_value</code>.</li>
 <li><code>&lt;PREFIX&gt;_filaments_topology.png</code>, <code>&lt;PREFIX&gt;_filaments_logfield.png</code> – 2D filaments colored by <code>topology_type</code> / <code>log_field_value</code>.</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds_topology.png</code>, <code>&lt;PREFIX&gt;_filament_manifolds_logfield.png</code> – 2D filament manifolds colored by <code>topology_type</code> / <code>log_field_value</code>.</li>
 <li><code>&lt;PREFIX&gt;_density_3d.png</code> – slice of the 3D density slab colored by <code>log_field_value</code>.</li>
 <li><code>&lt;PREFIX&gt;_density.png</code> – 2D flattened density colored by <code>log_field_value</code>.</li>
 <li><code>&lt;PREFIX&gt;_composite_density_walls_filaments.png</code> – composite: density base, walls light green, filaments red; overlay opacity controlled by <code>--composite-opacity</code>.</li>
+<li><code>&lt;PREFIX&gt;_composite_density_walls_filaments_filament_manifolds.png</code> – composite that also includes filament manifolds (blue) when <code>--filament-manifolds</code> is provided.</li>
 </ul></li>
 </ul>
 </section>
 <section id="example" class="level3">
 <h3 class="anchored" data-anchor-id="example">Example</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_cropped <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a.S020.vtu <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_filaments_U.S020.vtp <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_cropped/auto2d <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_cropped <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a.S020.vtu <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_filaments_U.S020.vtp <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filament-manifolds</span> snap_010_filament_manifolds_JE2a.S020.vtu <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_cropped/auto2d <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="notes" class="level3">
 <h3 class="anchored" data-anchor-id="notes">Notes</h3>

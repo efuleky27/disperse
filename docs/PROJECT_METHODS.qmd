@@ -10,7 +10,7 @@ format:
 
 ## Introduction
 
-This project extracts, visualizes, and quantifies cosmic-web topology (walls and filaments) from large N-body snapshots using DisPerSE-based workflows. We combine command-line scripts to:  
+This project extracts, visualizes, and quantifies cosmic-web topology (walls and filaments) from large N-body snapshots using DisPerSE-based workflows. Input snapshots can be provided either as a single HDF5 file or as a directory of split files (e.g., `snapdir_000`), which the reader traverses via header metadata. We combine command-line scripts to:  
 - Stream/crop particle data, tessellate density, and extract Morse–Smale structures.  
 - Clip slabs and flatten outputs for 2D overlays and PNGs.  
 - Compute overlap/unique/unassigned topology statistics using authoritative Delaunay scalars.  
@@ -19,7 +19,7 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
 ## Methods
 
 ### Data and Tools
-- **Data**: Quijote snapshot (e.g., `data/snap_010.hdf5`), 1 Gpc/h box, `PartType1` dark matter coordinates.
+- **Data**: Quijote snapshot (e.g., `data/snap_010.hdf5` or a multi-file folder such as `data/snapdir_000`), 1 Gpc/h box, `PartType1` dark matter coordinates.
 - **Core tools**:
   - DisPerSE binaries: `delaunay_3D`, `mse`, `netconv`, `skelconv` (installed in your environment or pointed via `--disperse-bin-dir`).
   - ParaView `pvpython` (for `batch_clip.py` rendering).
@@ -90,7 +90,8 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
     - Filaments ↔ Delaunay: `int(cell)` (critical point index); interpolated arc samples have IDs not present in Delaunay.
   - Aggregate Delaunay scalars over categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament‑manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`).
   - Settings: `--walls-id-field true_index`, `--filaments-id-field cell`, `--scalar-fields mass field_value log_field_value`; add `--netconv-bin/--skelconv-bin` when paths are needed.
-- **Output**: `<prefix>_topology_stats.csv` with counts and `<scalar>_sum`/`<scalar>_mean` per category.
+- **Output**: `<prefix>_topology_stats.csv` with counts and `<scalar>_sum`/`<scalar>_mean` per category.  
+  - Optional per-point export: `<prefix>_topology_points.csv` (one row per Delaunay node with boolean membership flags and scalar values).
 - **Why**: Shows how much mass/field value sits in overlapping vs unique topology membership. Filament counts can exceed matched mass because many filament samples are interpolated along arcs and have no Delaunay node.
 
 #### Stage 4: Batch crops and slabs (`batch_crop_and_clip.py`)
@@ -103,7 +104,9 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
   - Per-crop actions
     - Run Stage 1 with chosen persistence and smoothing (e.g., `--mse-nsig 5.0`, `--dump-manifolds JE1a`, `--dump-arcs U`, `--netconv-smooth 20`, `--skelconv-smooth 20`).
     - Run Stage 3 to write `<crop_prefix>_topology_stats.csv`.
+    - If enabled (`--write-per-point-csv`), also write `<crop_prefix>_topology_points.csv` for downstream aggregation.
     - Derive slab origins from `--slab-step`/`--slab-thickness`; run Stage 2 for each slab (`--resample-dims` often 500×500×100 or 512×512×64; `--scalar-name log_field_value`).
+    - If you only need analysis + stats, `--skip-slabs` runs without any slab clipping.
   - Output layout
     - `output-root/crop_x.../`: NDnet/NDskl (rebased), shifted VTKs, per-crop topology stats.
     - `slab_z.../` subfolders: per-slab VTKs, stats, and PNGs.
@@ -113,6 +116,8 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
 - **VTK files**: shifted walls/filaments/density (3D and flattened 2D), plus averaged density grids for slice/overlay inspection.
 - **PNGs**: 3D slices, 2D flats, and composites that show layered density/walls/filaments to visually assess overlap and separation.
 - **Summary stats**: Per-file scalar stats (`*_summary_stats.csv`) and per-crop topology overlap stats (`*_topology_stats.csv`) to quantify counts, sums, and means in shared/unique/unassigned categories.
+- **Per-point stats**: Optional `*_topology_points.csv` files support histogramming and cross-crop aggregation.
+- **Cross-crop aggregation**: `aggregate_topology_points.py` combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). The default Polars engine is fast and exact; a streaming engine is available for approximate quantiles on very large datasets.
 
 ### Troubleshooting (common issues seen)
 - **VTK import errors**: Ensure `vtkmodules` is on `PYTHONPATH` (e.g., via conda environment hooks) and ParaView’s Python is discoverable when using `pvpython`.

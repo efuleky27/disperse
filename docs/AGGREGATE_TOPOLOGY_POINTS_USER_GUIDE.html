@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>analyze_snapshot_2d.py User Guide</title>
+<title>aggregate_topology_points.py User Guide</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -2178,7 +2178,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><code>analyze_snapshot_2d.py</code> User Guide</h1>
+<h1 class="title"><code>aggregate_topology_points.py</code> User Guide</h1>
 </div>
 
 
@@ -2195,165 +2195,74 @@ vertical-align: -.125em;
 </header>
 
 
-<section id="analyze_snapshot_2d.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="analyze_snapshot_2d.py-user-guide"><code>analyze_snapshot_2d.py</code> User Guide</h2>
-<p>This script replicates the 3D DisPerSE workflow in two dimensions. It projects a slab of a Gadget/Quijote snapshot onto a plane, builds a 2D NDfield catalog, runs <code>delaunay_2D</code>, applies <code>mse</code>, and converts manifolds/skeletons for visualization.</p>
-<hr>
-<section id="stage-overview" class="level3">
-<h3 class="anchored" data-anchor-id="stage-overview">Stage Overview</h3>
-<ol type="1">
-<li><strong>Slab extraction &amp; projection</strong> — read the snapshot (or reuse an NDfield), filter by <code>--crop-box</code> and <code>--projection-range</code>, drop the projection axis, and emit a <code>[2 N]</code> NDfield.</li>
-<li><strong><code>delaunay_2D</code></strong> — triangulate the projected catalog with optional boundary settings.</li>
-<li><strong><code>mse</code></strong> — compute 2D Morse–Smale manifolds/skeletons on the NDnet.</li>
-<li><strong>Conversion</strong> — send manifolds to <code>netconv</code> and skeletons to <code>skelconv</code>.</li>
-</ol>
-<p>You can resume at any stage via <code>--coords-input</code>, <code>--network-input</code>, <code>--manifolds-input</code>, or <code>--skel-input</code>, mirroring the 3D script.</p>
-<hr>
-</section>
-<section id="core-arguments" class="level3">
-<h3 class="anchored" data-anchor-id="core-arguments">Core Arguments</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Argument</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>--input PATH</code></td>
-<td>HDF5 snapshot (default <code>data/snap_010.hdf5</code>).</td>
-</tr>
-<tr class="even">
-<td><code>--output-dir DIR</code></td>
-<td>Directory for all generated artifacts.</td>
-</tr>
-<tr class="odd">
-<td><code>--output-prefix NAME</code></td>
-<td>Basename for files inside <code>output-dir</code>.</td>
-</tr>
-<tr class="even">
-<td><code>--parttype NAME</code></td>
-<td>Particle group to sample (default <code>PartType1</code>).</td>
-</tr>
-<tr class="odd">
-<td><code>--coords-input PATH</code></td>
-<td>Reuse an existing <code>[2 N]</code> NDfield catalog.</td>
-</tr>
-<tr class="even">
-<td><code>--network-input PATH</code></td>
-<td>Reuse an existing 2D NDnet (skip Delaunay).</td>
-</tr>
-<tr class="odd">
-<td><code>--manifolds-input PATH</code></td>
-<td>Reuse manifolds (skip <code>mse</code>).</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="sampling-projection" class="level3">
-<h3 class="anchored" data-anchor-id="sampling-projection">Sampling &amp; Projection</h3>
+<section id="aggregate_topology_points.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="aggregate_topology_points.py-user-guide"><code>aggregate_topology_points.py</code> User Guide</h2>
+<p>Use <code>scripts/aggregate_topology_points.py</code> to combine many <code>*_topology_points.csv</code> files into: - A single aggregated <code>topology_stats</code> CSV (same shape as per-crop stats). - Per-category histograms for each scalar (CSV, plus PNG if matplotlib is available).</p>
+<p>This is designed for large datasets (many crops and large per-point files).</p>
+<section id="what-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
 <ul>
-<li><code>--target-count N</code> — approximate number of particles to keep after filters.</li>
-<li><code>--stride N</code> — explicit decimation rate (overrides <code>--target-count</code>).</li>
-<li><code>--chunk-size N</code> — streaming chunk size for snapshot reads (default 2M).</li>
-<li><code>--crop-box xmin ymin zmin xmax ymax zmax</code> — optional 3D sub-volume before projection.</li>
-<li><code>--projection-axis {x,y,z}</code> — axis to collapse (default <code>z</code>; plane is the other two axes).</li>
-<li><code>--projection-range min max</code> — restrict the slab thickness along the projection axis.</li>
+<li>Scans for <code>*_topology_points.csv</code> files (or uses explicit inputs).</li>
+<li>Aggregates category statistics across all crops.</li>
+<li>Writes histogram CSVs (and optional PNGs) per category and scalar.</li>
 </ul>
 </section>
-<section id="units" class="level3">
-<h3 class="anchored" data-anchor-id="units">Units</h3>
+<section id="requirements" class="level3">
+<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
 <ul>
-<li><code>--input-unit {kpc/h,mpc/h}</code> — units of snapshot coordinates.</li>
-<li><code>--output-unit {kpc/h,mpc/h}</code> — units stored in the NDfield and exported meshes.</li>
+<li>Python in your active environment.</li>
+<li>Optional but recommended: <code>polars</code> (fast path, default).</li>
+<li>Optional: <code>matplotlib</code> for PNG histogram plots.</li>
 </ul>
 </section>
-<section id="delaunay-options" class="level3">
-<h3 class="anchored" data-anchor-id="delaunay-options">Delaunay Options</h3>
+<section id="cli" class="level3">
+<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> <span class="op">&lt;</span>OUTPUT_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>COMBINED_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  [--glob <span class="st">&quot;**/*_topology_points.csv&quot;</span>] <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  [--inputs file1.csv file2.csv ...] <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  [--bins 100] <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [--hist-percentile-range 1 99] <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [--engine polars<span class="kw">|</span><span class="ex">stream</span><span class="kw">|</span><span class="ex">python]</span> <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">plots</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="engines" class="level3">
+<h3 class="anchored" data-anchor-id="engines">Engines</h3>
 <ul>
-<li><code>--periodic</code> — treat plane boundaries as periodic when calling <code>delaunay_2D</code>/<code>mse</code>.</li>
-<li><code>--delaunay-blocks NCHUNKS NTHREADS</code> — DisPerSE block decomposition (memory reduction).</li>
-<li><code>--delaunay-btype {mirror,periodic,smooth,void}</code> — boundary extrapolation passed to <code>-btype</code>.</li>
-<li><code>--export-delaunay</code> — convert the raw 2D NDnet via <code>netconv</code>.
-<ul>
-<li><code>--delaunay-format ...</code> — output format for the above (VTU, PLY, etc.).</li>
-<li><code>--delaunay-smooth N</code> — smoothing iterations for the exported triangulation.</li>
-</ul></li>
+<li><code>polars</code> (default): fast, exact stats, scales well.</li>
+<li><code>stream</code>: fast and memory-light, approximate quantiles (uses histogram bins).</li>
+<li><code>python</code>: exact but slow on large files.</li>
 </ul>
 </section>
-<section id="morsesmale-manifolds" class="level3">
-<h3 class="anchored" data-anchor-id="morsesmale-manifolds">Morse–Smale / Manifolds</h3>
-<ul>
-<li><code>--mse-nsig s1 [s2 ...]</code> — sigma thresholds for <code>mse -nsig</code>.</li>
-<li><code>--persistence-cut c1 [c2 ...]</code> — absolute persistence cuts (override <code>--mse-nsig</code>).</li>
-<li><code>--mse-threads N</code> — OpenMP threads for <code>mse</code>.</li>
-<li><code>--mse-vertex-as-minima</code> — forward <code>-vertexAsMinima</code>.</li>
-<li><code>--dump-manifolds SPEC</code> — descriptor for <code>-dumpManifolds</code> (default <code>JD1d</code>).</li>
-<li><code>--dump-arcs CUID</code> — repeat to request multiple skeleton tags.</li>
-</ul>
+<section id="output" class="level3">
+<h3 class="anchored" data-anchor-id="output">Output</h3>
+<p>In <code>--output-dir</code> with <code>--output-prefix</code>: - <code>&lt;prefix&gt;_topology_stats.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set)</p>
+<p>Categories follow <code>ndtopo_stats.py</code>, including filament-manifold variants when present.</p>
 </section>
-<section id="conversion-reuse" class="level3">
-<h3 class="anchored" data-anchor-id="conversion-reuse">Conversion &amp; Reuse</h3>
-<ul>
-<li><code>--netconv-format ...</code> / <code>--netconv-smooth N</code> / <code>--skip-netconv</code>.</li>
-<li><code>--skel-input TAG=PATH</code> — convert existing NDskl files.</li>
-<li><code>--skelconv-format ...</code> / <code>--skelconv-smooth N</code> / <code>--skip-skelconv</code>.</li>
-<li><code>--stop-after {ndfield,delaunay,mse}</code> — exit early.</li>
-<li><code>--keep-ndfield</code> — retain the intermediate <code>coords_stride*.AND</code>.</li>
-<li><code>--disperse-bin-dir DIR</code> — directory containing <code>delaunay_2D</code>, <code>mse</code>, <code>netconv</code>, <code>skelconv</code>.</li>
-</ul>
-<hr>
-</section>
-<section id="example-workflows" class="level3">
-<h3 class="anchored" data-anchor-id="example-workflows">Example Workflows</h3>
-<p><strong>1. Full 2D analysis of a slab</strong></p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot_2d.py <span class="dt">\</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_2d <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--projection-axis</span> z <span class="at">--projection-range</span> 400 600 <span class="dt">\</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 2_000_000 <span class="dt">\</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.5 <span class="dt">\</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JD1d <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-format</span> vtp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>2. Cropped sub-volume before projection</strong></p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot_2d.py <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_2d_subbox <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500 500 1000 <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--projection-axis</span> y <span class="at">--projection-range</span> 250 350 <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 300000 <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JD0a</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>3. Conversion-only reuse</strong></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot_2d.py <span class="dt">\</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_2d <span class="dt">\</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifolds-input</span> outputs/snap_010_2d/snap_010_manifolds_JD1d.NDnet <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skel-input</span> U=outputs/snap_010_2d/snap_010.U.NDskl <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> ply_ascii <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-format</span> vtk <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<hr>
-</section>
-<section id="workflow-summary" class="level3">
-<h3 class="anchored" data-anchor-id="workflow-summary">Workflow Summary</h3>
-<ol type="1">
-<li><p><strong>NDfield Stage</strong><br>
-Streams coordinates, filters through the crop box and slab, applies stride decimation, and writes a 2D NDfield. Use <code>--stop-after ndfield</code> if you only need the projected catalog.</p></li>
-<li><p><strong>Delaunay Stage</strong><br>
-Runs <code>delaunay_2D</code> (unless <code>--network-input</code> was supplied) to produce an NDnet suitable for <code>mse</code>. <code>--stop-after delaunay</code> outputs only the triangulation.</p></li>
-<li><p><strong>Morse–Smale Stage</strong><br>
-Invokes <code>mse</code> with the requested thresholds, dumps manifolds and optional arcs, and records the resulting filenames for reuse.</p></li>
-<li><p><strong>Conversion Stage</strong><br>
-Uses <code>netconv</code>/<code>skelconv</code> to emit VTU/VTP/etc. for ParaView or other visualization tools. Skip via <code>--skip-netconv</code> / <code>--skip-skelconv</code> if you only need NDnet/NDskl.</p></li>
-<li><p><strong>Summary &amp; Cleanup</strong><br>
-Prints a recap of all generated artifacts and removes the NDfield unless <code>--keep-ndfield</code> is set. Projection metadata (axis and range) is also listed for traceability.</p></li>
-<li><p><strong>Validation</strong><br>
-Crop boxes and projection ranges are sanity-checked, and any reuse paths are expanded early so misconfigurations fail fast.</p></li>
-</ol>
-<p>With these options you can carve out thin slabs, build 2D DisPerSE analyses, and visualize the resulting manifolds or skeletons just like in the 3D workflow—only faster and with less memory pressure.</p>
+<section id="examples" class="level3">
+<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<p>Aggregate all crops under a root, fast path:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000 <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000/combined <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches_000 <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--engine</span> polars <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-percentile-range</span> 1 99</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Use explicit files and skip PNG plots:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--inputs</span> outputs/crop_a/topology_points.csv outputs/crop_b/topology_points.csv <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/combined <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> combined <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--no-plots</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Streaming mode (approximate quantiles):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000 <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000/combined <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches_000 <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--engine</span> stream <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--bins</span> 50</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>batch_crop_and_clip.py User Guide</title>
+<title>stitch_slab_pngs.py User Guide</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -2178,7 +2178,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><code>batch_crop_and_clip.py</code> User Guide</h1>
+<h1 class="title"><code>stitch_slab_pngs.py</code> User Guide</h1>
 </div>
 
 
@@ -2195,109 +2195,82 @@ vertical-align: -.125em;
 </header>
 
 
-<section id="batch_crop_and_clip.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="batch_crop_and_clip.py-user-guide"><code>batch_crop_and_clip.py</code> User Guide</h2>
-<p>Use <code>scripts/batch_crop_and_clip.py</code> to automate two steps across many subvolumes: 1) Run <code>analyze_snapshot.py</code> on non-overlapping crop boxes of a snapshot. 2) For each crop, run <code>batch_clip.py</code> across multiple slab origins inside that crop.</p>
-<p>Outputs are organized per-crop and per-slab so results do not overwrite.</p>
+<section id="stitch_slab_pngs.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="stitch_slab_pngs.py-user-guide"><code>stitch_slab_pngs.py</code> User Guide</h2>
+<p>Use <code>scripts/stitch_slab_pngs.py</code> to build an MP4 by stitching one PNG type across slab folders (<code>slab_z*</code>) for each crop.</p>
 <section id="what-it-does" class="level3">
 <h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
 <ul>
-<li>Tiles a user-specified volume with fixed-size crop boxes (skips partial edge tiles).</li>
-<li>For each crop: calls <code>analyze_snapshot.py</code> with your smoothing, nsig, and export options.</li>
-<li>If <code>--dump-filament-manifolds</code> is provided, it also exports the filament-manifold VTKs for each crop.</li>
-<li>Within each crop: marches slab origins along z (or whichever axis you choose in <code>batch_clip.py</code>, default z) with a fixed step and thickness, calling <code>batch_clip.py</code> to produce 3D/2D clips and summary stats.</li>
-<li>Handles unit conversion between input snapshot units and output units (e.g., kpc/h to mpc/h).</li>
-<li>Skips crops that contain no particles (does not abort the batch).</li>
+<li>Scans each crop folder for slab directories (e.g., <code>slab_z0</code>, <code>slab_z10</code>, …).</li>
+<li>Picks a single PNG per slab (by suffix or glob).</li>
+<li>Orders frames by the numeric <code>z</code> value in the slab folder name.</li>
+<li>Writes an MP4 using <code>ffmpeg</code>.</li>
 </ul>
 </section>
 <section id="requirements" class="level3">
 <h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
 <ul>
-<li>Python with access to <code>scripts/analyze_snapshot.py</code> and <code>scripts/batch_clip.py</code>.</li>
-<li>ParaView <code>pvpython</code> on PATH for the <code>batch_clip.py</code> calls.</li>
-<li>DisPerSE binaries available to <code>analyze_snapshot.py</code> (as usual).</li>
-<li>Per-crop topology stats CSVs are generated automatically via <code>ndtopo_stats.py</code>.</li>
+<li><code>ffmpeg</code> on PATH.</li>
+<li>Slab PNGs created by <code>batch_clip.py</code> (or equivalent).</li>
 </ul>
-<p>To keep <code>pvpython</code> on PATH whenever you activate the conda environment:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d&quot;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d&quot;</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">export _PV_OLD_PATH=&quot;$PATH&quot;</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH&quot;</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;$_PV_OLD_PATH&quot;</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="cli" class="level3">
 <h3 class="anchored" data-anchor-id="cli">CLI</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> <span class="op">&lt;</span>snapshot.hdf5<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> <span class="op">&lt;</span>OUTPUT_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> DX DY DZ <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> XMIN XMAX <span class="at">--y-range</span> YMIN YMAX <span class="at">--z-range</span> ZMIN ZMAX <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> <span class="op">&lt;</span>STEP<span class="op">&gt;</span> --slab-thickness <span class="op">&lt;</span>THICK<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  [--mse-nsig 5.0] [--dump-manifolds JE1a] [--dump-filament-manifolds JE2a] [--dump-arcs U] <span class="dt">\</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [--netconv-smooth 20] [--skelconv-smooth 20] <span class="dt">\</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  [--stride 1] [--delaunay-btype periodic] <span class="dt">\</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  [--resample-dims NX NY NZ] [--scalar-name log_field_value] <span class="dt">\</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  [--png-percentile-range PLOW PHIGH] <span class="dt">\</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">write</span><span class="pp">-</span><span class="ss">per</span><span class="pp">-</span><span class="ss">point</span><span class="pp">-</span><span class="ss">csv</span><span class="pp">]</span> <span class="dt">\</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">skip</span><span class="pp">-</span><span class="ss">slabs</span><span class="pp">]</span> <span class="dt">\</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  [--input-unit kpc/h] [--output-unit mpc/h] <span class="dt">\</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  [--analyze-script path/to/analyze_snapshot.py] <span class="dt">\</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  [--clip-script path/to/batch_clip.py]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> <span class="op">&lt;</span>CROP_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> <span class="op">&lt;</span>PNG_SUFFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  [--output-dir <span class="op">&lt;</span>OUT_DIR<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  [--fps N] <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  [--frame-hold N] <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">combine</span><span class="pp">-</span><span class="ss">all</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="key-options" class="level3">
+<h3 class="anchored" data-anchor-id="key-options">Key options</h3>
 <ul>
-<li>Crop sizes/ranges and slab params use the same units as <code>--input-unit</code> (default kpc/h). Outputs and slab origins passed to <code>batch_clip.py</code> are converted to <code>--output-unit</code> (default mpc/h).</li>
-<li><code>--slab-step</code> sets spacing between slab origins; <code>--slab-thickness</code> sets the clip depth for each slab.</li>
-<li><code>--resample-dims</code> sets the grid for density resampling inside <code>batch_clip.py</code> (default 500 500 100).</li>
-<li><code>--png-percentile-range</code> clamps PNG coloring to the given percentile range when <code>batch_clip.py</code> renders images (e.g., <code>1 99</code>).</li>
-<li><code>--write-per-point-csv</code> adds a per‑point topology CSV (one row per Delaunay ID) next to the per‑crop stats file.</li>
-<li><code>--skip-slabs</code> runs only <code>analyze_snapshot.py</code> and topology stats for each crop, skipping <code>batch_clip.py</code>.</li>
-<li>Smoothing tags for output filenames come from <code>--netconv-smooth</code> and <code>--skelconv-smooth</code>.</li>
-<li><code>ndtopo_stats.py</code> supports <code>--delaunay-id-field</code>, <code>--walls-id-field</code>, <code>--filaments-id-field</code>, and <code>--*-cell-mode</code> if you need to adjust how IDs are matched.</li>
+<li><code>--root</code> – Root directory containing <code>crop_*</code> folders.</li>
+<li><code>--crop-dir</code> – Process a single crop directory instead of all crops.</li>
+<li><code>--slab-glob</code> – Slab folder glob (default <code>slab_z*</code>).</li>
+<li><code>--png-suffix</code> – PNG filename suffix to match (e.g., <code>composite_density_walls_filaments.png</code>).</li>
+<li><code>--png-glob</code> – Full glob pattern for PNGs inside each slab (use this <strong>or</strong> <code>--png-suffix</code>).</li>
+<li><code>--output</code> – Output MP4 path (single crop only).</li>
+<li><code>--output-dir</code> – Output directory for per-crop MP4 files.</li>
+<li><code>--fps</code> – Frames per second (default 30).</li>
+<li><code>--frame-hold</code> – Hold each frame for N×(1/<code>--fps</code>) seconds (default 1).</li>
+<li><code>--combine-all</code> – Build one MP4 across all crops, ordered by slab z.</li>
+<li><code>--overwrite</code> – Overwrite existing MP4s.</li>
+<li><code>--dry-run</code> – Print actions without running <code>ffmpeg</code>.</li>
 </ul>
 </section>
-<section id="outputs-and-layout" class="level3">
-<h3 class="anchored" data-anchor-id="outputs-and-layout">Outputs and layout</h3>
-<p>Under <code>--output-root</code>, each crop gets its own folder:</p>
-<pre><code>output-root/
-  crop_x&lt;x0&gt;-&lt;x1&gt;_y&lt;y0&gt;-&lt;y1&gt;_z&lt;z0&gt;-&lt;z1&gt;/
-    &lt;crop_prefix&gt;_*.vtu/vtp/...   # analyze_snapshot outputs
-    &lt;crop_prefix&gt;_topology_stats.csv  # ndtopo_stats results for this crop
-    &lt;crop_prefix&gt;_topology_points.csv # per-point topology rows (optional)
-    slab_z&lt;origin&gt;/
-      &lt;prefix&gt;_walls_3d.vtu
-      &lt;prefix&gt;_filaments_3d.vtp
-      &lt;prefix&gt;_density_3d.vtu / .vti / averaged vti
-      &lt;prefix&gt;_walls.vtu / &lt;prefix&gt;_filaments.vtp / &lt;prefix&gt;_walls_filaments.vtm
-      &lt;prefix&gt;_summary_stats.csv
-      PNGs if batch_clip was called with --save-pngs (the driver passes it by default)</code></pre>
-<p>Naming notes: - Manifolds: <code>&lt;crop_prefix&gt;_sX_manifolds_&lt;TAG&gt;.S###.vtu</code> (persistence tag + smoothing). - Filament manifolds (optional): <code>&lt;crop_prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;.S###.vtu</code> (persistence tag + smoothing). - Filaments: <code>&lt;crop_prefix&gt;_sX_arcs_&lt;ARC&gt;.S###.vtp</code> (persistence tag + smoothing). - Delaunay: <code>&lt;crop_prefix&gt;_delaunay.S###.vtu</code> (smoothing tag). - Unsmooothed conversions (e.g., via <code>ndtopo_stats.py --write-vtk</code>) use <code>_S000</code>. - DisPerSE concatenates multiple manifold tags into one file (e.g., <code>JE1a2a</code>). Run per-tag if you need separate manifold outputs. Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.</p>
+<section id="example-all-crops-composite-pngs" class="level3">
+<h3 class="anchored" data-anchor-id="example-all-crops-composite-pngs">Example: all crops, composite PNGs</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> composite_density_walls_filaments_filament_manifolds.png <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="examples" class="level3">
-<h3 class="anchored" data-anchor-id="examples">Examples</h3>
-<p>Run a batch over 500×500×100 (kpc/h) tiles, stepping slabs every 10 (mpc/h after conversion):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> outputs/quijote_batches <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 200000 <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> 10 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="at">--dump-filament-manifolds</span> JE2a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="at">--skelconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="example-single-crop-density-pngs" class="level3">
+<h3 class="anchored" data-anchor-id="example-single-crop-density-pngs">Example: single crop, density PNGs</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-dir</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000 <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> density.png <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000/density.mp4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="tips" class="level3">
-<h3 class="anchored" data-anchor-id="tips">Tips</h3>
+<section id="example-one-mp4-across-all-crops-ordered-by-z" class="level3">
+<h3 class="anchored" data-anchor-id="example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> walls_3d.png <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--combine-all</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frame-hold</span> 2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="notes" class="level3">
+<h3 class="anchored" data-anchor-id="notes">Notes</h3>
 <ul>
-<li>If a crop contains no particles, the script logs “[skip] Crop box contains no particles.” and moves on.</li>
-<li>Ensure <code>pvpython</code> is resolvable from the environment; otherwise set PATH accordingly or adjust the <code>--clip-script</code> invocation to include its full path.</li>
-<li>Keep <code>--input-unit</code>/<code>--output-unit</code> consistent with your snapshot and downstream expectations; the driver handles the z-origin conversion for slabs automatically.***</li>
+<li>If multiple PNGs match in a slab, the first one is used and a warning is printed.</li>
+<li>The script uses a concat list so non-sequential slab indices are fine.</li>
+<li>Use <code>--dry-run</code> if you want to verify the frame list before encoding.</li>
 </ul>
 </section>
 </section>

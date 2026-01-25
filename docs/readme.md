@@ -10,14 +10,21 @@ format:
 Concise reference for pulling Quijote data, running the DisPerSE pipelines, and exporting visualization-ready artifacts.
 
 ### Documentation
-- Core pipelines: `docs/ANALYZE_SNAPSHOT_USER_GUIDE.qmd` (3D) and `docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.qmd` (2D projections)
-- Slab + PNGs: `docs/BATCH_CLIP_USER_GUIDE.qmd`
-- Batch tiling + per-slab: `docs/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd`
-- Topology overlap stats: `docs/ND_TOPO_STATS_USER_GUIDE.qmd`
-- End-to-end runbook: `docs/TOPOLOGY_ANALYSIS_USER_GUIDE.qmd`
-- Methods summary: `docs/PROJECT_METHODS.qmd`
-- Utilities/other tools: `docs/OTHER_TOOLS_USER_GUIDE.qmd`
-- Results examples: `docs/results.qmd` / `docs/results.html`
+- Core pipelines: [Analyze Snapshot (3D)](ANALYZE_SNAPSHOT_USER_GUIDE.html) and [Analyze Snapshot 2D](ANALYZE_SNAPSHOT_2D_USER_GUIDE.html)
+- Slab + PNGs: [Batch Clip](BATCH_CLIP_USER_GUIDE.html)
+- Batch tiling + per-slab: [Batch Crop + Clip](BATCH_CROP_AND_CLIP_USER_GUIDE.html)
+- Topology overlap stats: [ND Topo Stats](ND_TOPO_STATS_USER_GUIDE.html)
+- Per-point aggregation + histograms: [Aggregate Topology Points](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html)
+- 3D spin renders: [Spin Render](SPIN_RENDER_USER_GUIDE.html)
+- Slab PNG stitching: [Stitch Slab PNGs](STITCH_SLAB_PNGS_USER_GUIDE.html)
+- End-to-end runbook: [Topology Analysis](TOPOLOGY_ANALYSIS_USER_GUIDE.html)
+- Methods summary: [Project Methods](PROJECT_METHODS.html)
+- Workflow flowchart: [Workflow Flowchart](WORKFLOW_FLOWCHART.html)
+- Utilities/other tools: [Other Tools](OTHER_TOOLS_USER_GUIDE.html)
+- Results examples: [Results](results.html)
+
+### Workflow Flowchart
+[Workflow Flowchart](WORKFLOW_FLOWCHART.html)
 
 ### Project Layout
 - All scripts live in `scripts/`:
@@ -28,6 +35,9 @@ Concise reference for pulling Quijote data, running the DisPerSE pipelines, and 
   - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
   - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and `cell` handling for Delaunay/walls/filaments).
   - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
+  - `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats and histograms.
+  - `scripts/spin_render.py`: render rotating PNG sequences (and MP4 via ffmpeg).
+  - `scripts/stitch_slab_pngs.py`: stitch slab PNGs into per-crop or combined MP4s.
 - `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
 
 ### Key Links

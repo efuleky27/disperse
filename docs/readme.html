@@ -2201,15 +2201,23 @@ vertical-align: -.125em;
 <section id="documentation" class="level3">
 <h3 class="anchored" data-anchor-id="documentation">Documentation</h3>
 <ul>
-<li>Core pipelines: <code>docs/ANALYZE_SNAPSHOT_USER_GUIDE.qmd</code> (3D) and <code>docs/ANALYZE_SNAPSHOT_2D_USER_GUIDE.qmd</code> (2D projections)</li>
-<li>Slab + PNGs: <code>docs/BATCH_CLIP_USER_GUIDE.qmd</code></li>
-<li>Batch tiling + per-slab: <code>docs/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd</code></li>
-<li>Topology overlap stats: <code>docs/ND_TOPO_STATS_USER_GUIDE.qmd</code></li>
-<li>End-to-end runbook: <code>docs/TOPOLOGY_ANALYSIS_USER_GUIDE.qmd</code></li>
-<li>Methods summary: <code>docs/PROJECT_METHODS.qmd</code></li>
-<li>Utilities/other tools: <code>docs/OTHER_TOOLS_USER_GUIDE.qmd</code></li>
-<li>Results examples: <code>docs/results.qmd</code> / <code>docs/results.html</code></li>
+<li>Core pipelines: <a href="ANALYZE_SNAPSHOT_USER_GUIDE.html">Analyze Snapshot (3D)</a> and <a href="ANALYZE_SNAPSHOT_2D_USER_GUIDE.html">Analyze Snapshot 2D</a></li>
+<li>Slab + PNGs: <a href="BATCH_CLIP_USER_GUIDE.html">Batch Clip</a></li>
+<li>Batch tiling + per-slab: <a href="BATCH_CROP_AND_CLIP_USER_GUIDE.html">Batch Crop + Clip</a></li>
+<li>Topology overlap stats: <a href="ND_TOPO_STATS_USER_GUIDE.html">ND Topo Stats</a></li>
+<li>Per-point aggregation + histograms: <a href="AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">Aggregate Topology Points</a></li>
+<li>3D spin renders: <a href="SPIN_RENDER_USER_GUIDE.html">Spin Render</a></li>
+<li>Slab PNG stitching: <a href="STITCH_SLAB_PNGS_USER_GUIDE.html">Stitch Slab PNGs</a></li>
+<li>End-to-end runbook: <a href="TOPOLOGY_ANALYSIS_USER_GUIDE.html">Topology Analysis</a></li>
+<li>Methods summary: <a href="PROJECT_METHODS.html">Project Methods</a></li>
+<li>Workflow flowchart: <a href="WORKFLOW_FLOWCHART.html">Workflow Flowchart</a></li>
+<li>Utilities/other tools: <a href="OTHER_TOOLS_USER_GUIDE.html">Other Tools</a></li>
+<li>Results examples: <a href="results.html">Results</a></li>
 </ul>
+</section>
+<section id="workflow-flowchart" class="level3">
+<h3 class="anchored" data-anchor-id="workflow-flowchart">Workflow Flowchart</h3>
+<p><a href="WORKFLOW_FLOWCHART.html">Workflow Flowchart</a></p>
 </section>
 <section id="project-layout" class="level3">
 <h3 class="anchored" data-anchor-id="project-layout">Project Layout</h3>
@@ -2221,8 +2229,11 @@ vertical-align: -.125em;
 <li><code>scripts/export_grid_vti.py</code>: wrap a 3D HDF5 grid as VTI for ParaView.</li>
 <li><code>scripts/export_snapshot_vtu.py</code>: stream snapshot particles to VTU (or VTI from an existing grid with <code>--density-field</code>).</li>
 <li><code>scripts/batch_clip.py</code>: clip slabs, flatten to 2D, average density, and render PNGs.</li>
-<li><code>scripts/ndtopo_stats.py</code>: compute overlap/unique/unassigned stats (uses Delaunay scalars, matches by <code>true_index</code>/<code>int(cell)</code>).</li>
+<li><code>scripts/ndtopo_stats.py</code>: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and <code>cell</code> handling for Delaunay/walls/filaments).</li>
 <li><code>scripts/batch_crop_and_clip.py</code>: tile a snapshot into many crops, run analyze → stats → slab clips for each.</li>
+<li><code>scripts/aggregate_topology_points.py</code>: aggregate per-point CSVs into global stats and histograms.</li>
+<li><code>scripts/spin_render.py</code>: render rotating PNG sequences (and MP4 via ffmpeg).</li>
+<li><code>scripts/stitch_slab_pngs.py</code>: stitch slab PNGs into per-crop or combined MP4s.</li>
 </ul></li>
 <li><code>data/</code>: place snapshots or density grids here. <code>outputs/</code>: per-run artifacts.</li>
 </ul>
@@ -2241,104 +2252,125 @@ vertical-align: -.125em;
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint local-id</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint search quijote</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/&quot;</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Snapshot BSQ 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Density field (3D_cubes/BSQ/0):</p>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/fiducial/0/snapdir_000/&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/fiducial/0/snapdir_000/&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/snapdir_000/&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Snapshot Fiducial 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Snapshot (BSQ/0):</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint local-id</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint search quijote</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/&quot;</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Density Field BSQ 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Snapshot BSQ 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Density field (3D_cubes/BSQ/0):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint local-id</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint search quijote</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">&quot;</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="st">&quot;</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5&quot;</span> <span class="at">--label</span> <span class="st">&quot;Quijote Density Field BSQ 0 z0&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="snapshot-wallsfilaments-disperse" class="level3">
 <h3 class="anchored" data-anchor-id="snapshot-wallsfilaments-disperse">Snapshot → walls/filaments (DisPerSE)</h3>
 <p>Environment: <code>conda activate disperse</code> (with <code>hdf5plugin</code>, <code>vtkmodules</code>).</p>
+<p>To keep <code>pvpython</code> on PATH whenever you activate the environment:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d&quot;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d&quot;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="st">export _PV_OLD_PATH=&quot;$PATH&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d/paraview_path.sh&quot;</span> <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH=&quot;$_PV_OLD_PATH&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Typical run (cropped, periodic, rebased for tessellation, shifted VTK outputs):</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\ </span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">--delaunay-btype</span> periodic <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500000 500000 100000 <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\ </span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">--delaunay-btype</span> periodic <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Notes: - Coordinates are rebased to the crop origin for <code>-periodic</code> tessellation, then VTKs are shifted back to global. - Outputs include shifted VTKs (<code>*_delaunay.vtu</code>, <code>*_manifolds_&lt;TAG&gt;.vtu</code>, <code>*_filaments_&lt;ARC&gt;.vtp</code>) plus per-file summary stats CSV. - You can replace <code>--stride 1</code> with <code>--target-count 2000000</code> to auto-pick a stride near 2M particles.</p>
 </section>
 <section id="density-workflows" class="level3">
 <h3 class="anchored" data-anchor-id="density-workflows">Density Workflows</h3>
 <p>From snapshot to density grid:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compute_density_field.py <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--parttype</span> PartType1 <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-size</span> 256 <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--chunk-size</span> 2000000 <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--store-contrast</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compute_density_field.py <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--parttype</span> PartType1 <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-size</span> 256 <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--chunk-size</span> 2000000 <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--store-contrast</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Visualize grid in ParaView (VTI):</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_snapshot_vtu.py <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--density-field</span> <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-dataset</span> DensityField/density <span class="dt">\</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_snapshot_vtu.py <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--density-field</span> <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-dataset</span> DensityField/density <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Convert an existing grid directly:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_grid_vti.py <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/df_m_CIC_z_1_00.hdf5 <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset</span> df <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/df_m_CIC_z_1_00.vti <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--spacing</span> 1 1 1 <span class="dt">\</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--origin</span> 0 0 0 <span class="dt">\</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field-name</span> density</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_grid_vti.py <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/df_m_CIC_z_1_00.hdf5 <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset</span> df <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/df_m_CIC_z_1_00.vti <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--spacing</span> 1 1 1 <span class="dt">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--origin</span> 0 0 0 <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field-name</span> density</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="slab-clip-pngs" class="level3">
 <h3 class="anchored" data-anchor-id="slab-clip-pngs">Slab clip + PNGs</h3>
 <p>Clip a slab, flatten, average density, and render overlays:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_filaments_U.vtp <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox/auto2d <span class="dt">\</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_filaments_U.vtp <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox/auto2d <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.</p>
 </section>
 <section id="topology-overlap-stats" class="level3">
 <h3 class="anchored" data-anchor-id="topology-overlap-stats">Topology overlap stats</h3>
 <p>Use Delaunay scalars to quantify shared/unique/unassigned topology membership:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay.vtu <span class="dt">\</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> outputs/snap_010_subbox/snap_010_filaments_U.vtp <span class="dt">\</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="dt">\</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/snap_010_topology_stats.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> outputs/snap_010_subbox/snap_010_filaments_U.vtp <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-id-field</span> true_index <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="dt">\</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/snap_010_topology_stats.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>--write-vtk</code> will auto-convert NDnet/NDskl (unsmoothed) if VTKs are not present.</p>
 </section>
 <section id="batch-crops-slabs" class="level3">
 <h3 class="anchored" data-anchor-id="batch-crops-slabs">Batch crops + slabs</h3>
 <p>Tile the box, run analyze → stats → slab clips for each crop:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> outputs/quijote_batches <span class="dt">\</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 200000 <span class="dt">\</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="at">--skelconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> 10 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> outputs/quijote_batches <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 200000 <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="at">--dump-filament-manifolds</span> JE2a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="at">--skelconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> 10 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Outputs are organized per crop (<code>*_delaunay.vtu</code>, walls/filaments VTKs, per-crop topology stats) and per slab subfolder (flattened VTKs, PNGs, stats).</p>
 </section>
 <section id="other-utilities" class="level3">
@@ -2346,23 +2378,23 @@ vertical-align: -.125em;
 <ul>
 <li>CosmoFlow snapshot prep:</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/prepare_cosmoflow_snapshot.py <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/univ_ics_2019-03_a10000668.hdf5 <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> data/cosmoflow_z0_snapshot.hdf5 <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--redshift-index</span> 0 <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 1000000 <span class="dt">\</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--threshold</span> 5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/prepare_cosmoflow_snapshot.py <span class="dt">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/univ_ics_2019-03_a10000668.hdf5 <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> data/cosmoflow_z0_snapshot.hdf5 <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--redshift-index</span> 0 <span class="dt">\</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 1000000 <span class="dt">\</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--threshold</span> 5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
 <li>ParaView automation example:</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> visualize_walls_paraview.py <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010/snap_010_walls.vtu <span class="dt">\</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> field_value <span class="dt">\</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--threshold</span> 0.001 0.02 <span class="dt">\</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-size</span> 0.035 0.20 <span class="dt">\</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-position</span> 0.85 0.1 <span class="dt">\</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-font-sizes</span> 8 7 <span class="dt">\</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--screenshot</span> outputs/snap_010/walls_preview.png</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> visualize_walls_paraview.py <span class="dt">\</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010/snap_010_walls.vtu <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> field_value <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--threshold</span> 0.001 0.02 <span class="dt">\</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-size</span> 0.035 0.20 <span class="dt">\</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-position</span> 0.85 0.1 <span class="dt">\</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-bar-font-sizes</span> 8 7 <span class="dt">\</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--screenshot</span> outputs/snap_010/walls_preview.png</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="some-ai-queries-detailed-guide" class="level2">
@@ -2384,6 +2416,7 @@ vertical-align: -.125em;
 <li>Particle sampling: <code>--stride</code> / <code>--target-count</code> (denser preserves fine structure; more thinning smooths).</li>
 <li>Boundaries: <code>--periodic</code>, <code>--delaunay-btype</code> (wraparound, block options). +- Persistence: <code>--mse-nsig</code> or <code>--persistence-cut</code> (higher → prune weaker features; multiple values allowed, e.g., <code>--nsig 3.5 4.0 5.0</code>).</li>
 <li>Manifolds: <code>--dump-manifolds</code> (JD1d walls, J0a void minima, etc.).</li>
+<li>Filament manifolds (optional): <code>--dump-filament-manifolds</code> (e.g., JE2a).</li>
 <li>Threshold style: absolute (<code>--persistence-cut</code>) vs. sigma (<code>--mse-nsig</code>).</li>
 <li>Units: <code>--input-unit</code> / <code>--output-unit</code> to keep coordinate scales consistent.</li>
 <li>Post-visualization: <code>visualize_walls_paraview.py --threshold</code> can hide/show ranges.</li>
@@ -2395,91 +2428,91 @@ vertical-align: -.125em;
 <h3 class="anchored" data-anchor-id="buildsetup-walkthrough-macos">Build/setup walkthrough (macOS)</h3>
 <p><strong>What we’re building</strong> - A reproducible setup that: - builds DisPerSE from source (CGAL, GMP/MPFR, GSL, CFITSIO), - downloads a Quijote snapshot (e.g., <code>snap_010.hdf5</code>), - optionally grids particles (CIC), - runs DisPerSE to extract filaments/walls, - converts results to VTK for ParaView.</p>
 <p><strong>One-time prerequisites</strong> - Command Line Tools (if needed): <code>xcode-select --install</code> - Homebrew libs (Apple Silicon paths assumed):</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install cgal gmp mpfr gsl cfitsio boost@1.85</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install cgal gmp mpfr gsl cfitsio boost@1.85</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
 <li>Conda env (example):</li>
 </ul>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> disperse <span class="at">-c</span> conda-forge python=3.11 <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  numpy scipy h5py astropy tqdm numba psutil</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate disperse</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># avoid HDF5 plugin crash:</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">unset</span> <span class="va">HDF5_PLUGIN_PATH</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HDF5_USE_FILE_LOCKING</span><span class="op">=</span>FALSE</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> disperse <span class="at">-c</span> conda-forge python=3.11 <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  numpy scipy h5py astropy tqdm numba psutil</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate disperse</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># avoid HDF5 plugin crash:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="bu">unset</span> <span class="va">HDF5_PLUGIN_PATH</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HDF5_USE_FILE_LOCKING</span><span class="op">=</span>FALSE</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Build DisPerSE (once)</strong></p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/fules/src/DisPerSE</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) Shim to ensure CGAL/GMP/MPFR are found</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> cgal_use_dummy.cmake <span class="op">&lt;&lt;&#39;CMAKE&#39;</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="st">if (DEFINED CGAL_DIR AND EXISTS &quot;${CGAL_DIR}/UseCGAL.cmake&quot;)</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="st">  include(&quot;${CGAL_DIR}/UseCGAL.cmake&quot;)</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT GMP_FOUND)  find_package(GMP)  endif()</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT MPFR_FOUND) find_package(MPFR) endif()</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="st">if (GMP_FOUND AND NOT TARGET GMP::gmp)</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(GMP::gmp UNKNOWN IMPORTED)</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(GMP::gmp PROPERTIES</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION &quot;${GMP_LIBRARIES}&quot;</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES &quot;${GMP_INCLUDE_DIR};${GMP_INCLUDE_DIRS}&quot;)</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="st">if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(MPFR::mpfr UNKNOWN IMPORTED)</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(MPFR::mpfr PROPERTIES</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION &quot;${MPFR_LIBRARIES}&quot;</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES &quot;${MPFR_INCLUDE_DIR};${MPFR_INCLUDE_DIRS}&quot;)</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="op">CMAKE</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Configure &amp; build</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85:/opt/homebrew&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake&quot;</span> <span class="dt">\</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">&quot;-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS&quot;</span></span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span>  <span class="co"># builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Users/fules/src/DisPerSE</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) Shim to ensure CGAL/GMP/MPFR are found</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> cgal_use_dummy.cmake <span class="op">&lt;&lt;&#39;CMAKE&#39;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">if (DEFINED CGAL_DIR AND EXISTS &quot;${CGAL_DIR}/UseCGAL.cmake&quot;)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">  include(&quot;${CGAL_DIR}/UseCGAL.cmake&quot;)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT GMP_FOUND)  find_package(GMP)  endif()</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT MPFR_FOUND) find_package(MPFR) endif()</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">if (GMP_FOUND AND NOT TARGET GMP::gmp)</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(GMP::gmp UNKNOWN IMPORTED)</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(GMP::gmp PROPERTIES</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION &quot;${GMP_LIBRARIES}&quot;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES &quot;${GMP_INCLUDE_DIR};${GMP_INCLUDE_DIRS}&quot;)</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="st">if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(MPFR::mpfr UNKNOWN IMPORTED)</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(MPFR::mpfr PROPERTIES</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION &quot;${MPFR_LIBRARIES}&quot;</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES &quot;${MPFR_INCLUDE_DIR};${MPFR_INCLUDE_DIRS}&quot;)</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="op">CMAKE</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Configure &amp; build</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85:/opt/homebrew&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake&quot;</span> <span class="dt">\</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">&quot;-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS&quot;</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span>  <span class="co"># builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>If you see <code>Undefined symbols ___gmpn_*</code>, GMP/MPFR weren’t linked—this shim + Homebrew gmp/mpfr fixes it.</p>
 <p><strong>PATH</strong></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/Users/fules/src/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/Users/fules/src/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Add to <code>~/.zshrc</code> if desired.</p>
 <p>Docs: DisPerSE converters (skelconv) usage is on the DisPerSE site; the cosmology pipeline examples there mirror the <code>mse</code>/<code>skelconv</code>/<code>-manifolds</code> calls used here.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">(</span><span class="ex">MPFR_FOUND</span> AND NOT TARGET MPFR::mpfr<span class="kw">)</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">add_library</span><span class="er">(</span><span class="ex">MPFR::mpfr</span> UNKNOWN IMPORTED<span class="kw">)</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">set_target_properties</span><span class="er">(</span><span class="ex">MPFR::mpfr</span> PROPERTIES</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">IMPORTED_LOCATION</span> <span class="st">&quot;</span><span class="va">${MPFR_LIBRARIES}</span><span class="st">&quot;</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">INTERFACE_INCLUDE_DIRECTORIES</span> <span class="st">&quot;</span><span class="va">${MPFR_INCLUDE_DIR}</span><span class="st">;</span><span class="va">${MPFR_INCLUDE_DIRS}</span><span class="st">&quot;</span><span class="kw">)</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">endif()</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ex">CMAKE</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3.2 Configure &amp; build</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85:/opt/homebrew&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake&quot;</span> <span class="dt">\</span></span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">&quot;-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS&quot;</span></span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span>  <span class="co"># builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">(</span><span class="ex">MPFR_FOUND</span> AND NOT TARGET MPFR::mpfr<span class="kw">)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">add_library</span><span class="er">(</span><span class="ex">MPFR::mpfr</span> UNKNOWN IMPORTED<span class="kw">)</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">set_target_properties</span><span class="er">(</span><span class="ex">MPFR::mpfr</span> PROPERTIES</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">IMPORTED_LOCATION</span> <span class="st">&quot;</span><span class="va">${MPFR_LIBRARIES}</span><span class="st">&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">INTERFACE_INCLUDE_DIRECTORIES</span> <span class="st">&quot;</span><span class="va">${MPFR_INCLUDE_DIR}</span><span class="st">;</span><span class="va">${MPFR_INCLUDE_DIRS}</span><span class="st">&quot;</span><span class="kw">)</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">endif()</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ex">CMAKE</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3.2 Configure &amp; build</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">&quot;/opt/homebrew/opt/boost@1.85:/opt/homebrew&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake&quot;</span> <span class="dt">\</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">&quot;-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS&quot;</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span>  <span class="co"># builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>If you ever see Undefined symbols __<em>gmpn</em>* again, it means CGAL needs GMP/MPFR. The shim above, plus Homebrew’s gmp/mpfr, fixes that.</p>
 <p>Add the binaries to your shell PATH:</p>
 </section>
 <section id="add-to-.zshrc-or-just-export-in-the-shell-you-use-to-run" class="level3">
 <h3 class="anchored" data-anchor-id="add-to-.zshrc-or-just-export-in-the-shell-you-use-to-run">Add to ~/.zshrc (or just export in the shell you use to run)</h3>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/Users/fules/src/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/Users/fules/src/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Docs: DisPerSE converters (skelconv) usage is here (formats, flags). ￼ A typical DisPerSE pipeline used in cosmological catalogs is illustrated here (you’ll recognize the mse/skelconv calls and the -manifolds flag).</p>
 </section>
 </section>

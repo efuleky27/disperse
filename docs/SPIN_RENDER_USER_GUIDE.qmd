@@ -46,12 +46,14 @@ pvpython scripts/spin_render.py \
   [--scalar NAME] \
   [--range-min MIN --range-max MAX] \
   [--percentile-range PLOW PHIGH] \
-  [--colormap PRESET]
+  [--colormap PRESET] \
+  [--overwrite]
 ```
 
 ### Key options
 - `--input` – VTK file to render.
 - `--output` – Output path used as the PNG prefix; the script writes `<OUTPUT_BASE>_0000.png`, `<OUTPUT_BASE>_0001.png`, ...
+- If `--output` ends with `.mp4`, the script also stitches the PNGs into that movie using `ffmpeg`.
 - `--frames` – Number of frames (default 180).
 - `--elev` – Camera elevation in degrees for the orbit (default 20).
 - `--zoom` – Zoom factor baked into the orbit radius (default 1.2).
@@ -59,6 +61,7 @@ pvpython scripts/spin_render.py \
 - `--range-min/--range-max` – Fixed color range. If omitted, auto-range is used.
 - `--percentile-range` – Clamp the colormap to the given percentiles (e.g., `1 99`). Mutually exclusive with fixed range.
 - `--colormap` – ParaView preset name (default `Fast`).
+- `--overwrite` – Overwrite the MP4 if it already exists.
 
 ### Animated elevation + zoom
 ```bash

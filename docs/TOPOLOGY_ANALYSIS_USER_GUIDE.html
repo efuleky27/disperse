@@ -2235,24 +2235,25 @@ HDF5 snapshot; optional crop box; stride/target-count; <code>--periodic</code>/<
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Outputs (per crop)</strong><br>
-- Native (rebased coords): <code>&lt;prefix&gt;.NDnet</code>, <code>&lt;prefix&gt;_s*.NDskl</code>. - VTK (shifted to global): <code>&lt;prefix&gt;_delaunay[.S###].vtu</code>, <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;[.S###].vtu</code>, <code>&lt;prefix&gt;_filaments_&lt;ARC&gt;[.S###].vtp</code>. - <code>&lt;prefix&gt;_summary_stats.csv</code> (VTK scalar stats).</p>
+- Native (rebased coords): <code>&lt;prefix&gt;.NDnet</code>, <code>&lt;prefix&gt;_s*.NDskl</code>. - VTK (shifted to global): <code>&lt;prefix&gt;_delaunay[.S###].vtu</code>, <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;[.S###].vtu</code>, <code>&lt;prefix&gt;_filaments_&lt;ARC&gt;[.S###].vtp</code>, and optional <code>&lt;prefix&gt;_filament_manifolds_&lt;TAG&gt;[.S###].vtu</code>. - <code>&lt;prefix&gt;_summary_stats.csv</code> (VTK scalar stats).</p>
 <p><strong>Why it matters</strong><br>
 Produces the authoritative density/topology datasets used by Stage 2 (slab clipping) and Stage 3 (overlap/mass stats), without periodic tiling artifacts in cropped runs.</p>
 </section>
 <section id="stage-2-batch_clip.py-slab-clip-2d3d-views" class="level2">
 <h2 class="anchored" data-anchor-id="stage-2-batch_clip.py-slab-clip-2d3d-views">Stage 2: <code>batch_clip.py</code> (slab clip + 2D/3D views)</h2>
 <p><strong>Purpose (what/why)</strong><br>
-Take the walls/filaments/density VTKs and make slab-focused products: clipped 3D, flattened 2D, averaged density, and PNGs. Once flattened, you can layer density, walls, and filaments in 2D to see where structures overlap or diverge.</p>
+Take the walls/filaments/density VTKs (plus optional filament-manifold VTKs) and make slab-focused products: clipped 3D, flattened 2D, averaged density, and PNGs. Once flattened, you can layer density, walls, and filaments in 2D to see where structures overlap or diverge.</p>
 <p><strong>How it works (plain steps)</strong><br>
 1) <strong>Clip</strong> walls/filaments/density to the slab bounds.<br>
 2) <strong>Flatten</strong> walls/filaments onto the slab plane; <strong>average</strong> density across slab thickness; <strong>resample</strong> density to a regular grid.<br>
 3) <strong>Render</strong> optional PNGs (3D slices, 2D flats, composite overlays).</p>
 <p><strong>Key inputs</strong><br>
-Walls VTU, Filaments VTP, Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.</p>
+Walls VTU, Filaments VTP, optional filament manifolds VTU, Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.</p>
 <p>Example:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
@@ -2273,27 +2274,28 @@ Provides ready-to-view 2D/3D slices aligned to a slab, and flattened 2D layers t
 <section id="stage-3-ndtopo_stats.py-overlapmass-attribution" class="level2">
 <h2 class="anchored" data-anchor-id="stage-3-ndtopo_stats.py-overlapmass-attribution">Stage 3: <code>ndtopo_stats.py</code> (overlap/mass attribution)</h2>
 <p><strong>Purpose (what/why)</strong><br>
-Compute how many IDs belong to walls, filaments, both, or neither, and aggregate scalar sums/means for those categories. Scalars always come from the Delaunay mesh; IDs come from walls (<code>true_index</code>) and filaments (<code>int(cell)</code>).</p>
+Compute how many IDs belong to walls, filaments, both, or neither, and aggregate scalar sums/means for those categories. Scalars always come from the Delaunay mesh; ID fields and <code>cell</code> handling are configurable via flags (e.g., <code>true_index</code>, <code>cell</code> with optional <code>.0</code> filtering).</p>
 <p><strong>Inputs (VTK preferred; <code>--write-vtk</code> auto-converts native)</strong><br>
-- Delaunay VTU (or NDnet) with <code>true_index</code> and scalars (<code>mass</code>, <code>field_value</code>, <code>log_field_value</code>).<br>
-- Walls VTU (or NDnet) with <code>true_index</code>.<br>
-- Filaments VTP (or NDskl) with <code>cell</code> (integer part used as ID).</p>
+- Delaunay VTU (or NDnet) with an ID field (<code>true_index</code> by default) and scalars (<code>mass</code>, <code>field_value</code>, <code>log_field_value</code>).<br>
+- Walls VTU (or NDnet) with an ID field (<code>true_index</code> by default).<br>
+- Filaments VTP (or NDskl) with an ID field (<code>cell</code> by default; can keep only <code>.0</code> cells if desired).</p>
 <p><strong>Key flags</strong><br>
 - <code>--write-vtk</code> (convert NDnet/NDskl to unsmoothed VTU/VTP if needed)<br>
-- <code>--walls-id-field true_index</code>, <code>--filaments-id-field cell</code><br>
-- <code>--scalar-fields mass field_value log_field_value</code><br>
+- <code>--delaunay-id-field true_index</code>, <code>--walls-id-field true_index</code>, <code>--filaments-id-field cell</code><br>
+- <code>--delaunay-cell-mode all|zero</code>, <code>--walls-cell-mode all|zero</code>, <code>--filaments-cell-mode all|zero</code> - <code>--scalar-fields mass field_value log_field_value</code><br>
 - <code>--netconv-bin/--skelconv-bin</code> if conversion is required</p>
 <p><strong>Example (per crop)</strong></p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="at">--verbose</span> <span class="at">--write-vtk</span> <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-ndnet</span> outputs/snap_010_subbox/snap_010.NDnet <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-ndnet</span>    outputs/snap_010_subbox/snap_010_s3_manifolds_JE1a.NDnet <span class="dt">\</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-ndskl</span> outputs/snap_010_subbox/snap_010_s3.U.NDskl <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/topology_stats.csv <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-bin</span> /path/to/netconv <span class="at">--skelconv-bin</span> /path/to/skelconv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-id-field</span> true_index <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-cell-mode</span> all <span class="at">--walls-cell-mode</span> all <span class="at">--filaments-cell-mode</span> all <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/topology_stats.csv <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-bin</span> /path/to/netconv <span class="at">--skelconv-bin</span> /path/to/skelconv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Outputs</strong><br>
-- CSV with rows for <code>shared</code>, <code>wall_only</code>, <code>filament_only</code>, <code>unassigned</code>; columns: <code>count</code>, and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> for each scalar.<br>
+- CSV with rows for <code>walls</code>, <code>filaments</code>, <code>walls_not_filaments</code>, <code>filaments_not_walls</code>, <code>shared_walls_filaments</code>, <code>unassigned</code> (plus filament-manifold variants such as <code>filament_manifolds</code>, <code>shared_walls_filament_manifolds</code>, <code>shared_filaments_filament_manifolds</code>); columns: <code>count</code>, and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> for each scalar.<br>
 - Note: Many filament <code>cell</code> IDs won’t match Delaunay <code>true_index</code> (interpolated arc samples), so filament mass can be &lt; filament count.</p>
 <p><strong>Why it matters</strong><br>
 Gives quantitative overlap/uniqueness across topologies and assigns scalar totals/means using the authoritative Delaunay values.</p>

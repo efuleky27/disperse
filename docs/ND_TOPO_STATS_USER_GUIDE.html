@@ -2197,13 +2197,13 @@ vertical-align: -.125em;
 
 <section id="ndtopo_stats.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="ndtopo_stats.py-user-guide"><code>ndtopo_stats.py</code> User Guide</h2>
-<p>Use <code>scripts/ndtopo_stats.py</code> to measure how many vertices belong to walls, filaments, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.</p>
+<p>Use <code>scripts/ndtopo_stats.py</code> to measure how many vertices belong to walls, filaments, filament manifolds (optional), both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.</p>
 <section id="what-it-does" class="level3">
 <h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
 <ul>
 <li>Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (<code>--write-vtk</code> via <code>netconv</code>/<code>skelconv</code>).</li>
-<li>Loads the Delaunay VTU (universe), walls VTU, and filaments VTP.</li>
-<li>Matches point IDs (<code>true_index</code> by default; filaments use integer part of <code>cell</code>) and splits them into: shared (wall∩filament), wall_only, filament_only, unassigned.</li>
+<li>Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament-manifolds VTU.</li>
+<li>Matches point IDs (<code>true_index</code> by default; filaments use integer part of <code>cell</code> unless you filter to <code>.0</code> cells) and splits them into: walls, filaments, walls_not_filaments, filaments_not_walls, shared_walls_filaments, unassigned, plus filament‑manifold categories when provided.</li>
 <li>Aggregates selected scalar fields (default: <code>mass</code>, <code>field_value</code>, <code>log_field_value</code>) from the Delaunay mesh for each category and writes a CSV.</li>
 </ul>
 </section>
@@ -2217,47 +2217,75 @@ vertical-align: -.125em;
 <section id="cli" class="level3">
 <h3 class="anchored" data-anchor-id="cli">CLI</h3>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-ndnet</span> <span class="op">&lt;</span>Delaunay.vtu<span class="kw">|</span><span class="ex">NDnet</span><span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-ndnet</span> <span class="op">&lt;</span>Walls.vtu<span class="kw">|</span><span class="ex">NDnet</span><span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-ndskl</span> <span class="op">&lt;</span>Filaments.vtp<span class="kw">|</span><span class="ex">NDskl</span><span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> <span class="op">&lt;</span>stats.csv<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">write</span><span class="pp">-</span><span class="ss">vtk</span><span class="pp">]</span> <span class="dt">\</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  [--netconv-bin /path/to/netconv] <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [--skelconv-bin /path/to/skelconv] <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [--walls-id-field true_index] <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  [--filaments-id-field cell] <span class="dt">\</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  [--scalar-fields mass field_value log_field_value] <span class="dt">\</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">verbose</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> <span class="op">&lt;</span>Delaunay.vtu<span class="op">&gt;</span>   <span class="kw">|</span> <span class="ex">--delaunay-ndnet</span> <span class="op">&lt;</span>Delaunay.NDnet<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    <span class="op">&lt;</span>Walls.vtu<span class="op">&gt;</span>      <span class="kw">|</span> <span class="ex">--walls-ndnet</span>    <span class="op">&lt;</span>Walls.NDnet<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> <span class="op">&lt;</span>Filaments.vtp<span class="op">&gt;</span> <span class="kw">|</span> <span class="ex">--filaments-ndskl</span> <span class="op">&lt;</span>Filaments.NDskl<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  [--filament-manifolds-vtk <span class="op">&lt;</span>FilamentManifolds.vtu<span class="op">&gt;</span> <span class="kw">|</span> <span class="ex">--filament-manifolds-ndnet</span> <span class="op">&lt;</span>FilamentManifolds.NDnet<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> <span class="op">&lt;</span>stats.csv<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">write</span><span class="pp">-</span><span class="ss">vtk</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [--netconv-bin /path/to/netconv] <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [--skelconv-bin /path/to/skelconv] <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  [--delaunay-id-field true_index] <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  [--delaunay-cell-mode all<span class="kw">|</span><span class="ex">zero]</span> <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  [--walls-id-field true_index] <span class="dt">\</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  [--walls-cell-mode all<span class="kw">|</span><span class="ex">zero]</span> <span class="dt">\</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  [--filaments-id-field cell] <span class="dt">\</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  [--filaments-cell-mode all<span class="kw">|</span><span class="ex">zero]</span> <span class="dt">\</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  [--filament-manifolds-id-field true_index] <span class="dt">\</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  [--filament-manifolds-cell-mode all<span class="kw">|</span><span class="ex">zero]</span> <span class="dt">\</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  [--scalar-fields mass field_value log_field_value] <span class="dt">\</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  [--per-point-csv <span class="op">&lt;</span>per_point.csv<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">verbose</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
 <li><code>--write-vtk</code> converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including <code>.S000</code> variants).</li>
-<li>Filament IDs use <code>int(cell)</code> by default to bucket arc samples with their source cell.</li>
+<li><code>--delaunay-id-field</code>, <code>--walls-id-field</code>, <code>--filaments-id-field</code>, and <code>--filament-manifolds-id-field</code> choose which point-data array defines IDs.</li>
+<li><code>--*-cell-mode zero</code> keeps only <code>.0</code> cell IDs (0-cells) when <code>cell</code> is used; <code>all</code> uses <code>int(cell)</code> for every point.</li>
 <li>Scalars are read only from the Delaunay file, regardless of what walls/filaments store.</li>
 </ul>
 </section>
 <section id="output" class="level3">
 <h3 class="anchored" data-anchor-id="output">Output</h3>
 <ul>
-<li>A single CSV at <code>--output-csv</code> with columns: <code>category</code>, <code>count</code>, and for each scalar <code>&lt;name&gt;_sum</code>, <code>&lt;name&gt;_mean</code>. Categories: <code>shared</code>, <code>wall_only</code>, <code>filament_only</code>, <code>unassigned</code>.</li>
+<li>A single CSV at <code>--output-csv</code> with columns: <code>category</code>, <code>count</code>, and for each scalar <code>&lt;name&gt;_sum</code>, <code>&lt;name&gt;_mean</code>.</li>
+<li>Base categories: <code>walls</code>, <code>filaments</code>, <code>walls_not_filaments</code>, <code>filaments_not_walls</code>, <code>shared_walls_filaments</code>, <code>unassigned</code>.</li>
+<li>Extra filament-manifold categories (only if provided): <code>filament_manifolds</code>, <code>walls_not_filament_manifolds</code>, <code>filament_manifolds_not_walls</code>, <code>shared_walls_filament_manifolds</code>, <code>shared_filaments_filament_manifolds</code>.</li>
+<li>Optional per-point CSV (<code>--per-point-csv</code>) with one row per Delaunay ID and boolean membership flags:
+<ul>
+<li>Columns: <code>delaunay_id</code>, <code>is_wall</code>, <code>is_filament</code>, <code>is_filament_manifold</code>, plus the requested scalar columns.</li>
+<li>Boolean flags preserve multi‑membership so downstream analyses can filter/aggregate by combination.</li>
+</ul></li>
+</ul>
+</section>
+<section id="naming-conventions-for-auto-converted-files---write-vtk" class="level3">
+<h3 class="anchored" data-anchor-id="naming-conventions-for-auto-converted-files---write-vtk">Naming conventions for auto-converted files (<code>--write-vtk</code>)</h3>
+<ul>
+<li>Delaunay from NDnet: <code>&lt;prefix&gt;_delaunay_S000.vtu</code>.</li>
+<li>Manifolds from NDnet: <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;_S000.vtu</code> (with existing persistence token kept in the stem).</li>
+<li>Filament manifolds from NDnet: <code>&lt;prefix&gt;_filament_manifolds_&lt;TAG&gt;_S000.vtu</code> (with existing persistence token kept in the stem).</li>
+<li>Filaments from NDskl: <code>&lt;prefix&gt;_arcs_&lt;TAG&gt;_S000.vtp</code> (with existing persistence token kept in the stem).</li>
+<li>Stems are sanitized to use underscores (single dot before the extension).</li>
 </ul>
 </section>
 <section id="examples" class="level3">
 <h3 class="anchored" data-anchor-id="examples">Examples</h3>
 <p>Use preexisting VTU/VTP:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="at">--verbose</span> <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-ndnet</span> outputs/snap_010_cropped_test/snap_010_nosmooth.vtu <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-ndnet</span>    outputs/snap_010_cropped_test/snap_010_s3_manifolds_JE1a_nosmooth.vtu <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-ndskl</span> outputs/snap_010_cropped_test/snap_010_s3.U_nosmooth.S000.vtp <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_cropped_test/topology_stats.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span>  outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>     outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S000.vtu <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_arcs_U.S000.vtp <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filament-manifolds-vtk</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_filament_manifolds_JE2a_S000.vtu <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-id-field</span> true_index <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_stats.csv <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--per-point-csv</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_points.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Convert native NDnet/NDskl on the fly (no smoothing):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="at">--verbose</span> <span class="at">--write-vtk</span> <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-ndnet</span> outputs/snap_010_cropped_test/snap_010.NDnet <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-ndnet</span>    outputs/snap_010_cropped_test/snap_010_s3_manifolds_JE1a.NDnet <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-ndskl</span> outputs/snap_010_cropped_test/snap_010_s3.U.NDskl <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-ndskl</span> outputs/snap_010_cropped_test/snap_010_s3_arcs_U.NDskl <span class="dt">\</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-bin</span> /Users/fules/miniforge3/envs/disperse/bin/netconv <span class="dt">\</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-bin</span> /Users/fules/miniforge3/envs/disperse/bin/skelconv <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-id-field</span> true_index <span class="at">--walls-id-field</span> true_index <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_cropped_test/topology_stats.csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>

@@ -2289,7 +2289,11 @@ vertical-align: -.125em;
 <li><code>--mse-threads N</code> — OpenMP threads for <code>mse</code>.</li>
 <li><code>--mse-vertex-as-minima</code> — forward <code>-vertexAsMinima</code>.</li>
 <li><code>--dump-manifolds SPEC</code> — descriptor for <code>mse -dumpManifolds</code> (default <code>JD1d</code>).</li>
-<li><code>--dump-arcs CUID</code> — one or more <code>-dumpArcs</code> descriptors (e.g., <code>U</code>, <code>CUD</code>). Repeatable.</li>
+<li><code>--dump-filament-manifolds TAG</code> — optional second manifolds tag (e.g., <code>JE2a</code>) to dump filament manifolds; runs <code>mse</code> a second time.</li>
+<li><code>--dump-arcs CUID</code> — one or more <code>-dumpArcs</code> descriptors (e.g., <code>U</code>, <code>CUD</code>). Repeatable.
+<ul>
+<li>Note: DisPerSE concatenates multiple manifold tags into one output (e.g., <code>JE1a2a</code>). Use <code>--dump-filament-manifolds</code> for one extra tag, or run separate passes if you need more.</li>
+</ul></li>
 </ul>
 </section>
 <section id="conversion-output-formats" class="level3">
@@ -2326,9 +2330,10 @@ vertical-align: -.125em;
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="cropped-sub-volume" class="level3">
 <h3 class="anchored" data-anchor-id="cropped-sub-volume">Cropped Sub-volume</h3>
@@ -2366,6 +2371,17 @@ The script reads the snapshot (or uses <code>--coords-input</code>), applies opt
 Runs <code>delaunay_3D</code> on the NDfield to produce an NDnet (<code>*.NDnet</code> or <code>*_G.NDnet</code> with block mode). Pass <code>--stop-after delaunay</code> to examine the tessellation.</p></li>
 <li><p><strong>Morse–Smale Analysis</strong><br>
 Runs <code>mse</code> on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with <code>--manifolds-input</code> or <code>--stop-after mse</code>.</p></li>
+</ol>
+<section id="naming-conventions-vtkndnetndskl" class="level3">
+<h3 class="anchored" data-anchor-id="naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</h3>
+<ul>
+<li>Delaunay: <code>&lt;prefix&gt;_delaunay.S###.vtu</code> (or <code>_S000</code> for unsmoothed conversions).</li>
+<li>Manifolds (walls): <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.S###.vtu</code> (NDnet: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
+<li>Filament manifolds (optional): <code>&lt;prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;.S###.vtu</code> (NDnet from <code>mse</code>: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
+<li>Skeletons: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;.S###.vtp</code> (NDskl: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;.NDskl</code>).</li>
+<li>Only one dot is used (before the extension); persistence (<code>sX</code>) precedes the role/tag; smoothing (<code>S###</code>) is appended by converters.</li>
+</ul>
+<ol start="4" type="1">
 <li><p><strong>Conversion</strong><br>
 Converts manifolds (via <code>netconv</code>) and skeletons (via <code>skelconv</code>) into VTK family formats for visualization.</p></li>
 <li><p><strong>Summary &amp; Cleanup</strong><br>
@@ -2374,6 +2390,7 @@ The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDn
 Crop boxes are sanity-checked, projection parameters are normalized, and any reuse paths are expanded up front so errors surface early.</p></li>
 </ol>
 <p>With these options, users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.</p>
+</section>
 </section>
 
 </main>

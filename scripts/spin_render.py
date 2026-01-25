@@ -5,8 +5,11 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import shutil
+import subprocess
 from pathlib import Path
 
+import numpy as np
 from paraview.simple import (  # type: ignore
     CameraKeyFrame,
     ColorBy,
@@ -33,6 +36,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--elev", type=float, default=20.0, help="Camera elevation angle.")
     parser.add_argument("--zoom", type=float, default=1.2, help="Camera zoom factor.")
     parser.add_argument("--fps", type=int, default=30, help="Frames per second.")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite output movie if it already exists.",
+    )
     parser.add_argument(
         "--animate-elev-zoom",
         action="store_true",
@@ -218,6 +226,27 @@ def main() -> None:
         anim.AnimationTime = t * (anim.EndTime - anim.StartTime) + anim.StartTime
         Render()
         SaveScreenshot(f"{prefix}_{i:04d}.png", view)
+
+    if out_path.suffix.lower() == ".mp4":
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            print("[warn] ffmpeg not found on PATH; skipping MP4 generation.")
+            return
+        cmd = [
+            ffmpeg,
+            "-y" if args.overwrite else "-n",
+            "-framerate",
+            str(args.fps),
+            "-i",
+            f"{prefix}_%04d.png",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            out_path.as_posix(),
+        ]
+        print(f"[run] {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":
