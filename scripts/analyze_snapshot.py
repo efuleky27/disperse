@@ -1261,6 +1261,7 @@ def ensure_catalog(
     meta: Optional[Dict[str, float]] = None
     box_scaled: Optional[float] = None
     crop_min_scaled: Optional[np.ndarray] = None
+    crop_min: Optional[np.ndarray] = None
 
     need_ndfield = coords_path is None and network_path is None and manifolds_path is None
     if args.stop_after == "ndfield" and coords_path is None:

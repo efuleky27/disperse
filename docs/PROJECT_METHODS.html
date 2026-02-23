@@ -2329,7 +2329,14 @@ vertical-align: -.125em;
 <li><strong>PNGs</strong>: 3D slices, 2D flats, and composites that show layered density/walls/filaments to visually assess overlap and separation.</li>
 <li><strong>Summary stats</strong>: Per-file scalar stats (<code>*_summary_stats.csv</code>) and per-crop topology overlap stats (<code>*_topology_stats.csv</code>) to quantify counts, sums, and means in shared/unique/unassigned categories.</li>
 <li><strong>Per-point stats</strong>: Optional <code>*_topology_points.csv</code> files support histogramming and cross-crop aggregation.</li>
-<li><strong>Cross-crop aggregation</strong>: <code>aggregate_topology_points.py</code> combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). The default Polars engine is fast and exact; a streaming engine is available for approximate quantiles on very large datasets.</li>
+<li><strong>Cross-crop aggregation</strong>: <code>aggregate_topology_points.py</code> combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). It also renders a composition barchart plus violin/box plots for the filament-manifold vs wall categories.
+<ul>
+<li>Defaults: histogram scalars <code>field_value</code> + <code>log_field_value</code>, <code>--hist-bin-mode per-category</code>, histogram-sampled plots (fast).<br>
+</li>
+<li>Controls: <code>--hist-scalars</code>, <code>--hist-bin-mode global|per-category</code>, <code>--plots-from-raw</code>, <code>--plot-sample-size</code>, <code>--violin-scalar</code>, <code>--box-scalar</code>, <code>--plot-fontscale</code>.<br>
+</li>
+<li>Box plots are rendered from the aggregated stats CSV by default; violin plots can be raw or histogram-sampled.</li>
+</ul></li>
 </ul>
 </section>
 <section id="troubleshooting-common-issues-seen" class="level3">

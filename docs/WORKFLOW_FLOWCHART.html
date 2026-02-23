@@ -4654,7 +4654,7 @@ graph TD
     G --&gt; G2[MP4 outputs&lt;br/&gt;Spin renders-3D rotation&lt;br/&gt;Slab-stitch movies across z]
     E --&gt; H[batch_crop_and_clip.py&lt;br/&gt;Tile multiple crops/slabs&lt;br/&gt;Runs Stage 1-3 per crop&lt;br/&gt;Runs slab clips per slab]
     H --&gt; I[&quot;Batch crop/clip outputs&lt;br/&gt;3D walls colored by log_field_value&lt;br/&gt;3D filaments colored by log_field_value&lt;br/&gt;3D filament manifolds colored by log_field_value (optional)&lt;br/&gt;2D density projection and average&lt;br/&gt;2D walls and filaments colored by topology_type and log_field_value&lt;br/&gt;Composite density, walls, filaments, filament manifolds&quot;]
-    I --&gt; J[Aggregate topology points&lt;br/&gt;Global stats + histograms]
+    I --&gt; J[Aggregate topology points&lt;br/&gt;Global stats + histograms + barchart/violin/box plots]
 </pre>
 </div>
 <p></p></figure><p></p>
@@ -4668,7 +4668,7 @@ graph TD
 <li><strong>ndtopo_stats.py</strong>: Optional; aggregates Delaunay scalars over walls/filaments/walls_not_filaments/filaments_not_walls/shared_walls_filaments/shared_filaments_filament_manifolds/unassigned (plus filament-manifold variants) into a CSV; accepts VTK or NDnet/NDskl.</li>
 <li><strong>batch_clip.py</strong>: Clips a slab, flattens walls/filaments, averages/resamples density, writes VTKs and PNGs.</li>
 <li><strong>batch_crop_and_clip.py</strong>: Tiles the snapshot into crops, runs <code>analyze_snapshot.py</code>, <code>ndtopo_stats.py</code>, and <code>batch_clip.py</code> per crop/slab; organizes outputs by crop/slab.</li>
-<li><strong>aggregate_topology_points.py</strong>: Combines per-point CSVs across crops; writes global stats and histogram CSV/PNG outputs.</li>
+<li><strong>aggregate_topology_points.py</strong>: Combines per-point CSVs across crops; writes global stats, histogram CSV/PNG outputs, and composition/violin/box plots.</li>
 <li><strong>spin_render.py</strong>: Produces rotating PNG sequences (optionally stitched to MP4 with ffmpeg).</li>
 <li><strong>stitch_slab_pngs.py</strong>: Stitches per-slab PNGs into MP4s (per crop or combined across crops).</li>
 </ul>
@@ -4684,7 +4684,7 @@ graph TD
 <section id="technologies-used" class="level3">
 <h3 class="anchored" data-anchor-id="technologies-used">Technologies used</h3>
 <ul>
-<li>Apple M1 Pro, 16GB, MacOS Tahoe - hardware</li>
+<li>Hardware - Apple M1 Pro, 16GB, MacOS Tahoe</li>
 <li>Terminal - interaction with scripts and command line utilities</li>
 <li>Globus - data transfer via CLI</li>
 <li>DisPerSE - Discrete Persistent Structures Extractor</li>

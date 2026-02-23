@@ -117,7 +117,10 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
 - **PNGs**: 3D slices, 2D flats, and composites that show layered density/walls/filaments to visually assess overlap and separation.
 - **Summary stats**: Per-file scalar stats (`*_summary_stats.csv`) and per-crop topology overlap stats (`*_topology_stats.csv`) to quantify counts, sums, and means in shared/unique/unassigned categories.
 - **Per-point stats**: Optional `*_topology_points.csv` files support histogramming and cross-crop aggregation.
-- **Cross-crop aggregation**: `aggregate_topology_points.py` combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). The default Polars engine is fast and exact; a streaming engine is available for approximate quantiles on very large datasets.
+- **Cross-crop aggregation**: `aggregate_topology_points.py` combines all per-point CSVs into a single stats file and per-category histograms (CSV/PNG). It also renders a composition barchart plus violin/box plots for the filament-manifold vs wall categories.  
+  - Defaults: histogram scalars `field_value` + `log_field_value`, `--hist-bin-mode per-category`, histogram-sampled plots (fast).  
+  - Controls: `--hist-scalars`, `--hist-bin-mode global|per-category`, `--plots-from-raw`, `--plot-sample-size`, `--violin-scalar`, `--box-scalar`, `--plot-fontscale`.  
+  - Box plots are rendered from the aggregated stats CSV by default; violin plots can be raw or histogram-sampled.
 
 ### Troubleshooting (common issues seen)
 - **VTK import errors**: Ensure `vtkmodules` is on `PYTHONPATH` (e.g., via conda environment hooks) and ParaView’s Python is discoverable when using `pvpython`.

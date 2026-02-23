@@ -84,7 +84,7 @@ output-root/
       <prefix>_density_3d.vtu / .vti / averaged vti
       <prefix>_walls.vtu / <prefix>_filaments.vtp / <prefix>_walls_filaments.vtm
       <prefix>_summary_stats.csv
-      PNGs if batch_clip was called with --save-pngs (the driver passes it by default)
+      PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-hide-orientation-axes`, and `--png-lighting` are forwarded)
 ```
 Naming notes:
 - Manifolds: `<crop_prefix>_sX_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).

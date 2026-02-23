@@ -44,12 +44,55 @@ def parse_args():
     parser.add_argument("--output-prefix", default="auto_clip", help="Prefix for output filenames.")
     parser.add_argument("--save-pngs", action="store_true", help="Also render PNG snapshots for each output.")
     parser.add_argument("--png-resolution", type=int, nargs=2, default=[1600, 1200], metavar=("WIDTH", "HEIGHT"))
+    parser.add_argument("--png-dpi", type=int, default=600, help="DPI scale for PNG exports.")
     parser.add_argument(
         "--png-percentile-range",
         type=float,
         nargs=2,
         metavar=("PLOW", "PHIGH"),
         help="Percentile range for PNG coloring (e.g., 1 99).",
+    )
+    parser.add_argument(
+        "--png-log-range",
+        type=float,
+        nargs=2,
+        default=[-3.0, 1.0],
+        metavar=("LOW", "HIGH"),
+        help="Fixed range for log_field_value PNGs (e.g., -3 1).",
+    )
+    parser.add_argument(
+        "--png-colormap",
+        default="Inferno (matplotlib)",
+        help="ParaView preset name for log_field_value (default: Inferno).",
+    )
+    parser.add_argument(
+        "--png-background",
+        default="white",
+        help="PNG background color: white or black.",
+    )
+    parser.add_argument(
+        "--png-transparent",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Save PNGs with transparent background.",
+    )
+    parser.add_argument(
+        "--png-hide-orientation-axes",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Hide the orientation axes gizmo in PNG renders.",
+    )
+    parser.add_argument(
+        "--png-lighting",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable lighting for 3D surface PNGs.",
+    )
+    parser.add_argument(
+        "--png-align-composite",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Align composite overlays to density bounds (default: on).",
     )
     parser.add_argument("--composite-opacity", type=float, default=0.6, help="Opacity for walls/filaments overlays in composite PNG.")
     return parser.parse_args()
@@ -271,6 +314,12 @@ def render_png(
     resolution,
     slice_axis="z",
     percentile_range: Optional[Tuple[float, float]] = None,
+    log_range: Optional[Tuple[float, float]] = None,
+    colormap: Optional[str] = None,
+    background: str = "white",
+    transparent: bool = False,
+    hide_axes: bool = False,
+    lighting: bool = True,
 ):
     """Render a single source to PNG with the chosen point-data array."""
     src = OpenDataFile(source_path)
@@ -278,6 +327,9 @@ def render_png(
     info = src.GetDataInformation()
     view = CreateRenderView()
     view.ViewSize = resolution
+    view.Background = [1.0, 1.0, 1.0] if background == "white" else [0.0, 0.0, 0.0]
+    if hide_axes and hasattr(view, "OrientationAxesVisibility"):
+        view.OrientationAxesVisibility = 0
     if view_mode == "2d":
         view.InteractionMode = "2D"
         view.CameraParallelProjection = 1
@@ -301,8 +353,32 @@ def render_png(
                 display.Slice = int(0.5 * (ext[4] + ext[5]))
     else:
         display.Representation = "Surface"
+        if hasattr(display, "Lighting"):
+            display.Lighting = 1 if lighting else 0
+        if not lighting:
+            if hasattr(display, "Specular"):
+                display.Specular = 0.0
+            if hasattr(display, "Diffuse"):
+                display.Diffuse = 0.0
+            if hasattr(display, "Ambient"):
+                display.Ambient = 1.0
+            if hasattr(display, "Shade"):
+                display.Shade = 0
+            if hasattr(view, "UseLight"):
+                view.UseLight = 0
+            if hasattr(view, "LightSwitch"):
+                view.LightSwitch = 0
     ColorBy(display, ('POINTS', array))
-    if percentile_range and array != "topology_type":
+    if array == "log_field_value" and colormap:
+        lut = GetColorTransferFunction(array)
+        try:
+            lut.ApplyPreset(colormap, True)
+        except Exception:
+            pass
+    if array == "log_field_value" and log_range is not None:
+        lut = GetColorTransferFunction(array)
+        lut.RescaleTransferFunction(float(log_range[0]), float(log_range[1]))
+    elif percentile_range and array != "topology_type":
         data_obj = servermanager.Fetch(src)
         arr = data_obj.GetPointData().GetArray(array)
         if arr is not None:
@@ -319,7 +395,12 @@ def render_png(
         display.RescaleTransferFunctionToDataRange(True, False)
     display.SetScalarBarVisibility(view, False)
     view.ResetCamera()
-    SaveScreenshot(png_path, view, ImageResolution=resolution)
+    SaveScreenshot(
+        png_path,
+        view,
+        ImageResolution=resolution,
+        TransparentBackground=1 if transparent else 0,
+    )
     Delete(view)
     Delete(src)
 
@@ -333,18 +414,60 @@ def render_composite_png(
     opacity: float,
     percentile_range: Optional[Tuple[float, float]] = None,
     filament_manifolds_path: Optional[str] = None,
+    log_range: Optional[Tuple[float, float]] = None,
+    colormap: Optional[str] = None,
+    background: str = "white",
+    transparent: bool = False,
+    hide_axes: bool = False,
+    lighting: bool = True,
+    align_overlays: bool = True,
 ):
     """Render density (log_field_value) with walls/filaments overlaid."""
     view = CreateRenderView()
     view.ViewSize = resolution
     view.InteractionMode = "2D"
     view.CameraParallelProjection = 1
+    view.Background = [1.0, 1.0, 1.0] if background == "white" else [0.0, 0.0, 0.0]
+    if hide_axes and hasattr(view, "OrientationAxesVisibility"):
+        view.OrientationAxesVisibility = 0
 
     dens = OpenDataFile(density_path)
+    dens.UpdatePipeline()
+    dens_bounds = dens.GetDataInformation().GetBounds()
+    max_extent = max(
+        dens_bounds[1] - dens_bounds[0],
+        dens_bounds[3] - dens_bounds[2],
+        dens_bounds[5] - dens_bounds[4],
+    )
+    tol = max(1e-6, 1e-6 * max_extent)
     dens_disp = Show(dens, view)
     dens_disp.Representation = "Surface"
+    if hasattr(dens_disp, "Lighting"):
+        dens_disp.Lighting = 1 if lighting else 0
+    if not lighting:
+        if hasattr(dens_disp, "Specular"):
+            dens_disp.Specular = 0.0
+        if hasattr(dens_disp, "Diffuse"):
+            dens_disp.Diffuse = 0.0
+        if hasattr(dens_disp, "Ambient"):
+            dens_disp.Ambient = 1.0
+        if hasattr(dens_disp, "Shade"):
+            dens_disp.Shade = 0
+        if hasattr(view, "UseLight"):
+            view.UseLight = 0
+        if hasattr(view, "LightSwitch"):
+            view.LightSwitch = 0
     ColorBy(dens_disp, ('POINTS', 'log_field_value'))
-    if percentile_range:
+    if colormap:
+        lut = GetColorTransferFunction("log_field_value")
+        try:
+            lut.ApplyPreset(colormap, True)
+        except Exception:
+            pass
+    if log_range is not None:
+        lut = GetColorTransferFunction("log_field_value")
+        lut.RescaleTransferFunction(float(log_range[0]), float(log_range[1]))
+    elif percentile_range:
         data_obj = servermanager.Fetch(dens)
         arr = data_obj.GetPointData().GetArray("log_field_value")
         if arr is not None:
@@ -362,9 +485,36 @@ def render_composite_png(
     dens_disp.SetScalarBarVisibility(view, False)
 
     walls = OpenDataFile(walls_path)
-    walls_disp = Show(walls, view)
+    walls.UpdatePipeline()
+    walls_source = walls
+    if align_overlays:
+        w_bounds = walls.GetDataInformation().GetBounds()
+        dx = dens_bounds[0] - w_bounds[0]
+        dy = dens_bounds[2] - w_bounds[2]
+        dz = dens_bounds[4] - w_bounds[4]
+        if abs(dx) < tol:
+            dx = 0.0
+        if abs(dy) < tol:
+            dy = 0.0
+        if abs(dz) < tol:
+            dz = 0.0
+        if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+            walls_source = Transform(Input=walls)
+            walls_source.Transform.Translate = [dx, dy, dz]
+    walls_disp = Show(walls_source, view)
     walls_disp.Representation = "Surface"
     walls_disp.Opacity = opacity
+    if hasattr(walls_disp, "Lighting"):
+        walls_disp.Lighting = 1 if lighting else 0
+    if not lighting:
+        if hasattr(walls_disp, "Specular"):
+            walls_disp.Specular = 0.0
+        if hasattr(walls_disp, "Diffuse"):
+            walls_disp.Diffuse = 0.0
+        if hasattr(walls_disp, "Ambient"):
+            walls_disp.Ambient = 1.0
+        if hasattr(walls_disp, "Shade"):
+            walls_disp.Shade = 0
     ColorBy(walls_disp, ('POINTS', 'topology_type'))
     lut_w = GetColorTransferFunction('walls_topology_type')
     lut_w.RGBPoints = [0, 0.6, 0.9, 0.6, 1, 0.6, 0.9, 0.6]
@@ -375,9 +525,36 @@ def render_composite_png(
     walls_disp.SetScalarBarVisibility(view, False)
 
     fils = OpenDataFile(filaments_path)
-    fils_disp = Show(fils, view)
+    fils.UpdatePipeline()
+    fils_source = fils
+    if align_overlays:
+        f_bounds = fils.GetDataInformation().GetBounds()
+        dx = dens_bounds[0] - f_bounds[0]
+        dy = dens_bounds[2] - f_bounds[2]
+        dz = dens_bounds[4] - f_bounds[4]
+        if abs(dx) < tol:
+            dx = 0.0
+        if abs(dy) < tol:
+            dy = 0.0
+        if abs(dz) < tol:
+            dz = 0.0
+        if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+            fils_source = Transform(Input=fils)
+            fils_source.Transform.Translate = [dx, dy, dz]
+    fils_disp = Show(fils_source, view)
     fils_disp.Representation = "Surface"
-    fils_disp.Opacity = opacity
+    fils_disp.Opacity = 1.0
+    if hasattr(fils_disp, "Lighting"):
+        fils_disp.Lighting = 1 if lighting else 0
+    if not lighting:
+        if hasattr(fils_disp, "Specular"):
+            fils_disp.Specular = 0.0
+        if hasattr(fils_disp, "Diffuse"):
+            fils_disp.Diffuse = 0.0
+        if hasattr(fils_disp, "Ambient"):
+            fils_disp.Ambient = 1.0
+        if hasattr(fils_disp, "Shade"):
+            fils_disp.Shade = 0
     ColorBy(fils_disp, ('POINTS', 'topology_type'))
     lut_f = GetColorTransferFunction('filaments_topology_type')
     lut_f.RGBPoints = [0, 1.0, 0.0, 0.0, 1, 1.0, 0.0, 0.0]
@@ -390,9 +567,36 @@ def render_composite_png(
     filman = None
     if filament_manifolds_path:
         filman = OpenDataFile(filament_manifolds_path)
-        filman_disp = Show(filman, view)
+        filman.UpdatePipeline()
+        filman_source = filman
+        if align_overlays:
+            m_bounds = filman.GetDataInformation().GetBounds()
+            dx = dens_bounds[0] - m_bounds[0]
+            dy = dens_bounds[2] - m_bounds[2]
+            dz = dens_bounds[4] - m_bounds[4]
+            if abs(dx) < tol:
+                dx = 0.0
+            if abs(dy) < tol:
+                dy = 0.0
+            if abs(dz) < tol:
+                dz = 0.0
+            if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+                filman_source = Transform(Input=filman)
+                filman_source.Transform.Translate = [dx, dy, dz]
+        filman_disp = Show(filman_source, view)
         filman_disp.Representation = "Surface"
-        filman_disp.Opacity = opacity
+        filman_disp.Opacity = 1.0
+        if hasattr(filman_disp, "Lighting"):
+            filman_disp.Lighting = 1 if lighting else 0
+        if not lighting:
+            if hasattr(filman_disp, "Specular"):
+                filman_disp.Specular = 0.0
+            if hasattr(filman_disp, "Diffuse"):
+                filman_disp.Diffuse = 0.0
+            if hasattr(filman_disp, "Ambient"):
+                filman_disp.Ambient = 1.0
+            if hasattr(filman_disp, "Shade"):
+                filman_disp.Shade = 0
         ColorBy(filman_disp, ('POINTS', 'topology_type'))
         lut_m = GetColorTransferFunction('filament_manifolds_topology_type')
         lut_m.RGBPoints = [0, 0.2, 0.5, 1.0, 1, 0.2, 0.5, 1.0]
@@ -403,7 +607,12 @@ def render_composite_png(
         filman_disp.SetScalarBarVisibility(view, False)
 
     view.ResetCamera()
-    SaveScreenshot(png_path, view, ImageResolution=resolution)
+    SaveScreenshot(
+        png_path,
+        view,
+        ImageResolution=resolution,
+        TransparentBackground=1 if transparent else 0,
+    )
     Delete(view); Delete(dens); Delete(walls); Delete(fils)
     if filman is not None:
         Delete(filman)
@@ -521,8 +730,16 @@ def main():
 
     # PNGs
     if args.save_pngs:
-        res = args.png_resolution
+        scale = max(args.png_dpi / 200.0, 0.1)
+        res = [int(args.png_resolution[0] * scale), int(args.png_resolution[1] * scale)]
         percentile_range = tuple(args.png_percentile_range) if args.png_percentile_range else None
+        log_range = tuple(args.png_log_range) if args.png_log_range else None
+        bg = args.png_background.lower()
+        transparent = bool(args.png_transparent)
+        hide_axes = bool(args.png_hide_orientation_axes)
+        colormap = args.png_colormap
+        lighting = bool(args.png_lighting)
+        align_overlays = bool(args.png_align_composite)
         render_png(
             walls_info["paths"]["3d"],
             os.path.join(out_dir, f"{prefix}_walls_3d.png"),
@@ -530,6 +747,12 @@ def main():
             "3d",
             res,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_png(
             fils_info["paths"]["3d"],
@@ -538,6 +761,12 @@ def main():
             "3d",
             res,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         if filman_info:
             render_png(
@@ -547,6 +776,12 @@ def main():
                 "3d",
                 res,
                 percentile_range=percentile_range,
+                log_range=log_range,
+                colormap=colormap,
+                background=bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
             )
         render_png(
             walls_info["paths"]["flat"],
@@ -554,6 +789,10 @@ def main():
             "topology_type",
             "2d",
             res,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_png(
             walls_info["paths"]["flat"],
@@ -562,6 +801,12 @@ def main():
             "2d",
             res,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_png(
             fils_info["paths"]["flat"],
@@ -569,6 +814,10 @@ def main():
             "topology_type",
             "2d",
             res,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_png(
             fils_info["paths"]["flat"],
@@ -577,6 +826,12 @@ def main():
             "2d",
             res,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         if filman_info:
             render_png(
@@ -585,6 +840,10 @@ def main():
                 "topology_type",
                 "2d",
                 res,
+                background=bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
             )
             render_png(
                 filman_info["paths"]["flat"],
@@ -593,6 +852,12 @@ def main():
                 "2d",
                 res,
                 percentile_range=percentile_range,
+                log_range=log_range,
+                colormap=colormap,
+                background=bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
             )
         render_png(
             density_3d,
@@ -602,6 +867,12 @@ def main():
             res,
             slice_axis=axis,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_png(
             density_flat_path,
@@ -610,6 +881,12 @@ def main():
             "2d",
             res,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         render_composite_png(
             density_flat_path,
@@ -619,6 +896,12 @@ def main():
             res,
             opacity=args.composite_opacity,
             percentile_range=percentile_range,
+            log_range=log_range,
+            colormap=colormap,
+            background=bg,
+            transparent=transparent,
+            hide_axes=hide_axes,
+            lighting=lighting,
         )
         if filman_info:
             render_composite_png(
@@ -629,6 +912,13 @@ def main():
                 res,
                 opacity=args.composite_opacity,
                 percentile_range=percentile_range,
+                log_range=log_range,
+                colormap=colormap,
+                background=bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
+                align_overlays=align_overlays,
                 filament_manifolds_path=filman_info["paths"]["flat"],
             )
 

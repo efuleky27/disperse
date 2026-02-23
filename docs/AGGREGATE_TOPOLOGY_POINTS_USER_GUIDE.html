@@ -2197,7 +2197,7 @@ vertical-align: -.125em;
 
 <section id="aggregate_topology_points.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="aggregate_topology_points.py-user-guide"><code>aggregate_topology_points.py</code> User Guide</h2>
-<p>Use <code>scripts/aggregate_topology_points.py</code> to combine many <code>*_topology_points.csv</code> files into: - A single aggregated <code>topology_stats</code> CSV (same shape as per-crop stats). - Per-category histograms for each scalar (CSV, plus PNG if matplotlib is available).</p>
+<p>Use <code>scripts/aggregate_topology_points.py</code> to combine many <code>*_topology_points.csv</code> files into: - A single aggregated <code>topology_stats</code> CSV (same shape as per-crop stats). - Per-category histograms for selected scalars (CSV, plus PNG if matplotlib is available). - Composition barchart + violin/box plots for filament-manifold vs wall membership.</p>
 <p>This is designed for large datasets (many crops and large per-point files).</p>
 <section id="what-it-does" class="level3">
 <h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
@@ -2205,6 +2205,7 @@ vertical-align: -.125em;
 <li>Scans for <code>*_topology_points.csv</code> files (or uses explicit inputs).</li>
 <li>Aggregates category statistics across all crops.</li>
 <li>Writes histogram CSVs (and optional PNGs) per category and scalar.</li>
+<li>Optionally renders composition barchart + violin/box plots.</li>
 </ul>
 </section>
 <section id="requirements" class="level3">
@@ -2224,9 +2225,16 @@ vertical-align: -.125em;
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  [--glob <span class="st">&quot;**/*_topology_points.csv&quot;</span>] <span class="dt">\</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  [--inputs file1.csv file2.csv ...] <span class="dt">\</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  [--bins 100] <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [--hist-percentile-range 1 99] <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [--engine polars<span class="kw">|</span><span class="ex">stream</span><span class="kw">|</span><span class="ex">python]</span> <span class="dt">\</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">plots</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  [--hist-scalars field_value log_field_value<span class="kw">|</span><span class="ex">all]</span> <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  [--hist-bin-mode per-category<span class="kw">|</span><span class="ex">global]</span> <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  [--hist-percentile-range 1 99] <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  [--engine polars<span class="kw">|</span><span class="ex">stream</span><span class="kw">|</span><span class="ex">python]</span> <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  [--violin-scalar log_field_value] <span class="dt">\</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  [--box-scalar field_value] <span class="dt">\</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">plots</span><span class="pp">-</span><span class="ss">from</span><span class="pp">-</span><span class="ss">raw</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  [--plot-sample-size 200000] <span class="dt">\</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  [--plot-fontscale 1.0] <span class="dt">\</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">plots</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="engines" class="level3">
 <h3 class="anchored" data-anchor-id="engines">Engines</h3>
@@ -2238,8 +2246,8 @@ vertical-align: -.125em;
 </section>
 <section id="output" class="level3">
 <h3 class="anchored" data-anchor-id="output">Output</h3>
-<p>In <code>--output-dir</code> with <code>--output-prefix</code>: - <code>&lt;prefix&gt;_topology_stats.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set)</p>
-<p>Categories follow <code>ndtopo_stats.py</code>, including filament-manifold variants when present.</p>
+<p>In <code>--output-dir</code> with <code>--output-prefix</code>: - <code>&lt;prefix&gt;_topology_stats.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set) - <code>&lt;prefix&gt;_filman_walls_composition.png</code> (composition barchart) - <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> (violin plot) - <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_box.png</code> (box plot)</p>
+<p>Categories follow <code>ndtopo_stats.py</code>, including filament-manifold variants when present. Histograms use per-category bins by default (<code>--hist-bin-mode per-category</code>) or shared bins per scalar (<code>--hist-bin-mode global</code>). The default histogram scalars are <code>field_value</code> and <code>log_field_value</code> (use <code>--hist-scalars</code> to override). Histogram PNGs include the particle count <code>n</code> and a red dashed median line; histogram CSVs include <code>total_count</code>. Violin plots use raw values if <code>--plots-from-raw</code> is set; otherwise they sample from histogram bins. Box plots are rendered from the aggregated <code>*_topology_stats.csv</code> by default.</p>
 </section>
 <section id="examples" class="level3">
 <h3 class="anchored" data-anchor-id="examples">Examples</h3>
@@ -2249,7 +2257,8 @@ vertical-align: -.125em;
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000/combined <span class="dt">\</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches_000 <span class="dt">\</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--engine</span> polars <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-percentile-range</span> 1 99</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-bin-mode</span> global <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-percentile-range</span> 1 99</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Use explicit files and skip PNG plots:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--inputs</span> outputs/crop_a/topology_points.csv outputs/crop_b/topology_points.csv <span class="dt">\</span></span>

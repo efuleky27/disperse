@@ -35,7 +35,7 @@ Concise reference for pulling Quijote data, running the DisPerSE pipelines, and 
   - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
   - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and `cell` handling for Delaunay/walls/filaments).
   - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
-  - `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats and histograms.
+  - `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats, histograms, and composition/violin/box plots (configurable scalars/binning).
   - `scripts/spin_render.py`: render rotating PNG sequences (and MP4 via ffmpeg).
   - `scripts/stitch_slab_pngs.py`: stitch slab PNGs into per-crop or combined MP4s.
 - `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
@@ -157,7 +157,12 @@ PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch
   --slab-axis z --slab-origin 0 --slab-thickness 10 \
   --resample-dims 512 512 64 \
   --scalar-name log_field_value \
-  --save-pngs
+  --save-pngs \
+  --png-colormap "Inferno (matplotlib)" \
+  --png-log-range -3 1 \
+  --png-dpi 600 \
+  --png-transparent \
+  --no-png-hide-orientation-axes
 ```
 Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.
 

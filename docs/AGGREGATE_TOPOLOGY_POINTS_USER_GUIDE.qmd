@@ -9,7 +9,8 @@ format:
 
 Use `scripts/aggregate_topology_points.py` to combine many `*_topology_points.csv` files into:
 - A single aggregated `topology_stats` CSV (same shape as per-crop stats).
-- Per-category histograms for each scalar (CSV, plus PNG if matplotlib is available).
+- Per-category histograms for selected scalars (CSV, plus PNG if matplotlib is available).
+- Composition barchart + violin/box plots for filament-manifold vs wall membership.
 
 This is designed for large datasets (many crops and large per-point files).
 
@@ -17,6 +18,7 @@ This is designed for large datasets (many crops and large per-point files).
 - Scans for `*_topology_points.csv` files (or uses explicit inputs).
 - Aggregates category statistics across all crops.
 - Writes histogram CSVs (and optional PNGs) per category and scalar.
+- Optionally renders composition barchart + violin/box plots.
 
 ### Requirements
 - Python in your active environment.
@@ -32,8 +34,15 @@ python scripts/aggregate_topology_points.py \
   [--glob "**/*_topology_points.csv"] \
   [--inputs file1.csv file2.csv ...] \
   [--bins 100] \
+  [--hist-scalars field_value log_field_value|all] \
+  [--hist-bin-mode per-category|global] \
   [--hist-percentile-range 1 99] \
   [--engine polars|stream|python] \
+  [--violin-scalar log_field_value] \
+  [--box-scalar field_value] \
+  [--plots-from-raw] \
+  [--plot-sample-size 200000] \
+  [--plot-fontscale 1.0] \
   [--no-plots]
 ```
 
@@ -47,8 +56,16 @@ In `--output-dir` with `--output-prefix`:
 - `<prefix>_topology_stats.csv`
 - `<prefix>_<category>_<scalar>_hist.csv`
 - `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)
+- `<prefix>_filman_walls_composition.png` (composition barchart)
+- `<prefix>_filman_walls_<scalar>_violin.png` (violin plot)
+- `<prefix>_filman_walls_<scalar>_box.png` (box plot)
 
 Categories follow `ndtopo_stats.py`, including filament-manifold variants when present.
+Histograms use per-category bins by default (`--hist-bin-mode per-category`) or shared bins per scalar (`--hist-bin-mode global`).
+The default histogram scalars are `field_value` and `log_field_value` (use `--hist-scalars` to override).
+Histogram PNGs include the particle count `n` and a red dashed median line; histogram CSVs include `total_count`.
+Violin plots use raw values if `--plots-from-raw` is set; otherwise they sample from histogram bins.
+Box plots are rendered from the aggregated `*_topology_stats.csv` by default.
 
 ### Examples
 Aggregate all crops under a root, fast path:
@@ -58,6 +75,7 @@ python scripts/aggregate_topology_points.py \
   --output-dir outputs/quijote_batches_000/combined \
   --output-prefix quijote_batches_000 \
   --engine polars \
+  --hist-bin-mode global \
   --hist-percentile-range 1 99
 ```
 

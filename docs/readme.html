@@ -2231,7 +2231,7 @@ vertical-align: -.125em;
 <li><code>scripts/batch_clip.py</code>: clip slabs, flatten to 2D, average density, and render PNGs.</li>
 <li><code>scripts/ndtopo_stats.py</code>: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and <code>cell</code> handling for Delaunay/walls/filaments).</li>
 <li><code>scripts/batch_crop_and_clip.py</code>: tile a snapshot into many crops, run analyze → stats → slab clips for each.</li>
-<li><code>scripts/aggregate_topology_points.py</code>: aggregate per-point CSVs into global stats and histograms.</li>
+<li><code>scripts/aggregate_topology_points.py</code>: aggregate per-point CSVs into global stats, histograms, and composition/violin/box plots (configurable scalars/binning).</li>
 <li><code>scripts/spin_render.py</code>: render rotating PNG sequences (and MP4 via ffmpeg).</li>
 <li><code>scripts/stitch_slab_pngs.py</code>: stitch slab PNGs into per-crop or combined MP4s.</li>
 </ul></li>
@@ -2340,7 +2340,12 @@ vertical-align: -.125em;
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span> <span class="dt">\</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-colormap</span> <span class="st">&quot;Inferno (matplotlib)&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-log-range</span> <span class="at">-3</span> 1 <span class="dt">\</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-dpi</span> 600 <span class="dt">\</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-transparent</span> <span class="dt">\</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--no-png-hide-orientation-axes</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.</p>
 </section>
 <section id="topology-overlap-stats" class="level3">
