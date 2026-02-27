@@ -40,13 +40,23 @@ EOF
 pvpython scripts/spin_render.py \
   --input <INPUT_VTK> \
   --output <OUTPUT_PATH> \
+  [--resolution WIDTH HEIGHT] \
+  [--background white|black] \
   [--frames N] \
   [--elev DEG] \
   [--zoom Z] \
+  [--radius-scale R] \
+  [--fps FPS] \
   [--scalar NAME] \
   [--range-min MIN --range-max MAX] \
   [--percentile-range PLOW PHIGH] \
   [--colormap PRESET] \
+  [--animate-elev-zoom] \
+  [--loops N] \
+  [--slow-elev-amp DEG] \
+  [--slow-zoom-amp Z] \
+  [--slow-phase RAD] \
+  [--azimuth-offset DEG] \
   [--overwrite]
 ```
 
@@ -54,14 +64,23 @@ pvpython scripts/spin_render.py \
 - `--input` – VTK file to render.
 - `--output` – Output path used as the PNG prefix; the script writes `<OUTPUT_BASE>_0000.png`, `<OUTPUT_BASE>_0001.png`, ...
 - If `--output` ends with `.mp4`, the script also stitches the PNGs into that movie using `ffmpeg`.
+- `--resolution` – Output resolution in pixels (e.g., `1920 1080`).
+- `--background` – Background color (`white` or `black`).
 - `--frames` – Number of frames (default 180).
 - `--elev` – Camera elevation in degrees for the orbit (default 20).
 - `--zoom` – Zoom factor baked into the orbit radius (default 1.2).
+- `--radius-scale` – Orbit radius scale as a fraction of dataset extent.
+- `--fps` – FPS for MP4 stitching (default 30).
 - `--scalar` – Point-data array to color by (default `log_field_value`).
 - `--range-min/--range-max` – Fixed color range. If omitted, auto-range is used.
 - `--percentile-range` – Clamp the colormap to the given percentiles (e.g., `1 99`). Mutually exclusive with fixed range.
 - `--colormap` – ParaView preset name (default `Fast`).
 - `--overwrite` – Overwrite the MP4 if it already exists.
+- `--animate-elev-zoom` – Enables smooth sinusoidal elevation and zoom modulation.
+- `--loops` – Number of full rotations.
+- `--slow-elev-amp/--slow-zoom-amp` – Slow modulation amplitude across the full movie.
+- `--slow-phase` – Phase offset (radians) for slow modulation.
+- `--azimuth-offset` – Starting azimuth offset in degrees.
 
 ### Animated elevation + zoom
 ```bash
@@ -73,11 +92,21 @@ pvpython scripts/spin_render.py \
   --elev-start 20 --elev-peak 60 \
   --zoom-start 0.6 --zoom-peak 2.0
 ```
-This animates elevation and zoom in four phases while the camera continues to rotate:
-1) rise from `elev-start` to `elev-peak`
-2) zoom in from `zoom-start` to `zoom-peak`
-3) zoom back out
-4) return to `elev-start`
+This animates elevation and zoom smoothly (sinusoidal) while the camera continues to rotate.
+
+### Multi-loop variation (seamless)
+```bash
+pvpython scripts/spin_render.py \
+  --input <INPUT_VTK> \
+  --output <OUTPUT_PATH> \
+  --frames 450 \
+  --animate-elev-zoom \
+  --loops 3 \
+  --slow-elev-amp 20 \
+  --slow-zoom-amp 0.5 \
+  --slow-phase 0.6
+```
+Slow modulation produces different loops while returning to the starting position at the end for seamless playback.
 
 ### Outputs
 - `<OUTPUT_BASE>_0000.png` ... `<OUTPUT_BASE>_####.png` – PNG frames of the rotation.
@@ -97,7 +126,37 @@ ffmpeg -framerate 30 \
   --output outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/spin.mp4 \
   --frames 180 \
   --scalar log_field_value \
-  --colormap Fast
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 --range-max 1 \
+  --resolution 1920 1080 \
+  --background black
+```
+
+### Example (multi-loop, smooth modulation)
+```bash
+pvpython scripts/spin_render.py \
+  --input outputs/combined_for_video.vtu \
+  --output outputs/combined_for_video_spin.mp4 \
+  --scalar log_field_value \
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 \
+  --range-max 1 \
+  --resolution 1920 1080 \
+  --background black \
+  --frames 1800 \
+  --fps 30 \
+  --animate-elev-zoom \
+  --loops 3 \
+  --azimuth-offset=-120 \
+  --elev-start=-40 \
+  --elev-peak 80 \
+  --zoom-start 0.8 \
+  --zoom-peak 2.0 \
+  --radius-scale 0.6 \
+  --slow-elev-amp 20 \
+  --slow-zoom-amp 0.5 \
+  --slow-phase 0.6 \
+  --overwrite
 ```
 
 ### Notes

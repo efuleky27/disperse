@@ -57,6 +57,7 @@ pvpython scripts/batch_clip.py \
   [--png-transparent|--no-png-transparent] \
   [--png-hide-orientation-axes|--no-png-hide-orientation-axes] \
   [--png-lighting|--no-png-lighting] \
+  [--composite-filaments-source arcs|manifolds] \
   [--png-percentile-range PLOW PHIGH]
 ```
 - `--walls/--filaments/--delaunay` are required; `--filament-manifolds` is optional. Relative paths are joined to `--input-dir`.
@@ -68,6 +69,7 @@ pvpython scripts/batch_clip.py \
 - `--save-pngs` renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). `--png-resolution WIDTH HEIGHT` sets base image size (default 1600×1200); `--png-dpi` scales it (default 600). `--composite-opacity` controls wall/filament overlay opacity in the composite (default 0.6).
 - `--png-colormap` chooses the ParaView preset for `log_field_value` (default Inferno). `--png-log-range` fixes the LUT range for `log_field_value` (default -3 to +1).
 - `--png-background` sets the render background (white or black). `--png-transparent` writes PNGs with transparency (default on). `--png-hide-orientation-axes` hides the axes gizmo (default on). `--png-lighting` toggles surface lighting (default on).
+- `--composite-filaments-source` selects whether the composite overlay uses filament manifolds or arc filaments (default: manifolds).
 - Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>.S###.vtu`, `*_filament_manifolds_<tag>.S###.vtu`, `*_filaments_<arc>.S###.vtp`, `*_delaunay.vtu`.
 
 ### Outputs (all in `--output-dir`)

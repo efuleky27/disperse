@@ -2249,7 +2249,8 @@ vertical-align: -.125em;
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  [--png-transparent<span class="kw">|</span><span class="ex">--no-png-transparent]</span> <span class="dt">\</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  [--png-hide-orientation-axes<span class="kw">|</span><span class="ex">--no-png-hide-orientation-axes]</span> <span class="dt">\</span></span>
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  [--png-lighting<span class="kw">|</span><span class="ex">--no-png-lighting]</span> <span class="dt">\</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  [--png-percentile-range PLOW PHIGH]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  [--composite-filaments-source arcs<span class="kw">|</span><span class="ex">manifolds]</span> <span class="dt">\</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  [--png-percentile-range PLOW PHIGH]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
 <li><code>--walls/--filaments/--delaunay</code> are required; <code>--filament-manifolds</code> is optional. Relative paths are joined to <code>--input-dir</code>.</li>
 <li><code>--output-dir</code> is required. Files are named with the prefix you supply.</li>
@@ -2260,6 +2261,7 @@ vertical-align: -.125em;
 <li><code>--save-pngs</code> renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). <code>--png-resolution WIDTH HEIGHT</code> sets base image size (default 1600×1200); <code>--png-dpi</code> scales it (default 600). <code>--composite-opacity</code> controls wall/filament overlay opacity in the composite (default 0.6).</li>
 <li><code>--png-colormap</code> chooses the ParaView preset for <code>log_field_value</code> (default Inferno). <code>--png-log-range</code> fixes the LUT range for <code>log_field_value</code> (default -3 to +1).</li>
 <li><code>--png-background</code> sets the render background (white or black). <code>--png-transparent</code> writes PNGs with transparency (default on). <code>--png-hide-orientation-axes</code> hides the axes gizmo (default on). <code>--png-lighting</code> toggles surface lighting (default on).</li>
+<li><code>--composite-filaments-source</code> selects whether the composite overlay uses filament manifolds or arc filaments (default: manifolds).</li>
 <li>Expect input filenames to follow the simplified stems from <code>analyze_snapshot.py</code>, e.g., <code>*_manifolds_&lt;tag&gt;.S###.vtu</code>, <code>*_filament_manifolds_&lt;tag&gt;.S###.vtu</code>, <code>*_filaments_&lt;arc&gt;.S###.vtp</code>, <code>*_delaunay.vtu</code>.</li>
 </ul>
 </section>

@@ -43,6 +43,7 @@ python scripts/aggregate_topology_points.py \
   [--plots-from-raw] \
   [--plot-sample-size 200000] \
   [--plot-fontscale 1.0] \
+  [--plot-dpi 200] \
   [--no-plots]
 ```
 

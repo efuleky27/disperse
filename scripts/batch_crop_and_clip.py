@@ -65,6 +65,12 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Enable lighting for 3D surface PNGs (forwarded to batch_clip.py).",
     )
+    p.add_argument(
+        "--composite-filaments-source",
+        choices=["arcs", "manifolds"],
+        default="manifolds",
+        help="Which filaments to use in composite PNGs (forwarded to batch_clip.py).",
+    )
     p.add_argument("--input-unit", choices=("kpc/h", "mpc/h"), default="kpc/h")
     p.add_argument("--output-unit", choices=("kpc/h", "mpc/h"), default="mpc/h")
     p.add_argument("--stats-script", default="scripts/ndtopo_stats.py", help="Path to ndtopo_stats.py.")
@@ -364,6 +370,8 @@ def main() -> None:
                 clip_cmd.extend(["--png-percentile-range", *[str(v) for v in args.png_percentile_range]])
             if args.png_lighting is not None:
                 clip_cmd.append("--png-lighting" if args.png_lighting else "--no-png-lighting")
+            if args.composite_filaments_source:
+                clip_cmd.extend(["--composite-filaments-source", args.composite_filaments_source])
             run(clip_cmd)
 
 

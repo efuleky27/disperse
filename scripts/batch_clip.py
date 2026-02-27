@@ -34,6 +34,12 @@ def parse_args():
     parser.add_argument("--walls", required=True, help="Input manifolds (walls) VTU.")
     parser.add_argument("--filaments", required=True, help="Input filaments VTP.")
     parser.add_argument("--filament-manifolds", help="Optional filament manifolds VTU (e.g., JE2a).")
+    parser.add_argument(
+        "--composite-filaments-source",
+        choices=["arcs", "manifolds"],
+        default="manifolds",
+        help="Which filaments to use in composite PNGs (default: manifolds).",
+    )
     parser.add_argument("--delaunay", required=True, help="Input Delaunay VTU for density.")
     parser.add_argument("--slab-axis", choices=["x", "y", "z"], default="z", help="Axis along which to clip/flatten.")
     parser.add_argument("--slab-origin", type=float, default=0.0, help="Lower bound of the slab along the chosen axis.")
@@ -414,6 +420,7 @@ def render_composite_png(
     opacity: float,
     percentile_range: Optional[Tuple[float, float]] = None,
     filament_manifolds_path: Optional[str] = None,
+    filaments_source: str = "manifolds",
     log_range: Optional[Tuple[float, float]] = None,
     colormap: Optional[str] = None,
     background: str = "white",
@@ -524,7 +531,9 @@ def render_composite_png(
     walls_disp.RescaleTransferFunctionToDataRange(True, False)
     walls_disp.SetScalarBarVisibility(view, False)
 
-    fils = OpenDataFile(filaments_path)
+    use_filament_manifolds = filaments_source == "manifolds" and filament_manifolds_path
+    active_filaments_path = filament_manifolds_path if use_filament_manifolds else filaments_path
+    fils = OpenDataFile(active_filaments_path)
     fils.UpdatePipeline()
     fils_source = fils
     if align_overlays:
@@ -565,7 +574,7 @@ def render_composite_png(
     fils_disp.SetScalarBarVisibility(view, False)
 
     filman = None
-    if filament_manifolds_path:
+    if filament_manifolds_path and not use_filament_manifolds:
         filman = OpenDataFile(filament_manifolds_path)
         filman.UpdatePipeline()
         filman_source = filman
@@ -896,12 +905,14 @@ def main():
             res,
             opacity=args.composite_opacity,
             percentile_range=percentile_range,
+            filaments_source=args.composite_filaments_source,
             log_range=log_range,
             colormap=colormap,
             background=bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
+            align_overlays=align_overlays,
         )
         if filman_info:
             render_composite_png(
@@ -912,6 +923,7 @@ def main():
                 res,
                 opacity=args.composite_opacity,
                 percentile_range=percentile_range,
+                filaments_source=args.composite_filaments_source,
                 log_range=log_range,
                 colormap=colormap,
                 background=bg,

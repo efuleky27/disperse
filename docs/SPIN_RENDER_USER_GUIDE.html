@@ -2232,14 +2232,24 @@ vertical-align: -.125em;
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> <span class="op">&lt;</span>INPUT_VTK<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="op">&lt;</span>OUTPUT_PATH<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  [--frames N] <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [--elev DEG] <span class="dt">\</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [--zoom Z] <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  [--scalar NAME] <span class="dt">\</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [--range-min MIN <span class="at">--range-max</span> MAX] <span class="dt">\</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  [--percentile-range PLOW PHIGH] <span class="dt">\</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  [--colormap PRESET] <span class="dt">\</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  [--resolution WIDTH HEIGHT] <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [--background white<span class="kw">|</span><span class="ex">black]</span> <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [--frames N] <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  [--elev DEG] <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [--zoom Z] <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  [--radius-scale R] <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  [--fps FPS] <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  [--scalar NAME] <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  [--range-min MIN <span class="at">--range-max</span> MAX] <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  [--percentile-range PLOW PHIGH] <span class="dt">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  [--colormap PRESET] <span class="dt">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">animate</span><span class="pp">-</span><span class="ss">elev</span><span class="pp">-</span><span class="ss">zoom</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  [--loops N] <span class="dt">\</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  [--slow-elev-amp DEG] <span class="dt">\</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  [--slow-zoom-amp Z] <span class="dt">\</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  [--slow-phase RAD] <span class="dt">\</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  [--azimuth-offset DEG] <span class="dt">\</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="key-options" class="level3">
 <h3 class="anchored" data-anchor-id="key-options">Key options</h3>
@@ -2247,14 +2257,23 @@ vertical-align: -.125em;
 <li><code>--input</code> – VTK file to render.</li>
 <li><code>--output</code> – Output path used as the PNG prefix; the script writes <code>&lt;OUTPUT_BASE&gt;_0000.png</code>, <code>&lt;OUTPUT_BASE&gt;_0001.png</code>, …</li>
 <li>If <code>--output</code> ends with <code>.mp4</code>, the script also stitches the PNGs into that movie using <code>ffmpeg</code>.</li>
+<li><code>--resolution</code> – Output resolution in pixels (e.g., <code>1920 1080</code>).</li>
+<li><code>--background</code> – Background color (<code>white</code> or <code>black</code>).</li>
 <li><code>--frames</code> – Number of frames (default 180).</li>
 <li><code>--elev</code> – Camera elevation in degrees for the orbit (default 20).</li>
 <li><code>--zoom</code> – Zoom factor baked into the orbit radius (default 1.2).</li>
+<li><code>--radius-scale</code> – Orbit radius scale as a fraction of dataset extent.</li>
+<li><code>--fps</code> – FPS for MP4 stitching (default 30).</li>
 <li><code>--scalar</code> – Point-data array to color by (default <code>log_field_value</code>).</li>
 <li><code>--range-min/--range-max</code> – Fixed color range. If omitted, auto-range is used.</li>
 <li><code>--percentile-range</code> – Clamp the colormap to the given percentiles (e.g., <code>1 99</code>). Mutually exclusive with fixed range.</li>
 <li><code>--colormap</code> – ParaView preset name (default <code>Fast</code>).</li>
 <li><code>--overwrite</code> – Overwrite the MP4 if it already exists.</li>
+<li><code>--animate-elev-zoom</code> – Enables smooth sinusoidal elevation and zoom modulation.</li>
+<li><code>--loops</code> – Number of full rotations.</li>
+<li><code>--slow-elev-amp/--slow-zoom-amp</code> – Slow modulation amplitude across the full movie.</li>
+<li><code>--slow-phase</code> – Phase offset (radians) for slow modulation.</li>
+<li><code>--azimuth-offset</code> – Starting azimuth offset in degrees.</li>
 </ul>
 </section>
 <section id="animated-elevation-zoom" class="level3">
@@ -2266,7 +2285,20 @@ vertical-align: -.125em;
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span> 20 <span class="at">--elev-peak</span> 60 <span class="dt">\</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.6 <span class="at">--zoom-peak</span> 2.0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>This animates elevation and zoom in four phases while the camera continues to rotate: 1) rise from <code>elev-start</code> to <code>elev-peak</code> 2) zoom in from <code>zoom-start</code> to <code>zoom-peak</code> 3) zoom back out 4) return to <code>elev-start</code></p>
+<p>This animates elevation and zoom smoothly (sinusoidal) while the camera continues to rotate.</p>
+</section>
+<section id="multi-loop-variation-seamless" class="level3">
+<h3 class="anchored" data-anchor-id="multi-loop-variation-seamless">Multi-loop variation (seamless)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> <span class="op">&lt;</span>INPUT_VTK<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="op">&lt;</span>OUTPUT_PATH<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 450 <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 3 <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Slow modulation produces different loops while returning to the starting position at the end for seamless playback.</p>
 </section>
 <section id="outputs" class="level3">
 <h3 class="anchored" data-anchor-id="outputs">Outputs</h3>
@@ -2276,19 +2308,48 @@ vertical-align: -.125em;
 </section>
 <section id="stitch-frames-to-mp4" class="level3">
 <h3 class="anchored" data-anchor-id="stitch-frames-to-mp4">Stitch frames to MP4</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-framerate</span> 30 <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-i</span> <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>_%04d.png <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-pix_fmt</span> yuv420p <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>.mp4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-framerate</span> 30 <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-i</span> <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>_%04d.png <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-pix_fmt</span> yuv420p <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>.mp4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="example" class="level3">
 <h3 class="anchored" data-anchor-id="example">Example</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/spin.mp4 <span class="dt">\</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 180 <span class="dt">\</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> Fast</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/spin.mp4 <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 180 <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">&quot;Inferno (matplotlib)&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="example-multi-loop-smooth-modulation" class="level3">
+<h3 class="anchored" data-anchor-id="example-multi-loop-smooth-modulation">Example (multi-loop, smooth modulation)</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/combined_for_video.vtu <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/combined_for_video_spin.mp4 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">&quot;Inferno (matplotlib)&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 1800 <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fps</span> 30 <span class="dt">\</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 3 <span class="dt">\</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--azimuth-offset</span><span class="op">=</span>-120 <span class="dt">\</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span><span class="op">=</span>-40 <span class="dt">\</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-peak</span> 80 <span class="dt">\</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.8 <span class="dt">\</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-peak</span> 2.0 <span class="dt">\</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">--radius-scale</span> 0.6 <span class="dt">\</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6 <span class="dt">\</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--overwrite</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="notes" class="level3">
 <h3 class="anchored" data-anchor-id="notes">Notes</h3>

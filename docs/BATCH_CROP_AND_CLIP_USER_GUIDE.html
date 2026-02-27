@@ -2274,7 +2274,7 @@ vertical-align: -.125em;
       &lt;prefix&gt;_density_3d.vtu / .vti / averaged vti
       &lt;prefix&gt;_walls.vtu / &lt;prefix&gt;_filaments.vtp / &lt;prefix&gt;_walls_filaments.vtm
       &lt;prefix&gt;_summary_stats.csv
-      PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-hide-orientation-axes`, and `--png-lighting` are forwarded)</code></pre>
+      PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-hide-orientation-axes`, `--png-lighting`, and `--composite-filaments-source` are forwarded)</code></pre>
 <p>Naming notes: - Manifolds: <code>&lt;crop_prefix&gt;_sX_manifolds_&lt;TAG&gt;.S###.vtu</code> (persistence tag + smoothing). - Filament manifolds (optional): <code>&lt;crop_prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;.S###.vtu</code> (persistence tag + smoothing). - Filaments: <code>&lt;crop_prefix&gt;_sX_arcs_&lt;ARC&gt;.S###.vtp</code> (persistence tag + smoothing). - Delaunay: <code>&lt;crop_prefix&gt;_delaunay.S###.vtu</code> (smoothing tag). - Unsmooothed conversions (e.g., via <code>ndtopo_stats.py --write-vtk</code>) use <code>_S000</code>. - DisPerSE concatenates multiple manifold tags into one file (e.g., <code>JE1a2a</code>). Run per-tag if you need separate manifold outputs. Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.</p>
 </section>
 <section id="examples" class="level3">

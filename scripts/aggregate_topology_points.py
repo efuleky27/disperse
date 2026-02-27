@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 
 def parse_args() -> argparse.Namespace:
@@ -94,6 +94,8 @@ def _quantile(vals_sorted: List[float], q: float) -> float:
     return float(vals_sorted[lo] * (1 - frac) + vals_sorted[hi] * frac)
 
 
+
+
 def _select_hist_scalars(all_scalars: List[str], args: argparse.Namespace) -> List[str]:
     if args.hist_scalars:
         if len(args.hist_scalars) == 1 and args.hist_scalars[0].lower() == "all":
@@ -129,6 +131,17 @@ def _component_lists() -> Tuple[List[str], List[str], List[str]]:
 
 def _component_color_map() -> Dict[int, str]:
     return {idx: color for idx, (_, _, color) in enumerate(FILMAN_WALLS_COMPONENTS)}
+
+
+def _set_transparent(fig, ax) -> None:
+    try:
+        fig.patch.set_alpha(0.0)
+    except Exception:
+        pass
+    try:
+        ax.patch.set_alpha(0.0)
+    except Exception:
+        pass
 
 
 def aggregate_values(vals: List[float]) -> Dict[str, float]:
@@ -431,6 +444,7 @@ def run_polars(paths: List[Path], args: argparse.Namespace) -> None:
                 "max": float(row.get(f"{name}_max", 0.0) or 0.0),
             }
 
+
     if args.no_plots:
         have_plots = False
     else:
@@ -716,7 +730,6 @@ def run_stream(paths: List[Path], args: argparse.Namespace) -> None:
     samples: Dict[str, Dict[str, List[float]]] = {}
     global_samples: Dict[str, List[float]] = {}
     global_counts: Dict[str, int] = {}
-
     def _stat_store(cat: str, name: str) -> Dict[str, float]:
         return stats.setdefault(cat, {}).setdefault(
             name,
@@ -826,6 +839,7 @@ def run_stream(paths: List[Path], args: argparse.Namespace) -> None:
         if high > low:
             global_support[name] = (low, high)
 
+
     edges_by_cat: Dict[str, Dict[str, List[float]]] = {}
     if args.hist_bin_mode == "global":
         for name in hist_scalars:
@@ -882,6 +896,7 @@ def run_stream(paths: List[Path], args: argparse.Namespace) -> None:
                             continue
                         counts.setdefault(cat, {}).setdefault(name, [0] * (len(edges) - 1))
                         counts[cat][name][bin_idx] += 1
+
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1143,7 +1158,7 @@ def write_filman_walls_composition_plot(
     for spine in ax.spines.values():
         spine.set_visible(False)
     ax.set_title("Particle membership in cosmic structures", fontsize=sizes["title"])
-    table_bbox = [0.12, -0.7, 0.9, 0.45]
+    table_bbox = [0.13, -0.7, 0.85, 0.5]
     table = ax.table(
         cellText=[
             [f"{c:.2e}" for c in counts],
@@ -1171,7 +1186,8 @@ def write_filman_walls_composition_plot(
     ax.set_position([0.1, 0.52, 0.8, 0.4])
     fig.tight_layout()
     out_path = out_dir / f"{output_prefix}_filman_walls_composition.png"
-    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight")
+    _set_transparent(fig, ax)
+    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight", transparent=True)
     plt.close(fig)
 
 
@@ -1264,7 +1280,8 @@ def write_filman_walls_violin_plot(
     ax.set_position([0.1, 0.48, 0.8, 0.42])
     fig.tight_layout()
     out_path = out_dir / f"{output_prefix}_filman_walls_{scalar_name}_violin.png"
-    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight")
+    _set_transparent(fig, ax)
+    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight", transparent=True)
     plt.close(fig)
 
 
@@ -1349,7 +1366,18 @@ def write_filman_walls_box_plot(
     )
     ax.tick_params(axis="y", labelsize=sizes["tick"])
 
-    stats_rows = ["count", "mean", "min", "q25", "median", "q75", "max"]
+    stats_rows = ["count", "mean", "min", "q25", "median", "q75", "max", "skew"]
+    def _bowley(stats: Dict[str, float]) -> Optional[float]:
+        if not stats or not stats.get("count"):
+            return None
+        q1 = stats.get("q25", 0.0)
+        q2 = stats.get("median", 0.0)
+        q3 = stats.get("q75", 0.0)
+        denom = q3 - q1
+        if denom == 0:
+            return None
+        return (q3 + q1 - 2.0 * q2) / denom
+
     cell_text = [
         [f"{s.get('count', 0.0):.2e}" if s.get("count") else "" for s in stats_list],
         [f"{s.get('mean', 0.0):.3f}" if s.get("count") else "" for s in stats_list],
@@ -1358,6 +1386,10 @@ def write_filman_walls_box_plot(
         [f"{s.get('median', 0.0):.3f}" if s.get("count") else "" for s in stats_list],
         [f"{s.get('q75', 0.0):.3f}" if s.get("count") else "" for s in stats_list],
         [f"{s.get('max', 0.0):.3f}" if s.get("count") else "" for s in stats_list],
+        [
+            f"{val:.3f}" if val is not None else ""
+            for val in (_bowley(s) for s in stats_list)
+        ],
     ]
     table = ax.table(
         cellText=cell_text,
@@ -1384,15 +1416,16 @@ def write_filman_walls_box_plot(
     ax.set_position([0.1, 0.48, 0.8, 0.42])
     fig.tight_layout()
     out_path = out_dir / f"{output_prefix}_filman_walls_{scalar_name}_box.png"
-    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight")
+    _set_transparent(fig, ax)
+    fig.savefig(out_path, dpi=plot_dpi, bbox_inches="tight", transparent=True)
     plt.close(fig)
 
 
 FILMAN_WALLS_COMPONENTS = [
-    ("filament_manifolds_only", "Filaments only", "#f2e661"),
+    ("filament_manifolds_only", "Filaments excl. walls", "#f2e661"),
     ("shared_filament_manifolds_walls", "Filaments and walls", "#fca50a"),
-    ("walls_not_filament_manifolds", "Walls only", "#c73e4c"),
-    ("unassigned_walls_filament_manifolds", "Unassigned", "#5d126e"),
+    ("walls_not_filament_manifolds", "Walls excl. filaments", "#c73e4c"),
+    ("unassigned_walls_filament_manifolds", "Not filaments or walls", "#5d126e"),
 ]
 
 

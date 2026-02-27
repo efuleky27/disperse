@@ -35,8 +35,8 @@ Concise reference for pulling Quijote data, running the DisPerSE pipelines, and 
   - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
   - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and `cell` handling for Delaunay/walls/filaments).
   - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
-  - `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats, histograms, and composition/violin/box plots (configurable scalars/binning).
-  - `scripts/spin_render.py`: render rotating PNG sequences (and MP4 via ffmpeg).
+- `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats, histograms, and composition/violin/box plots (configurable scalars/binning).
+- `scripts/spin_render.py`: render rotating PNG sequences (and MP4 via ffmpeg), with configurable resolution, background, and multi‑loop camera paths.
   - `scripts/stitch_slab_pngs.py`: stitch slab PNGs into per-crop or combined MP4s.
 - `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
 

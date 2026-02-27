@@ -32,9 +32,28 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render a rotating view of a VTK file.")
     parser.add_argument("--input", required=True, help="Input VTK file (vtu/vtp/vti/vtr).")
     parser.add_argument("--output", required=True, help="Output movie path (.mp4) or PNG path.")
+    parser.add_argument(
+        "--resolution",
+        nargs=2,
+        type=int,
+        metavar=("WIDTH", "HEIGHT"),
+        help="Output resolution in pixels (e.g., 1920 1080).",
+    )
+    parser.add_argument(
+        "--background",
+        choices=["white", "black"],
+        default="white",
+        help="Background color for renders (default: white).",
+    )
     parser.add_argument("--frames", type=int, default=180, help="Number of frames to render.")
     parser.add_argument("--elev", type=float, default=20.0, help="Camera elevation angle.")
     parser.add_argument("--zoom", type=float, default=1.2, help="Camera zoom factor.")
+    parser.add_argument(
+        "--radius-scale",
+        type=float,
+        default=0.6,
+        help="Orbit radius scale as a fraction of the dataset extent (default: 0.6).",
+    )
     parser.add_argument("--fps", type=int, default=30, help="Frames per second.")
     parser.add_argument(
         "--overwrite",
@@ -45,6 +64,36 @@ def _parse_args() -> argparse.Namespace:
         "--animate-elev-zoom",
         action="store_true",
         help="Animate elevation/zoom over the rotation.",
+    )
+    parser.add_argument(
+        "--loops",
+        type=int,
+        default=1,
+        help="Number of full rotations to render (default: 1).",
+    )
+    parser.add_argument(
+        "--slow-elev-amp",
+        type=float,
+        default=0.0,
+        help="Amplitude of slow elevation modulation over the full movie (degrees).",
+    )
+    parser.add_argument(
+        "--slow-zoom-amp",
+        type=float,
+        default=0.0,
+        help="Amplitude of slow zoom modulation over the full movie.",
+    )
+    parser.add_argument(
+        "--slow-phase",
+        type=float,
+        default=0.0,
+        help="Phase offset (radians) for slow modulation (default: 0).",
+    )
+    parser.add_argument(
+        "--azimuth-offset",
+        type=float,
+        default=0.0,
+        help="Starting azimuth offset in degrees (default: 0).",
     )
     parser.add_argument("--elev-start", type=float, default=20.0, help="Start elevation for animation.")
     parser.add_argument("--elev-peak", type=float, default=60.0, help="Peak elevation for animation.")
@@ -98,6 +147,12 @@ def _camera_path(
     frames: int,
     elev_deg: float,
     zoom: float,
+    radius_scale: float,
+    loops: int,
+    slow_elev_amp: float,
+    slow_zoom_amp: float,
+    slow_phase: float,
+    azimuth_offset_deg: float,
     animate: bool,
     elev_start: float,
     elev_peak: float,
@@ -116,25 +171,29 @@ def _camera_path(
         return a + (b - a) * t
 
     keyframes = []
+    loops = max(1, int(loops))
     for i in range(frames):
         t = i / max(frames - 1, 1)
+        t_loop = (t * loops) % 1.0
+        elev_loop_start = elev_start
+        elev_loop_peak = elev_peak
+        zoom_loop_start = zoom_start
+        zoom_loop_peak = zoom_peak
         if animate:
-            if t < 0.25:
-                elev_deg = lerp(elev_start, elev_peak, t / 0.25)
-                zoom = zoom_start
-            elif t < 0.5:
-                elev_deg = elev_peak
-                zoom = lerp(zoom_start, zoom_peak, (t - 0.25) / 0.25)
-            elif t < 0.75:
-                elev_deg = elev_peak
-                zoom = lerp(zoom_peak, zoom_start, (t - 0.5) / 0.25)
-            else:
-                elev_deg = lerp(elev_peak, elev_start, (t - 0.75) / 0.25)
-                zoom = zoom_start
+            elev_mid = 0.5 * (elev_loop_start + elev_loop_peak)
+            elev_amp = 0.5 * (elev_loop_peak - elev_loop_start)
+            zoom_mid = 0.5 * (zoom_loop_start + zoom_loop_peak)
+            zoom_amp = 0.5 * (zoom_loop_peak - zoom_loop_start)
+            elev_deg = elev_mid + elev_amp * math.sin(2.0 * math.pi * t_loop)
+            zoom = zoom_mid + zoom_amp * math.sin(2.0 * math.pi * t_loop + math.pi / 2.0)
+        if slow_elev_amp or slow_zoom_amp:
+            slow = math.sin(2.0 * math.pi * t + slow_phase)
+            elev_deg = elev_deg + slow_elev_amp * slow
+            zoom = zoom + slow_zoom_amp * slow
         zoom = max(zoom, 1e-3)
-        radius = 0.6 * max(dx, dy, dz) / zoom
+        radius = max(radius_scale, 1e-3) * max(dx, dy, dz) / zoom
         elev = math.radians(elev_deg)
-        theta = 2.0 * math.pi * t
+        theta = 2.0 * math.pi * t * loops + math.radians(azimuth_offset_deg)
         x = cx + radius * math.cos(theta)
         y = cy + radius * math.sin(theta)
         z = cz + radius * math.sin(elev)
@@ -153,6 +212,20 @@ def main() -> None:
     src.UpdatePipeline()
 
     view = CreateRenderView()
+    if args.resolution:
+        view.ViewSize = [int(args.resolution[0]), int(args.resolution[1])]
+    if hasattr(view, "BackgroundColorMode"):
+        view.BackgroundColorMode = "Single Color"
+    if hasattr(view, "UseColorPaletteForBackground"):
+        view.UseColorPaletteForBackground = 0
+    if args.background == "black":
+        view.Background = [0.0, 0.0, 0.0]
+        if hasattr(view, "Background2"):
+            view.Background2 = [0.0, 0.0, 0.0]
+    else:
+        view.Background = [1.0, 1.0, 1.0]
+        if hasattr(view, "Background2"):
+            view.Background2 = [1.0, 1.0, 1.0]
     view.OrientationAxesVisibility = 0
     disp = Show(src, view)
     ResetCamera(view)
@@ -211,6 +284,12 @@ def main() -> None:
         anim.NumberOfFrames,
         args.elev,
         args.zoom,
+        args.radius_scale,
+        args.loops,
+        args.slow_elev_amp,
+        args.slow_zoom_amp,
+        args.slow_phase,
+        args.azimuth_offset,
         args.animate_elev_zoom,
         args.elev_start,
         args.elev_peak,
