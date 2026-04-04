@@ -7,12 +7,12 @@ format:
 
 ## `ndtopo_stats.py` User Guide
 
-Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, filament manifolds (optional), both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
+Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, optional filament/cluster manifolds, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
 
 ### What it does
 - Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (`--write-vtk` via `netconv`/`skelconv`).
-- Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament-manifolds VTU.
-- Matches point IDs (`true_index` by default; filaments use integer part of `cell` unless you filter to `.0` cells) and splits them into: walls, filaments, walls_not_filaments, filaments_not_walls, shared_walls_filaments, unassigned, plus filament‑manifold categories when provided.
+- Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament manifolds VTU. Cluster inputs can be either VTU manifolds **or** the VTP critical-point export (`cluster_critpoints`).
+- Matches point IDs (`true_index` by default; filaments use integer part of `cell` unless you filter to `.0` cells) and splits them into: walls, filaments, walls_not_filaments, filaments_not_walls, shared_walls_filaments, unassigned, plus filament‑/cluster‑manifold categories when provided.
 - Aggregates selected scalar fields (default: `mass`, `field_value`, `log_field_value`) from the Delaunay mesh for each category and writes a CSV.
 
 ### Requirements
@@ -26,6 +26,7 @@ python scripts/ndtopo_stats.py \
   --walls-vtk    <Walls.vtu>      | --walls-ndnet    <Walls.NDnet> \
   --filaments-vtk <Filaments.vtp> | --filaments-ndskl <Filaments.NDskl> \
   [--filament-manifolds-vtk <FilamentManifolds.vtu> | --filament-manifolds-ndnet <FilamentManifolds.NDnet>] \
+  [--cluster-manifolds-vtk <ClusterManifolds.vtu|.vtp> | --cluster-manifolds-ndnet <ClusterManifolds.NDnet>] \
   --output-csv <stats.csv> \
   [--write-vtk] \
   [--netconv-bin /path/to/netconv] \
@@ -38,12 +39,15 @@ python scripts/ndtopo_stats.py \
   [--filaments-cell-mode all|zero] \
   [--filament-manifolds-id-field true_index] \
   [--filament-manifolds-cell-mode all|zero] \
+  [--cluster-manifolds-id-field true_index] \
+  [--cluster-manifolds-cell-mode all|zero] \
   [--scalar-fields mass field_value log_field_value] \
+  [--topology-scalars-csv <topology_scalars.csv>] \
   [--per-point-csv <per_point.csv>] \
   [--verbose]
 ```
-- `--write-vtk` converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including `.S000` variants).
-- `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, and `--filament-manifolds-id-field` choose which point-data array defines IDs.
+- `--write-vtk` converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including `_S000` or `.S000` variants).
+- `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, `--filament-manifolds-id-field`, and `--cluster-manifolds-id-field` choose which point-data array defines IDs. For cluster critical points, `true_index` is provided via nearest‑neighbor mapping to the Delaunay mesh.
 - `--*-cell-mode zero` keeps only `.0` cell IDs (0-cells) when `cell` is used; `all` uses `int(cell)` for every point.
 - Scalars are read only from the Delaunay file, regardless of what walls/filaments store.
 
@@ -51,14 +55,24 @@ python scripts/ndtopo_stats.py \
 - A single CSV at `--output-csv` with columns: `category`, `count`, and for each scalar `<name>_sum`, `<name>_mean`.
 - Base categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned`.
 - Extra filament-manifold categories (only if provided): `filament_manifolds`, `walls_not_filament_manifolds`, `filament_manifolds_not_walls`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`.
+- Extra cluster categories (only if provided):
+  - Always: `clusters`, `clusters_not_filaments`, `clusters_not_walls`, `filaments_not_clusters`, `walls_not_clusters`,
+    `shared_walls_clusters`, `shared_filaments_clusters`, `shared_walls_filaments_clusters`.
+  - If filament manifolds are provided: `clusters_not_filament_manifolds`, `filament_manifolds_not_clusters`,
+    `shared_filament_manifolds_clusters`, `shared_walls_filament_manifolds_clusters`,
+    `shared_filaments_filament_manifolds_clusters`, `shared_walls_filaments_filament_manifolds_clusters`.
 - Optional per-point CSV (`--per-point-csv`) with one row per Delaunay ID and boolean membership flags:
-  - Columns: `delaunay_id`, `is_wall`, `is_filament`, `is_filament_manifold`, plus the requested scalar columns.
+  - Columns: `delaunay_id`, `is_wall`, `is_filament`, `is_filament_manifold`, `is_cluster`, plus the requested scalar columns.
   - Boolean flags preserve multi‑membership so downstream analyses can filter/aggregate by combination.
+- Optional topology-scalars CSV (`--topology-scalars-csv`) that uses **topology dataset scalars** instead of Delaunay scalars.
+  - Adds a `scalar_source` column (`walls`, `filaments`, `filament_manifolds`, `clusters`) to indicate which topology dataset supplied the scalar values.
 
 ### Naming conventions for auto-converted files (`--write-vtk`)
 - Delaunay from NDnet: `<prefix>_delaunay_S000.vtu`.
 - Manifolds from NDnet: `<prefix>_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
 - Filament manifolds from NDnet: `<prefix>_filament_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
+- Cluster manifolds from NDnet (if you have them): `<prefix>_cluster_manifolds_<TAG>_S000.vtu` (legacy; clusters are now critical points).
+- Cluster critical points (recommended): `<prefix>_cluster_critpoints_<TAG>_S000.vtp` (and `.vtu`), with `field_value` and `log_field_value = ln(field_value)`.
 - Filaments from NDskl: `<prefix>_arcs_<TAG>_S000.vtp` (with existing persistence token kept in the stem).
 - Stems are sanitized to use underscores (single dot before the extension).
 
@@ -68,8 +82,9 @@ Use preexisting VTU/VTP:
 python scripts/ndtopo_stats.py --verbose \
   --delaunay-vtk  outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_delaunay_S000.vtu \
   --walls-vtk     outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S000.vtu \
-  --filaments-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_arcs_U.S000.vtp \
+  --filaments-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_arcs_U_S000.vtp \
   --filament-manifolds-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_filament_manifolds_JE2a_S000.vtu \
+  --cluster-manifolds-vtk outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_cluster_critpoints_JE0a_S000.vtp \
   --delaunay-id-field true_index --walls-id-field true_index --filaments-id-field cell \
   --scalar-fields mass field_value log_field_value \
   --output-csv outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/topology_stats.csv \

@@ -10,20 +10,20 @@ format:
 graph TD
     A[Data acquisition<br/>Download Quijote snapshot - HDF5] --> B[analyze_snapshot.py<br/>Stage 1: Stream, crop, stride and target count<br/>Write NDfield - rebased crop]
     B --> C[delaunay_3D<br/>Stage 2: Build Delaunay NDnet<br/>DTFE density]
-    C --> D[mse<br/>Stage 3: Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump arcs - filaments]
-    D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>Delaunay: density]
+    C --> D[mse<br/>Stage 3: Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump filament manifolds (optional)<br/>Export cluster critical points (maxima)<br/>Dump arcs - filaments]
+    D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>filament manifolds (optional)<br/>cluster critical points (optional)<br/>Delaunay: density]
     E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>all topology types<br/>stats CSV]
     %% E --> F2[batch_clip.py<br/>Clip slab - axis/origin/thickness<br/>Flatten walls/filaments<br/>Average density<br/>Resample/grid]
     F1 --> G[PNG outputs<br/>2D and 3D density, walls, filaments, composite]
     G --> G2[MP4 outputs<br/>Spin renders-3D rotation<br/>Slab-stitch movies across z]
     E --> H[batch_crop_and_clip.py<br/>Tile multiple crops/slabs<br/>Runs Stage 1-3 per crop<br/>Runs slab clips per slab]
-    H --> I["Batch crop/clip outputs<br/>3D walls colored by log_field_value<br/>3D filaments colored by log_field_value<br/>3D filament manifolds colored by log_field_value (optional)<br/>2D density projection and average<br/>2D walls and filaments colored by topology_type and log_field_value<br/>Composite density, walls, filaments, filament manifolds"]
+    H --> I["Batch crop/clip outputs<br/>3D walls colored by log_field_value<br/>3D filaments colored by log_field_value<br/>3D filament/cluster manifolds or critical points colored by log_field_value (optional)<br/>2D density projection and average<br/>2D walls and filaments colored by topology_type and log_field_value<br/>Composite density, walls, filaments, filament/cluster manifolds or critical points"]
     I --> J[Aggregate topology points<br/>Global stats + histograms + barchart/violin/box plots]
 ```
 
 ### Legend
 - **analyze_snapshot.py**: Streams/crops/decimates particles; rebases crop for periodic Delaunay; runs `delaunay_3D` and `mse`; exports shifted VTKs (walls/filaments/delaunay) with persistence/smoothing tags.
-- **ndtopo_stats.py**: Optional; aggregates Delaunay scalars over walls/filaments/walls_not_filaments/filaments_not_walls/shared_walls_filaments/shared_filaments_filament_manifolds/unassigned (plus filament-manifold variants) into a CSV; accepts VTK or NDnet/NDskl.
+- **ndtopo_stats.py**: Optional; aggregates Delaunay scalars over walls/filaments/walls_not_filaments/filaments_not_walls/shared_walls_filaments/unassigned plus filament‑manifold and cluster combinations (e.g., `clusters`, `shared_walls_clusters`, `shared_walls_filaments_clusters`) into a CSV; accepts VTK or NDnet/NDskl.
 - **batch_clip.py**: Clips a slab, flattens walls/filaments, averages/resamples density, writes VTKs and PNGs.
 - **batch_crop_and_clip.py**: Tiles the snapshot into crops, runs `analyze_snapshot.py`, `ndtopo_stats.py`, and `batch_clip.py` per crop/slab; organizes outputs by crop/slab.
 - **aggregate_topology_points.py**: Combines per-point CSVs across crops; writes global stats, histogram CSV/PNG outputs, and composition/violin/box plots.
@@ -31,8 +31,8 @@ graph TD
 - **stitch_slab_pngs.py**: Stitches per-slab PNGs into MP4s (per crop or combined across crops).
 
 ### Notes
-- Walls: descending manifolds (e.g., JE1a); Filaments: arcs (e.g., U).
-- Naming: `<prefix>_sX_manifolds_<TAG>_S###.vtu`, `<prefix>_sX_arcs_<TAG>_S###.vtp`, `<prefix>_delaunay_S###.vtu`; unsmoothed conversions use `_S000`.
+- Walls are 2D manifolds (tag chosen by the workflow, e.g., `J2a/JE2a`), filaments are arcs (e.g., `U`), and clusters are exported as maxima critical points (`cluster_critpoints`).
+- Naming: `<prefix>_sX_manifolds_<TAG>_S###.vtu`, `<prefix>_sX_arcs_<TAG>_S###.vtp`, `<prefix>_cluster_critpoints_<TAG>_S000.vtp`, `<prefix>_delaunay_S###.vtu`; unsmoothed conversions use `_S000`.
 - Use shifted Delaunay VTKs (non-`_S000`) for slabs to avoid origin offsets.
 
 ### Technologies used

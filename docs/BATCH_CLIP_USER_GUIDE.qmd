@@ -10,13 +10,13 @@ format:
 Use `scripts/batch_clip.py` to clip DisPerSE outputs to a slab, export clipped 3D data, and produce flattened 2D views plus a Z-averaged density map for ParaView or downstream tools.
 
 ### What it does
-- Clips walls (manifolds), filaments, optional filament manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.
+- Clips walls (manifolds), filaments, optional filament/cluster manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.
 - Exports both the clipped 3D datasets and flattened 2D versions (walls/filaments/density scaled onto a plane, averaged over the slab depth - vti files).
 - Keeps topology tags as point data (`topology_type`) for easy coloring.
 
 ### Requirements
 - ParaView pvpython (e.g., `/Applications/ParaView-6.0.1.app/Contents/bin/pvpython`).
-- Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).
+- Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, optional cluster manifolds **VTU or VTP** (critical-point clusters are VTP), Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).
 
 To keep `pvpython` on PATH whenever you activate the conda environment:
 ```bash
@@ -40,6 +40,7 @@ pvpython scripts/batch_clip.py \
   --walls <walls.vtu> \
   --filaments <filaments.vtp> \
   [--filament-manifolds <filament_manifolds.vtu>] \
+  [--cluster-manifolds <clusters.vtu|.vtp>] \
   --delaunay <delaunay.vtu> \
   --output-dir <OUTPUT_DIR> \
   --output-prefix <PREFIX> \
@@ -55,12 +56,14 @@ pvpython scripts/batch_clip.py \
   [--png-log-range -3 1] \
   [--png-background white] \
   [--png-transparent|--no-png-transparent] \
+  [--png-align-composite|--no-png-align-composite] \
   [--png-hide-orientation-axes|--no-png-hide-orientation-axes] \
   [--png-lighting|--no-png-lighting] \
   [--composite-filaments-source arcs|manifolds] \
   [--png-percentile-range PLOW PHIGH]
 ```
-- `--walls/--filaments/--delaunay` are required; `--filament-manifolds` is optional. Relative paths are joined to `--input-dir`.
+- `--walls/--filaments/--delaunay` are required; `--filament-manifolds` and `--cluster-manifolds` are optional. Relative paths are joined to `--input-dir`.
+- Output extensions for each structure follow the input type: VTP inputs produce VTP outputs, VTU inputs produce VTU outputs.
 - `--output-dir` is required. Files are named with the prefix you supply.
 - `--slab-axis`, `--slab-origin`, `--slab-thickness` define the clip.
 - `--resample-dims` controls the regular grid used before clipping and averaging density (default 512 512 64).
@@ -68,41 +71,46 @@ pvpython scripts/batch_clip.py \
 - `--png-percentile-range` clamps PNG coloring to the given percentile range (e.g., `1 99`) for scalar renders (ignored if `--png-log-range` is set for `log_field_value`).
 - `--save-pngs` renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). `--png-resolution WIDTH HEIGHT` sets base image size (default 1600×1200); `--png-dpi` scales it (default 600). `--composite-opacity` controls wall/filament overlay opacity in the composite (default 0.6).
 - `--png-colormap` chooses the ParaView preset for `log_field_value` (default Inferno). `--png-log-range` fixes the LUT range for `log_field_value` (default -3 to +1).
-- `--png-background` sets the render background (white or black). `--png-transparent` writes PNGs with transparency (default on). `--png-hide-orientation-axes` hides the axes gizmo (default on). `--png-lighting` toggles surface lighting (default on).
+- `--png-background` sets the render background (white or black). Note: the slab PNGs are currently rendered with a black background by default; use `--png-transparent` to hide the background. `--png-hide-orientation-axes` hides the axes gizmo (default on). `--png-lighting` toggles surface lighting (default on).
+- `--png-align-composite` aligns overlay bounds to the density bounds for composite PNGs. Disable with `--no-png-align-composite` if overlays already share a common coordinate frame.
 - `--composite-filaments-source` selects whether the composite overlay uses filament manifolds or arc filaments (default: manifolds).
-- Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>.S###.vtu`, `*_filament_manifolds_<tag>.S###.vtu`, `*_filaments_<arc>.S###.vtp`, `*_delaunay.vtu`.
+- Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>_S###.vtu`, `*_filament_manifolds_<tag>_S###.vtu`, `*_cluster_critpoints_<tag>_S000.vtp`, `*_arcs_<arc>_S###.vtp`, `*_delaunay.vtu`.
 
 ### Outputs (all in `--output-dir`)
 - `<PREFIX>_walls_3d.vtu` – clipped 3D walls (point-data `topology_type=1`).
 - `<PREFIX>_filaments_3d.vtp` – clipped 3D filaments (`topology_type=2`).
 - `<PREFIX>_filament_manifolds_3d.vtu` – clipped 3D filament manifolds (`topology_type=3`, if provided).
+- `<PREFIX>_clusters_3d.vtp` – clipped 3D cluster critical points (`topology_type=4`, if provided).
 - `<PREFIX>_walls.vtu` – walls flattened to the slab plane.
 - `<PREFIX>_filaments.vtp` – filaments flattened to the slab plane.
 - `<PREFIX>_filament_manifolds.vtu` – filament manifolds flattened to the slab plane (if provided).
+- `<PREFIX>_clusters.vtp` – cluster critical points flattened to the slab plane (if provided).
 - `<PREFIX>_density_3d.vtu` – clipped density slab (unstructured).
 - `<PREFIX>_density.vtu` – flattened density slab.
 - `<PREFIX>_density_3d.vti` – resampled slab (structured) for clean volume/slice rendering.
 - `<PREFIX>_density_avg.vti` – density averaged over slab depth.
 - `<PREFIX>_walls_filaments.vtm` – multiblock of the flattened walls + filaments.
-- `<PREFIX>_walls_filaments_filament_manifolds.vtm` – multiblock including filament manifolds (if provided).
+- `<PREFIX>_walls_filaments_...vtm` – multiblock including optional filament/cluster manifolds (suffixes are appended for each extra layer).
 - `<PREFIX>_summary_stats.csv` – per-array scalar stats (count, sum, mean, median, quartiles, min/max, std, bounding-box size/volume) for all readable VTU/VTP inputs/outputs.
 - PNGs (when `--save-pngs` is used):
   - `<PREFIX>_walls_3d.png`, `<PREFIX>_filaments_3d.png`, `<PREFIX>_filament_manifolds_3d.png` – 3D surfaces colored by `log_field_value`.
-  - `<PREFIX>_walls_topology.png`, `<PREFIX>_walls_logfield.png` – 2D walls colored by `topology_type` / `log_field_value`.
-  - `<PREFIX>_filaments_topology.png`, `<PREFIX>_filaments_logfield.png` – 2D filaments colored by `topology_type` / `log_field_value`.
-  - `<PREFIX>_filament_manifolds_topology.png`, `<PREFIX>_filament_manifolds_logfield.png` – 2D filament manifolds colored by `topology_type` / `log_field_value`.
+  - `<PREFIX>_walls_topology.png`, `<PREFIX>_walls_logfield.png` – 2D walls colored by `topology_type` / `log_field_value` (topology renders use white for the overlay).
+  - `<PREFIX>_filaments_topology.png`, `<PREFIX>_filaments_logfield.png` – 2D filaments colored by `topology_type` / `log_field_value` (topology renders use white for the overlay).
+  - `<PREFIX>_filament_manifolds_topology.png`, `<PREFIX>_filament_manifolds_logfield.png` – 2D filament manifolds colored by `topology_type` / `log_field_value` (topology renders use white for the overlay).
+  - `<PREFIX>_clusters_topology.png`, `<PREFIX>_clusters_logfield.png` – 2D cluster points colored by `topology_type` / `log_field_value` (topology renders use white for the overlay).
   - `<PREFIX>_density_3d.png` – slice of the 3D density slab colored by `log_field_value`.
   - `<PREFIX>_density.png` – 2D flattened density colored by `log_field_value`.
   - `<PREFIX>_composite_density_walls_filaments.png` – composite: density base, walls light green, filaments red; overlay opacity controlled by `--composite-opacity`.
-  - `<PREFIX>_composite_density_walls_filaments_filament_manifolds.png` – composite that also includes filament manifolds (blue) when `--filament-manifolds` is provided.
+  - `<PREFIX>_composite_density_walls_filaments_*.png` – composite that also includes filament/cluster manifolds (suffixes appended when provided).
 
 ### Example
 ```bash
 PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_cropped \
-  --walls snap_010_manifolds_JE1a.S020.vtu \
-  --filaments snap_010_filaments_U.S020.vtp \
-  --filament-manifolds snap_010_filament_manifolds_JE2a.S020.vtu \
+  --walls snap_010_manifolds_JE1a_S020.vtu \
+  --filaments snap_010_arcs_U_S020.vtp \
+  --filament-manifolds snap_010_filament_manifolds_JE2a_S020.vtu \
+  --cluster-manifolds snap_010_cluster_critpoints_JE0a_S000.vtp \
   --delaunay snap_010_delaunay.vtu \
   --output-dir outputs/snap_010_cropped/auto2d \
   --output-prefix snap_010 \

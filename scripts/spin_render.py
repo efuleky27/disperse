@@ -95,6 +95,18 @@ def _parse_args() -> argparse.Namespace:
         default=0.0,
         help="Starting azimuth offset in degrees (default: 0).",
     )
+    parser.add_argument(
+        "--representation",
+        choices=["surface", "points"],
+        default="surface",
+        help="Render representation (default: surface).",
+    )
+    parser.add_argument(
+        "--point-size",
+        type=float,
+        default=2.0,
+        help="Point size when using --representation points (default: 2.0).",
+    )
     parser.add_argument("--elev-start", type=float, default=20.0, help="Start elevation for animation.")
     parser.add_argument("--elev-peak", type=float, default=60.0, help="Peak elevation for animation.")
     parser.add_argument("--zoom-start", type=float, default=1.0, help="Start zoom for animation.")
@@ -228,6 +240,9 @@ def main() -> None:
             view.Background2 = [1.0, 1.0, 1.0]
     view.OrientationAxesVisibility = 0
     disp = Show(src, view)
+    if args.representation == "points":
+        disp.Representation = "Points"
+        disp.PointSize = float(args.point_size)
     ResetCamera(view)
 
     array_names = _point_array_names(src)

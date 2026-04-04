@@ -149,7 +149,7 @@ Zoom crop plane, z-projection 0-10000. Smoothed 20x. Source index as gaussian po
 
 With the results from analyze_snapshot.py in hand, visualize the walls and filaments in 2D. Specifically, generate a clip of a given thickness and project all topological structures onto the 2D face of the clip, while keeping info about the specific type of the topology (e.g. filament and wall). Then visualize the 2D result in paraview coloring the different topologies with different colors.
 
-ParaView-friendly workflow using the outputs we already have (snap_010_manifolds_vtu_JE1a_smooth20.S020.vtu for walls and snap_010_filaments_U_vtp_smooth20.S020.vtp for filaments). Goal: take a slab of given thickness, project to 2D, keep a type tag, and color by type.
+ParaView-friendly workflow using the outputs we already have (`snap_010_manifolds_vtu_JE1a_smooth20_S020.vtu` for walls and `snap_010_arcs_U_vtp_smooth20_S020.vtp` for filaments). Goal: take a slab of given thickness, project to 2D, keep a type tag, and color by type.
 
 - Load both files.
   - File > Open the manifolds VTU (walls) and the filaments VTP (arcs).
@@ -218,5 +218,4 @@ Density and filaments clipped to `0<z<10` in paraview, projected into 2D.
 
 Density, walls and filaments clipped to `0<z<10` in paraview, projected into 2D.
 ![Density, walls and filaments clipped to `0<z<10` in paraview, projected into 2D.](/outputs/snap_010_cropped_s6/density_walls_filaments_clip_2D.png)
-
 

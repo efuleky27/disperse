@@ -105,13 +105,14 @@ python scripts/analyze_snapshot.py \
   --mse-nsig 3.0 \
   --dump-manifolds JE1a \
   --dump-filament-manifolds JE2a \
+  --dump-clusters JE3a \
   --dump-arcs U \
   --netconv-smooth 20 \
   --skelconv-smooth 20
 ```
 Notes:
 - Coordinates are rebased to the crop origin for `-periodic` tessellation, then VTKs are shifted back to global.
-- Outputs include shifted VTKs (`*_delaunay.vtu`, `*_manifolds_<TAG>.vtu`, `*_filaments_<ARC>.vtp`) plus per-file summary stats CSV.
+- Outputs include shifted VTKs (`*_delaunay.vtu`, `*_manifolds_<TAG>.vtu`, `*_arcs_<ARC>.vtp`, optional `*_filament_manifolds_<TAG>.vtu`, and `*_cluster_critpoints_<TAG>_S000.vtp/.vtu`) plus per-file summary stats CSV.
 - You can replace `--stride 1` with `--target-count 2000000` to auto-pick a stride near 2M particles.
 
 ### Density Workflows
@@ -150,7 +151,7 @@ Clip a slab, flatten, average density, and render overlays:
 PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_subbox \
   --walls snap_010_manifolds_JE1a.vtu \
-  --filaments snap_010_filaments_U.vtp \
+  --filaments snap_010_arcs_U.vtp \
   --delaunay snap_010_delaunay.vtu \
   --output-dir outputs/snap_010_subbox/auto2d \
   --output-prefix snap_010 \
@@ -161,7 +162,8 @@ PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch
   --png-colormap "Inferno (matplotlib)" \
   --png-log-range -3 1 \
   --png-dpi 600 \
-  --png-transparent \
+  --no-png-transparent \
+  --png-align-composite \
   --no-png-hide-orientation-axes
 ```
 Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.
@@ -172,7 +174,7 @@ Use Delaunay scalars to quantify shared/unique/unassigned topology membership:
 python scripts/ndtopo_stats.py \
   --delaunay-vtk outputs/snap_010_subbox/snap_010_delaunay.vtu \
   --walls-vtk    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu \
-  --filaments-vtk outputs/snap_010_subbox/snap_010_filaments_U.vtp \
+  --filaments-vtk outputs/snap_010_subbox/snap_010_arcs_U.vtp \
   --delaunay-id-field true_index \
   --walls-id-field true_index \
   --filaments-id-field cell \
@@ -190,7 +192,7 @@ python scripts/batch_crop_and_clip.py \
   --crop-size 500000 500000 100000 \
   --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
   --mse-nsig 5.0 \
-  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
+  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-clusters JE3a --dump-arcs U \
   --netconv-smooth 20 --skelconv-smooth 20 \
   --slab-step 10 --slab-thickness 10 \
   --resample-dims 500 500 100 \
@@ -235,6 +237,7 @@ python scripts/prepare_cosmoflow_snapshot.py \
 +- Persistence: `--mse-nsig` or `--persistence-cut` (higher → prune weaker features; multiple values allowed, e.g., `--nsig 3.5 4.0 5.0`).
 - Manifolds: `--dump-manifolds` (JD1d walls, J0a void minima, etc.).
 - Filament manifolds (optional): `--dump-filament-manifolds` (e.g., JE2a).
+- Clusters (optional): `--dump-clusters` (exports maxima critical points; e.g., JE3a). `--dump-cluster-manifolds` remains as a deprecated alias.
 - Threshold style: absolute (`--persistence-cut`) vs. sigma (`--mse-nsig`).
 - Units: `--input-unit` / `--output-unit` to keep coordinate scales consistent.
 - Post-visualization: `visualize_walls_paraview.py --threshold` can hide/show ranges.

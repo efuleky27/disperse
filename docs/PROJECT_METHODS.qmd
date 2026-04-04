@@ -47,18 +47,26 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
       (here the DTFE density computed by delaunay_3D).
     - Persistence is not applied here; this is a pure geometric tessellation.
   - MSE (topology extraction)
-    - Run `mse` on the Delaunay NDnet with significance (`--mse-nsig`), manifold tag (`--dump-manifolds`, e.g., `JE1a`), and arc tag (`--dump-arcs`, e.g., `U`).
+    - Run `mse` on the Delaunay NDnet with significance (`--mse-nsig`), manifold tag (`--dump-manifolds`, e.g., `JE1a`), optional filament-manifold tag (`--dump-filament-manifolds`), and arc tag (`--dump-arcs`, e.g., `U`). When extra manifold dumps are requested, the MSC is reused (`-loadMSC`) to avoid recomputation.
     - Persistence: `--mse-nsig 3.0` or `5.0` (higher sigma prunes low-significance features; ratios printed in logs).
     - Dumps:
-      - `--dump-manifolds JE1a` → descending manifolds (walls).
-      - `--dump-arcs U` → ascending arcs (filaments).
+      - `--dump-manifolds <TAG>` → wall manifolds (2D sheets). Common choices are `J2a`/`JE2a`, depending on boundary handling.
+      - `--dump-filament-manifolds <TAG>` → optional filament manifolds (2D surfaces around filaments; often `J1a`/`JE1a`).
+      - `--dump-arcs U` → filament arcs (1D skeleton).
+      - `--dump-clusters <TAG>` → export **cluster critical points** (maxima) as VTP/VTU for downstream analysis (primary cluster representation).
     - Optional `--mse-vertex-as-minima` (off here) would force vertices to be minima.
+  - Structure identification & rationale
+    - **Walls**: 2D manifolds from the Morse–Smale complex of the DTFE density field. These represent sheet-like separatrices that partition flow basins, which is why they align with cosmic walls.
+    - **Filaments**: 1D arcs (skeleton) connecting saddle points to extrema, representing ridge-like paths of the density field. These are topologically stable under persistence pruning.
+    - **Filament manifolds**: Optional 2D manifolds that bound the filaments, useful for overlap/composition analysis in slabs.
+    - **Clusters**: Density maxima (critical points, type=3). DisPerSE’s 3‑manifold exports are volumetric and often empty for smoothed crops, so we export maxima critical points and map them back to Delaunay IDs. This yields a robust, discrete cluster catalog consistent with the same density field as walls/filaments.
+    - **Scalars**: All statistics use Delaunay scalars; cluster `log_field_value` is computed as `ln(field_value)` to match other structures.
   - Conversion & shift back
     - Convert manifolds/skeletons with `netconv`/`skelconv`; optional smoothing (`--netconv-smooth 20`, `--skelconv-smooth 20`).
     - Shift exported VTKs (Delaunay, manifolds, filaments) back to global coordinates using the stored crop origin; NDnet/NDskl stay rebased.
   - Summaries/outputs
     - Write `<prefix>_summary_stats.csv` (scalar stats for each VTK).
-    - Outputs: rebased NDnet/NDskl; shifted VTKs (`_delaunay[.S###].vtu`, `_manifolds_<TAG>[.S###].vtu`, `_filaments_<ARC>[.S###].vtp`).
+    - Outputs: rebased NDnet/NDskl; shifted VTKs (`_delaunay_S###.vtu`, `_manifolds_<TAG>_S###.vtu`, `_arcs_<ARC>_S###.vtp`, optional `_filament_manifolds_<TAG>_S###.vtu`, and `_cluster_critpoints_<TAG>_S000.vtp/.vtu`).
 - **Why**: Reduces the dataset to a safe size, builds the DTFE density that MSE needs, applies persistence filtering for meaningful walls/filaments, and delivers globally aligned VTKs for the next stages.
 
 #### Stage 2: Slab clip and visualization (`batch_clip.py`)
@@ -66,7 +74,7 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
 - **Key inputs**: Shifted VTKs from Stage 1 (walls, filaments, density); slab axis/origin/thickness; resample dimensions; scalar name.
 - **How it works**:
   - Clip slab
-    - Load shifted walls/filaments/density; clip to a slab (e.g., `--slab-axis z`, `--slab-origin 0/10/50`, `--slab-thickness 10` mpc/h).
+    - Load shifted walls/filaments/density (plus optional filament/cluster manifolds or cluster critical points); clip to a slab (e.g., `--slab-axis z`, `--slab-origin 0/10/50`, `--slab-thickness 10` mpc/h).
     - Uses clipped bounds so resampling never samples outside the crop.
   - Flatten / average / resample
     - Flatten walls/filaments onto the slab plane (set slab axis to zero).
@@ -88,7 +96,8 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
   - Match IDs:
     - Walls ↔ Delaunay: `true_index`.
     - Filaments ↔ Delaunay: `int(cell)` (critical point index); interpolated arc samples have IDs not present in Delaunay.
-  - Aggregate Delaunay scalars over categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament‑manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`).
+    - Clusters ↔ Delaunay: `true_index` assigned via nearest‑neighbor mapping from cluster critical points to Delaunay vertices.
+  - Aggregate Delaunay scalars over categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament‑manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`, and cluster variants such as `clusters`, `clusters_not_filaments`, `clusters_not_walls`, `shared_walls_clusters`, `shared_filaments_clusters`, `shared_walls_filaments_clusters`, and filament‑manifold/cluster intersections when provided).
   - Settings: `--walls-id-field true_index`, `--filaments-id-field cell`, `--scalar-fields mass field_value log_field_value`; add `--netconv-bin/--skelconv-bin` when paths are needed.
 - **Output**: `<prefix>_topology_stats.csv` with counts and `<scalar>_sum`/`<scalar>_mean` per category.  
   - Optional per-point export: `<prefix>_topology_points.csv` (one row per Delaunay node with boolean membership flags and scalar values).
@@ -102,7 +111,7 @@ This project extracts, visualizes, and quantifies cosmic-web topology (walls and
     - Set `--crop-size` (e.g., 500000×500000×100000 kpc/h) and ranges (`--x-range`, `--y-range`, `--z-range`).
     - Iterate non-overlapping tiles; skip empty/partial edge tiles.
   - Per-crop actions
-    - Run Stage 1 with chosen persistence and smoothing (e.g., `--mse-nsig 5.0`, `--dump-manifolds JE1a`, `--dump-arcs U`, `--netconv-smooth 20`, `--skelconv-smooth 20`).
+    - Run Stage 1 with chosen persistence and smoothing (e.g., `--mse-nsig 5.0`, `--dump-manifolds JE1a`, `--dump-filament-manifolds JE2a`, `--dump-clusters JE3a`, `--dump-arcs U`, `--netconv-smooth 20`, `--skelconv-smooth 20`).
     - Run Stage 3 to write `<crop_prefix>_topology_stats.csv`.
     - If enabled (`--write-per-point-csv`), also write `<crop_prefix>_topology_points.csv` for downstream aggregation.
     - Derive slab origins from `--slab-step`/`--slab-thickness`; run Stage 2 for each slab (`--resample-dims` often 500×500×100 or 512×512×64; `--scalar-name log_field_value`).

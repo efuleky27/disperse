@@ -17,6 +17,7 @@ Outputs are organized per-crop and per-slab so results do not overwrite.
 - Tiles a user-specified volume with fixed-size crop boxes (skips partial edge tiles).
 - For each crop: calls `analyze_snapshot.py` with your smoothing, nsig, and export options.
 - If `--dump-filament-manifolds` is provided, it also exports the filament-manifold VTKs for each crop.
+- If `--dump-clusters` is provided, it exports **cluster critical points** (maxima) as VTP/VTU for each crop, which is the primary cluster representation used downstream.
 - Within each crop: marches slab origins along z (or whichever axis you choose in `batch_clip.py`, default z) with a fixed step and thickness, calling `batch_clip.py` to produce 3D/2D clips and summary stats.
 - Handles unit conversion between input snapshot units and output units (e.g., kpc/h to mpc/h).
 - Skips crops that contain no particles (does not abort the batch).
@@ -50,12 +51,15 @@ python scripts/batch_crop_and_clip.py \
   --crop-size DX DY DZ \
   --x-range XMIN XMAX --y-range YMIN YMAX --z-range ZMIN ZMAX \
   --slab-step <STEP> --slab-thickness <THICK> \
-  [--mse-nsig 5.0] [--dump-manifolds JE1a] [--dump-filament-manifolds JE2a] [--dump-arcs U] \
+  [--mse-nsig 5.0] [--dump-manifolds JE1a] [--dump-filament-manifolds JE2a] [--dump-clusters JE3a] [--dump-arcs U] \
   [--netconv-smooth 20] [--skelconv-smooth 20] \
   [--stride 1] [--delaunay-btype periodic] \
   [--resample-dims NX NY NZ] [--scalar-name log_field_value] \
   [--png-percentile-range PLOW PHIGH] \
+  [--png-transparent|--no-png-transparent] \
+  [--png-align-composite|--no-png-align-composite] \
   [--write-per-point-csv] \
+  [--write-topology-scalars-csv|--no-write-topology-scalars-csv] \
   [--skip-slabs] \
   [--input-unit kpc/h] [--output-unit mpc/h] \
   [--analyze-script path/to/analyze_snapshot.py] \
@@ -65,6 +69,8 @@ python scripts/batch_crop_and_clip.py \
 - `--slab-step` sets spacing between slab origins; `--slab-thickness` sets the clip depth for each slab.
 - `--resample-dims` sets the grid for density resampling inside `batch_clip.py` (default 500 500 100).
 - `--png-percentile-range` clamps PNG coloring to the given percentile range when `batch_clip.py` renders images (e.g., `1 99`).
+- `--png-transparent` controls PNG alpha; use `--no-png-transparent` to force the background color to render.
+- `--png-align-composite` aligns composite overlays to the density bounds; disable with `--no-png-align-composite` if overlays are already aligned.
 - `--write-per-point-csv` adds a per‑point topology CSV (one row per Delaunay ID) next to the per‑crop stats file.
 - `--skip-slabs` runs only `analyze_snapshot.py` and topology stats for each crop, skipping `batch_clip.py`.
 - Smoothing tags for output filenames come from `--netconv-smooth` and `--skelconv-smooth`.
@@ -77,21 +83,24 @@ output-root/
   crop_x<x0>-<x1>_y<y0>-<y1>_z<z0>-<z1>/
     <crop_prefix>_*.vtu/vtp/...   # analyze_snapshot outputs
     <crop_prefix>_topology_stats.csv  # ndtopo_stats results for this crop
+    <crop_prefix>_topology_stats_topology_scalars.csv  # topology-scalars stats (optional)
     <crop_prefix>_topology_points.csv # per-point topology rows (optional)
     slab_z<origin>/
       <prefix>_walls_3d.vtu
       <prefix>_filaments_3d.vtp
       <prefix>_density_3d.vtu / .vti / averaged vti
       <prefix>_walls.vtu / <prefix>_filaments.vtp / <prefix>_walls_filaments.vtm
+      <prefix>_clusters.vtp (if cluster critical points were provided)
       <prefix>_summary_stats.csv
-      PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-hide-orientation-axes`, `--png-lighting`, and `--composite-filaments-source` are forwarded)
+      PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-align-composite`, `--png-hide-orientation-axes`, `--png-lighting`, and `--composite-filaments-source` are forwarded)
 ```
 Naming notes:
-- Manifolds: `<crop_prefix>_sX_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).
-- Filament manifolds (optional): `<crop_prefix>_sX_filament_manifolds_<TAG>.S###.vtu` (persistence tag + smoothing).
-- Filaments: `<crop_prefix>_sX_arcs_<ARC>.S###.vtp` (persistence tag + smoothing).
-- Delaunay: `<crop_prefix>_delaunay.S###.vtu` (smoothing tag).
-- Unsmooothed conversions (e.g., via `ndtopo_stats.py --write-vtk`) use `_S000`.
+- Manifolds: `<crop_prefix>_sX_manifolds_<TAG>_S###.vtu` (persistence tag + smoothing).
+- Filament manifolds (optional): `<crop_prefix>_sX_filament_manifolds_<TAG>_S###.vtu` (persistence tag + smoothing).
+- Cluster critical points (recommended): `<crop_prefix>_cluster_critpoints_<TAG>_S000.vtp` and `.vtu`.
+- Filaments: `<crop_prefix>_sX_arcs_<ARC>_S###.vtp` (persistence tag + smoothing).
+- Delaunay: `<crop_prefix>_delaunay_S###.vtu` (smoothing tag).
+- Unsmoothed conversions (e.g., via `ndtopo_stats.py --write-vtk`) use `_S000`.
 - DisPerSE concatenates multiple manifold tags into one file (e.g., `JE1a2a`). Run per-tag if you need separate manifold outputs.
 Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.
 
@@ -105,12 +114,33 @@ python scripts/batch_crop_and_clip.py \
   --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
   --slab-step 10 --slab-thickness 10 \
   --mse-nsig 5.0 \
-  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
+  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-clusters JE3a --dump-arcs U \
   --netconv-smooth 20 --skelconv-smooth 20 \
   --resample-dims 500 500 100 \
   --scalar-name log_field_value
 ```
 
+### More Examples (for science fair)
+```bash
+python scripts/batch_crop_and_clip.py \
+      --snapshot data/snapdir_000 \
+      --output-root outputs/quijote_batches_000_w_clusters_points \
+      --crop-size 500000 500000 100000 \
+      --mse-nsig 3.5 \
+      --x-range 0 500000 --y-range 0 500000 --z-range 900000 1000000 \
+      --slab-step 5 --slab-thickness 5 \
+      --dump-manifolds J1a --dump-arcs U \
+      --dump-filament-manifolds J2a \
+      --dump-clusters J3a \
+      --netconv-smooth 20 --skelconv-smooth 20 \
+      --png-percentile-range 0 99 \
+      --write-per-point-csv \
+      --no-png-lighting \
+      --no-png-transparent \
+      --export-delaunay-points \
+      --skip-slabs
+```
+     
 ### Tips
 - If a crop contains no particles, the script logs “[skip] Crop box contains no particles.” and moves on.
 - Ensure `pvpython` is resolvable from the environment; otherwise set PATH accordingly or adjust the `--clip-script` invocation to include its full path.

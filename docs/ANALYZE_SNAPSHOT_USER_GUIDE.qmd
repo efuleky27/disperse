@@ -60,6 +60,10 @@ Below is a description of every argument and the overall workflow.
 * `--mse-vertex-as-minima` — forward `-vertexAsMinima`.
 * `--dump-manifolds SPEC` — descriptor for `mse -dumpManifolds` (default `JD1d`).
 * `--dump-filament-manifolds TAG` — optional second manifolds tag (e.g., `JE2a`) to dump filament manifolds; runs `mse` a second time.
+* `--dump-clusters TAG` — export cluster critical points (maxima) using the given tag (e.g., `JE3a`).
+  - The pipeline exports **cluster critical points** from the skeleton as a VTP/VTU point set. This is the primary cluster representation used downstream because DisPerSE’s 3‑manifold exports are volumetric and often empty.
+  - Cluster `log_field_value` is computed as `ln(field_value)` for consistency with the other structures.
+* `--dump-cluster-manifolds TAG` — deprecated alias for `--dump-clusters` (kept for backward compatibility).
 * `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
   - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). Use `--dump-filament-manifolds` for one extra tag, or run separate passes if you need more.
 
@@ -95,6 +99,7 @@ python scripts/analyze_snapshot.py \
   --mse-nsig 3.0 \
   --dump-manifolds JE1a \
   --dump-filament-manifolds JE2a \
+  --dump-clusters JE3a \
   --dump-arcs U \
   --netconv-smooth 20 \
   --skelconv-smooth 20
@@ -143,11 +148,12 @@ python scripts/analyze_snapshot.py \
    Runs `mse` on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with `--manifolds-input` or `--stop-after mse`.
 
 ### Naming conventions (VTK/NDnet/NDskl)
-- Delaunay: `<prefix>_delaunay.S###.vtu` (or `_S000` for unsmoothed conversions).
-- Manifolds (walls): `<prefix>_sX_manifolds_<TAG>.S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
-- Filament manifolds (optional): `<prefix>_sX_filament_manifolds_<TAG>.S###.vtu` (NDnet from `mse`: `<prefix>_sX_manifolds_<TAG>.NDnet`).
-- Skeletons: `<prefix>_sX_arcs_<TAG>.S###.vtp` (NDskl: `<prefix>_sX_arcs_<TAG>.NDskl`).
-- Only one dot is used (before the extension); persistence (`sX`) precedes the role/tag; smoothing (`S###`) is appended by converters.
+- Delaunay: `<prefix>_delaunay_S###.vtu` (or `_S000` for unsmoothed conversions).
+- Manifolds (walls): `<prefix>_sX_manifolds_<TAG>_S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
+- Filament manifolds (optional): `<prefix>_sX_filament_manifolds_<TAG>_S###.vtu` (NDnet from `mse`: `<prefix>_sX_manifolds_<TAG>.NDnet`).
+- Cluster critical points (recommended): `<prefix>_cluster_critpoints_<TAG>_S000.vtp` and `.vtu`.
+- Skeletons: `<prefix>_sX_arcs_<TAG>_S###.vtp` (NDskl: `<prefix>_sX_arcs_<TAG>.NDskl`). A matching `.vtu` is also written for convenience.
+- Persistence tags (`sX`) precede the role/tag; smoothing (`S###`) is appended by converters. DisPerSE tools sometimes emit `.S###`, but outputs are normalized to `_S###` during the pipeline.
 
 4. **Conversion**  
    Converts manifolds (via `netconv`) and skeletons (via `skelconv`) into VTK family formats for visualization.

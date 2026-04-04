@@ -19,11 +19,19 @@ We also rebased cropped coordinates to the crop origin for periodic tessellation
 
 ## Common Conventions
 - Filenames from `analyze_snapshot.py` use simplified stems:
-  - Delaunay: `<prefix>_delaunay[.S###].vtu`
-  - Walls: `<prefix>_manifolds_<TAG>[.S###].vtu`
-  - Filaments: `<prefix>_filaments_<ARC>[.S###].vtp`
+  - Delaunay: `<prefix>_delaunay_S###.vtu`
+  - Walls: `<prefix>_manifolds_<TAG>_S###.vtu`
+  - Filaments: `<prefix>_arcs_<ARC>_S###.vtp` (a matching `.vtu` is also written)
+  - Cluster critical points: `<prefix>_cluster_critpoints_<TAG>_S000.vtp` and `.vtu`
 - Cropped runs: NDfield coordinates are rebased to crop origin; exported VTU/VTP are shifted back to global.
 - Use `--periodic` only if you need periodic tessellation; crops are handled safely by the rebase/shift logic.
+
+## Structure Identification (what each output represents)
+- **Walls**: 2D manifolds from the Morse–Smale complex of the DTFE density field. These sheet-like separatrices naturally trace cosmic walls.
+- **Filaments**: 1D arcs (skeleton) connecting saddle points to extrema. These trace ridges of the density field and are robust under persistence pruning.
+- **Filament manifolds**: Optional 2D manifolds that bound filaments; helpful for overlap/composition analysis.
+- **Clusters**: Density maxima (critical points, type=3). DisPerSE’s 3‑manifold exports are volumetric and often empty after smoothing, so the pipeline exports maxima critical points and maps them to Delaunay IDs. Cluster `log_field_value` is computed as `ln(field_value)` to match other structures.
+- **Scalars**: All overlap/summary stats use Delaunay scalars, which avoids interpolation artifacts from manifold/skeleton geometry.
 
 ## Stage 1: `analyze_snapshot.py` (build and extract topology)
 
@@ -58,7 +66,7 @@ python scripts/analyze_snapshot.py \
 
 **Outputs (per crop)**  
 - Native (rebased coords): `<prefix>.NDnet`, `<prefix>_s*.NDskl`.
-- VTK (shifted to global): `<prefix>_delaunay[.S###].vtu`, `<prefix>_manifolds_<TAG>[.S###].vtu`, `<prefix>_filaments_<ARC>[.S###].vtp`, and optional `<prefix>_filament_manifolds_<TAG>[.S###].vtu`.
+- VTK (shifted to global): `<prefix>_delaunay_S###.vtu`, `<prefix>_manifolds_<TAG>_S###.vtu`, `<prefix>_arcs_<ARC>_S###.vtp` (plus a `.vtu`), optional `<prefix>_filament_manifolds_<TAG>_S###.vtu`, and `<prefix>_cluster_critpoints_<TAG>_S000.vtp/.vtu`.
 - `<prefix>_summary_stats.csv` (VTK scalar stats).
 
 **Why it matters**  
@@ -75,22 +83,27 @@ Take the walls/filaments/density VTKs (plus optional filament-manifold VTKs) and
 3) **Render** optional PNGs (3D slices, 2D flats, composite overlays).
 
 **Key inputs**  
-Walls VTU, Filaments VTP, optional filament manifolds VTU, Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.
+Walls VTU, Filaments VTP, optional filament manifolds VTU, optional cluster manifolds or cluster critical points (VTU/VTP), Delaunay VTU; slab axis/origin/thickness; resample dims; scalar name; optional PNG rendering.
 
 Example:
 ```bash
 pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_subbox \
-  --walls snap_010_manifolds_JE1a.S020.vtu \
-  --filaments snap_010_filaments_U.S020.vtp \
+  --walls snap_010_manifolds_JE1a_S020.vtu \
+  --filaments snap_010_arcs_U_S020.vtp \
   --delaunay snap_010_delaunay.vtu \
   --output-dir outputs/snap_010_subbox/auto2d \
   --output-prefix snap_010 \
   --slab-axis z --slab-origin 0 --slab-thickness 10 \
   --resample-dims 512 512 64 \
   --scalar-name log_field_value \
-  --save-pngs
+  --save-pngs \
+  --no-png-transparent \
+  --png-align-composite
 ```
+Notes:
+- Use `--no-png-transparent` if you want the background color to be visible in PNGs.
+- `--png-align-composite` (default) aligns composite overlays to density bounds; disable with `--no-png-align-composite` if overlays already share the same coordinate frame.
 
 **Outputs (per slab)**  
 - 3D clips: `_walls_3d.vtu`, `_filaments_3d.vtp`, `_density_3d.vtu/.vti`
@@ -132,7 +145,7 @@ python scripts/ndtopo_stats.py --verbose --write-vtk \
 ```
 
 **Outputs**  
-- CSV with rows for `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament-manifold variants such as `filament_manifolds`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`); columns: `count`, and `<scalar>_sum`/`<scalar>_mean` for each scalar.  
+- CSV with rows for `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned` (plus filament‑manifold variants and cluster variants such as `clusters`, `clusters_not_filaments`, `clusters_not_walls`, `shared_walls_clusters`, `shared_filaments_clusters`, `shared_walls_filaments_clusters`, and filament‑manifold/cluster intersections when provided); columns: `count`, and `<scalar>_sum`/`<scalar>_mean` for each scalar.  
 - Note: Many filament `cell` IDs won’t match Delaunay `true_index` (interpolated arc samples), so filament mass can be < filament count.
 
 **Why it matters**  
@@ -152,7 +165,7 @@ Tile a large snapshot into non-overlapping crops, run `analyze_snapshot.py` on e
 **Per-crop processing**  
 - Runs `analyze_snapshot.py` with your MSE/manifold/skeleton options (`--mse-nsig`, `--dump-manifolds`, `--dump-arcs`, `--netconv-smooth`, `--skelconv-smooth`, etc.).  
 - Runs `ndtopo_stats.py` on the crop outputs; writes `<crop_prefix>_topology_stats.csv`.  
-- Builds expected filenames using simplified stems (e.g., `crop..._manifolds_<TAG>.S###.vtu`, `crop..._filaments_<ARC>.S###.vtp`, `crop..._delaunay[.S###].vtu`).
+- Builds expected filenames using simplified stems (e.g., `crop..._manifolds_<TAG>_S###.vtu`, `crop..._arcs_<ARC>_S###.vtp`, `crop..._delaunay_S###.vtu`).
 
 **Per-slab processing (inside each crop)**  
 - Slab origins marched by `--slab-step`; thickness `--slab-thickness`.  
@@ -178,9 +191,10 @@ python scripts/batch_crop_and_clip.py \
 output-root/
   crop_x.../                          # per-crop outputs (rebased NDnet/NDskl, shifted VTK, stats)
     crop_..._topology_stats.csv       # ndtopo_stats for this crop
-    crop_..._delaunay[.S###].vtu
-    crop_..._manifolds_<TAG>.S###.vtu
-    crop_..._filaments_<ARC>.S###.vtp
+    crop_..._delaunay_S###.vtu
+    crop_..._manifolds_<TAG>_S###.vtu
+    crop_..._arcs_<ARC>_S###.vtp
+    crop_..._cluster_critpoints_<TAG>_S000.vtp/.vtu
     slab_z.../
       <prefix>_walls_3d.vtu
       <prefix>_filaments_3d.vtp

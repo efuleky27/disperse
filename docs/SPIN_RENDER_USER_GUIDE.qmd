@@ -57,6 +57,8 @@ pvpython scripts/spin_render.py \
   [--slow-zoom-amp Z] \
   [--slow-phase RAD] \
   [--azimuth-offset DEG] \
+  [--representation surface|points] \
+  [--point-size N] \
   [--overwrite]
 ```
 
@@ -81,6 +83,8 @@ pvpython scripts/spin_render.py \
 - `--slow-elev-amp/--slow-zoom-amp` – Slow modulation amplitude across the full movie.
 - `--slow-phase` – Phase offset (radians) for slow modulation.
 - `--azimuth-offset` – Starting azimuth offset in degrees.
+- `--representation` – Render as `surface` or `points`.
+- `--point-size` – Point size when `--representation points` is used.
 
 ### Animated elevation + zoom
 ```bash
@@ -156,6 +160,87 @@ pvpython scripts/spin_render.py \
   --slow-elev-amp 20 \
   --slow-zoom-amp 0.5 \
   --slow-phase 0.6 \
+  --overwrite
+```
+
+### More Examples (for science fair)
+```bash
+pvpython scripts/spin_render.py \
+  --input outputs/movie_loop/combined_components.vtu \
+  --output outputs/movie_loop/combined_components_spin.mp4 \
+  --scalar log_field_value \
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 \
+  --range-max 1 \
+  --resolution 1920 1080 \
+  --background black \
+  --frames 1800 \
+  --fps 30 \
+  --animate-elev-zoom \
+  --loops 3 \
+  --azimuth-offset=-120 \
+  --elev-start=-40 \
+  --elev-peak 80 \
+  --zoom-start 0.8 \
+  --zoom-peak 2.0 \
+  --radius-scale 0.6 \
+  --slow-elev-amp 20 \
+  --slow-zoom-amp 0.5 \
+  --slow-phase 0.6 \
+  --point-size 4 \
+  --line-width 2 \
+  --overwrite
+
+pvpython scripts/spin_render_layers.py \
+  --input outputs/four_layers \
+  --output outputs/movie_loop/four_layers_spin.mp4  \
+  --scalar log_field_value \
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 \
+  --range-max 1 \
+  --resolution 1920 1080 \
+  --background black \
+  --frames 1800 \
+  --fps 30 \
+  --animate-elev-zoom \
+  --loops 5 \
+  --azimuth-offset=-120 \
+  --elev-start=-40 \
+  --elev-peak 80 \
+  --zoom-start 0.8 \
+  --zoom-peak 2.0 \
+  --radius-scale 0.6 \
+  --slow-elev-amp 20 \
+  --slow-zoom-amp 0.5 \
+  --slow-phase 0.6 \
+  --point-size 4 \
+  --line-width 2 \
+  --overwrite
+
+pvpython scripts/spin_render.py \
+  --input outputs/movie_loop/particle_cube.vtu \
+  --output outputs/movie_loop/particle_cube.mp4 \
+  --scalar log_field_value \
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 \
+  --range-max 1 \
+  --resolution 1920 1080 \
+  --background black \
+  --frames 1800 \
+  --fps 30 \
+  --animate-elev-zoom \
+  --loops 1 \
+  --azimuth-offset=-120 \
+  --elev-start=-40 \
+  --elev-peak 80 \
+  --zoom-start 0.8 \
+  --zoom-peak 2.0 \
+  --radius-scale 0.6 \
+  --slow-elev-amp 20 \
+  --slow-zoom-amp 0.5 \
+  --slow-phase 0.6 \
+  --representation points \
+  --point-size 2.5 \
   --overwrite
 ```
 
