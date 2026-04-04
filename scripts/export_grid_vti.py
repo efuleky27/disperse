@@ -49,11 +49,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-VTK_TYPES = {
-    np.dtype("<f4"): ("Float32", np.float32),
-    np.dtype("<f8"): ("Float64", np.float64),
-    np.dtype("<i4"): ("Int32", np.int32),
-    np.dtype("<i8"): ("Int64", np.int64),
+# Keyed by (kind, itemsize) so endianness variants all match.
+VTK_TYPES: dict[tuple[str, int], tuple[str, type]] = {
+    ("f", 4): ("Float32", np.float32),
+    ("f", 8): ("Float64", np.float64),
+    ("i", 4): ("Int32", np.int32),
+    ("i", 8): ("Int64", np.int64),
 }
 
 
@@ -71,13 +72,16 @@ def main() -> None:
     if data.ndim != 3:
         raise ValueError(f"Dataset {args.dataset} must be 3-D, got shape {data.shape}")
 
-    vtk_type, cast = VTK_TYPES.get(data.dtype)
-    if vtk_type is None:
-        raise TypeError(f"Unsupported dtype {data.dtype}. Add it to VTK_TYPES.")
+    vtk_entry = VTK_TYPES.get((data.dtype.kind, data.dtype.itemsize))
+    if vtk_entry is None:
+        raise TypeError(
+            f"Unsupported dtype {data.dtype}. "
+            f"Supported: float32, float64, int32, int64. Add others to VTK_TYPES."
+        )
+    vtk_type, cast = vtk_entry
 
     data = np.asarray(data, dtype=cast)
     nx, ny, nz = data.shape
-    dims_str = f"{nz} {ny} {nx}"
 
     with open(output_path, "w", encoding="utf-8") as sink:
         sink.write('<?xml version="1.0"?>\n')
@@ -88,7 +92,7 @@ def main() -> None:
             f'Spacing="{args.spacing[0]} {args.spacing[1]} {args.spacing[2]}">\n'
         )
         sink.write(f'    <Piece Extent="0 {nx-1} 0 {ny-1} 0 {nz-1}">\n')
-        sink.write('      <PointData Scalars="{name}">\n'.format(name=args.field_name))
+        sink.write(f'      <PointData Scalars="{args.field_name}">\n')
         sink.write(
             f'        <DataArray type="{vtk_type}" Name="{args.field_name}" '
             f'NumberOfComponents="1" format="ascii">\n'

@@ -31,6 +31,8 @@ Key options
     `JD0a` for voids); combine with `--mse-vertex-as-minima` if you want minima
     represented as vertices.
   - Optional filament manifolds via `--dump-filament-manifolds` (e.g., `JE2a`).
+  - Optional cluster critical points (maxima) via `--dump-clusters`
+    (e.g., `JE0a` or `J0a`, depending on boundary inclusion).
   - Extract filaments by repeating `--dump-arcs` (e.g., `--dump-arcs U`
     and `--dump-arcs CUD`).
   - Resume from an existing NDnet via `--network-input` or reuse manifolds with
@@ -77,13 +79,18 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import re
 import shutil
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
 
-import numpy.typing as npt
-try:  # Optional: used for post-export coordinate shifts on VTK outputs.
+try:
+    from utils import unit_scale, summarize_vtk, write_stats_csv
+except ImportError:
+    from scripts.utils import unit_scale, summarize_vtk, write_stats_csv  # type: ignore[no-redef]
+
+try:  # Optional: used for coordinate shifts and summary statistics on VTK outputs.
     from vtkmodules.vtkIOXML import (
         vtkXMLImageDataReader,
         vtkXMLImageDataWriter,
@@ -92,6 +99,10 @@ try:  # Optional: used for post-export coordinate shifts on VTK outputs.
         vtkXMLUnstructuredGridReader,
         vtkXMLUnstructuredGridWriter,
     )
+    from vtkmodules.numpy_interface import dataset_adapter as dsa
+    from vtkmodules.util.numpy_support import vtk_to_numpy
+    from vtkmodules.vtkCommonDataModel import vtkDataSet
+    from vtkmodules.vtkIOLegacy import vtkDataSetReader
 except Exception:  # pragma: no cover
     vtkXMLImageDataReader = None  # type: ignore
     vtkXMLImageDataWriter = None  # type: ignore
@@ -99,14 +110,6 @@ except Exception:  # pragma: no cover
     vtkXMLPolyDataWriter = None  # type: ignore
     vtkXMLUnstructuredGridReader = None  # type: ignore
     vtkXMLUnstructuredGridWriter = None  # type: ignore
-
-try:  # Local-only: used for optional summary statistics on VTK outputs.
-    from vtkmodules.numpy_interface import dataset_adapter as dsa
-    from vtkmodules.util.numpy_support import vtk_to_numpy
-    from vtkmodules.vtkCommonDataModel import vtkDataSet
-    from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLUnstructuredGridReader
-    from vtkmodules.vtkIOLegacy import vtkDataSetReader
-except Exception:  # pragma: no cover - optional dependency
     dsa = None  # type: ignore
     vtk_to_numpy = None  # type: ignore
 
@@ -134,7 +137,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover - depends on env
 
 import h5py
 import numpy as np
-import re
 
 
 # Default paths so that a newcomer can simply run the script without reading any
@@ -345,6 +347,22 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--dump-clusters",
+        metavar="TAG",
+        help=(
+            "Export cluster critical points (maxima) using the given tag (e.g., JE3a). "
+            "This exports a VTP/VTU point set from the skeleton and does not dump manifolds."
+        ),
+    )
+    parser.add_argument(
+        "--dump-cluster-manifolds",
+        metavar="TAG",
+        help=(
+            "Deprecated alias for --dump-clusters (critical points). "
+            "Kept for backward compatibility."
+        ),
+    )
+    parser.add_argument(
         "--dump-arcs",
         action="append",
         metavar="CUID",
@@ -357,6 +375,11 @@ def parse_args() -> argparse.Namespace:
         "--export-delaunay",
         action="store_true",
         help="Also export the raw Delaunay NDnet via netconv (DTFE density visualization).",
+    )
+    parser.add_argument(
+        "--export-delaunay-points",
+        action="store_true",
+        help="Export Delaunay vertices as a point cloud (VTP/VTU, S000 only).",
     )
     parser.add_argument(
         "--delaunay-format",
@@ -438,9 +461,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def parse_label_path_pairs(entries: Optional[Sequence[str]]) -> Dict[str, Path]:
+def parse_label_path_pairs(entries: Sequence[str] | None) -> dict[str, Path]:
     """Transform ['label=path', ...] into {'label': Path(...)}."""
-    result: Dict[str, Path] = {}
+    result: dict[str, Path] = {}
     if not entries:
         return result
     for item in entries:
@@ -493,24 +516,9 @@ def reorder_arcs_stem(stem: str) -> str:
     return "_".join(prefix_parts + [arc_tag])
 
 
-def unit_scale(input_unit: str, output_unit: str) -> float:
-    """Translate between kiloparsecs and megaparsecs per h.
-
-    Gadget snapshots can store coordinates in different units. DisPerSE does not
-    care which one you use as long as you are consistent, so we compute a simple
-    multiplicative factor here. The function is intentionally tiny yet heavily
-    commented so non-programmers can follow the conversions.
-    """
-    if input_unit == output_unit:
-        return 1.0
-    if input_unit == "kpc/h" and output_unit == "mpc/h":
-        return 0.001
-    if input_unit == "mpc/h" and output_unit == "kpc/h":
-        return 1000.0
-    raise ValueError(f"Unsupported unit conversion {input_unit}->{output_unit}")
 
 
-def resolve_snapshot_parts(snapshot_path: Path) -> List[Path]:
+def resolve_snapshot_parts(snapshot_path: Path) -> list[Path]:
     """Resolve a multi-file snapshot into an ordered list of part files."""
     path = snapshot_path.expanduser()
     if path.is_dir():
@@ -546,7 +554,7 @@ def resolve_snapshot_parts(snapshot_path: Path) -> List[Path]:
     return [path.parent / f"{stem}.{i}.hdf5" for i in range(num_files)]
 
 
-def read_snapshot_metadata(paths: Sequence[Path], parttype: str) -> Dict[str, float]:
+def read_snapshot_metadata(paths: Sequence[Path], parttype: str) -> dict[str, float]:
     """Extract global information from a single-file or multi-file snapshot."""
     with h5py.File(paths[0], "r") as handle:
         header = handle["Header"].attrs
@@ -567,7 +575,7 @@ def read_snapshot_metadata(paths: Sequence[Path], parttype: str) -> Dict[str, fl
 def count_particles_in_box_multi(
     paths: Sequence[Path],
     parttype: str,
-    crop_box: Tuple[float, float, float, float, float, float],
+    crop_box: tuple[float, float, float, float, float, float],
     chunk_size: int,
 ) -> int:
     count = 0
@@ -588,8 +596,8 @@ def write_ndfield_coords_multi(
     scale: float,
     bbox_min_scaled: np.ndarray,
     bbox_max_scaled: np.ndarray,
-    crop_box: Optional[Tuple[float, float, float, float, float, float]] = None,
-    rebase_origin: Optional[np.ndarray] = None,
+    crop_box: tuple[float, float, float, float, float, float] | None = None,
+    rebase_origin: np.ndarray | None = None,
 ) -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     mins = np.array(crop_box[:3], dtype=np.float64) if crop_box else None
@@ -652,7 +660,7 @@ def write_ndfield_coords_multi(
     return written
 
 
-def resolve_command(name: str, override_dir: Optional[Path]) -> str:
+def resolve_command(name: str, override_dir: Path | None) -> str:
     """Find the requested DisPerSE executable.
 
     Users sometimes install DisPerSE in custom locations. If `--disperse-bin-dir`
@@ -673,7 +681,7 @@ def resolve_command(name: str, override_dir: Optional[Path]) -> str:
     return path
 
 
-def determine_stride(total: int, requested_stride: Optional[int], target_count: int) -> Tuple[int, int]:
+def determine_stride(total: int, requested_stride: int | None, target_count: int) -> tuple[int, int]:
     """Decide how aggressively to thin the particles before running DisPerSE.
 
     Feeding all 134 million PartType1 particles into DisPerSE is rarely needed
@@ -692,7 +700,7 @@ def determine_stride(total: int, requested_stride: Optional[int], target_count: 
 
 def count_particles_in_box(
     coords_dataset: h5py.Dataset,
-    crop_box: Tuple[float, float, float, float, float, float],
+    crop_box: tuple[float, float, float, float, float, float],
     chunk_size: int,
 ) -> int:
     mins = np.array(crop_box[:3], dtype=np.float64)
@@ -714,12 +722,12 @@ def count_particles_in_box(
     return count
 
 
-def expand_optional_path(path: Optional[Path]) -> Optional[Path]:
+def expand_optional_path(path: Path | None) -> Path | None:
     """Return an expanded Path if provided, otherwise None."""
     return Path(path).expanduser() if path else None
 
 
-def parse_crop_box(raw: Optional[Sequence[float]]) -> Optional[Tuple[float, float, float, float, float, float]]:
+def parse_crop_box(raw: Sequence[float] | None) -> tuple[float, float, float, float, float, float] | None:
     """Validate and normalize the user-provided crop box."""
     if raw is None:
         return None
@@ -741,8 +749,8 @@ def write_ndfield_coords(
     scale: float,
     bbox_min_scaled: np.ndarray,
     bbox_max_scaled: np.ndarray,
-    crop_box: Optional[Tuple[float, float, float, float, float, float]] = None,
-    rebase_origin: Optional[np.ndarray] = None,
+    crop_box: tuple[float, float, float, float, float, float] | None = None,
+    rebase_origin: np.ndarray | None = None,
 ) -> int:
     """Stream the particle coordinates into the ASCII catalog DisPerSE expects.
 
@@ -807,7 +815,7 @@ def write_ndfield_coords(
     return written
 
 
-def run_command(cmd: Sequence[str], cwd: Optional[Path] = None) -> None:
+def run_command(cmd: Sequence[str], cwd: Path | None = None) -> None:
     """Thin wrapper around subprocess.run that prints the command.
 
     Printing the command makes the pipeline transparent: users see exactly which
@@ -824,8 +832,8 @@ def run_delaunay(
     output_dir: Path,
     prefix: str,
     periodic: bool,
-    blocks: Optional[Sequence[int]],
-    btype: Optional[str],
+    blocks: Sequence[int] | None,
+    btype: str | None,
 ) -> Path:
     """Launch DisPerSE's `delaunay_3D` program to build the simplicial network.
 
@@ -853,12 +861,14 @@ def run_mse(
     prefix: str,
     periodic: bool,
     nsig: Sequence[float],
-    persistence_cut: Optional[Sequence[float]],
-    threads: Optional[int],
+    persistence_cut: Sequence[float] | None,
+    threads: int | None,
     manifold_spec: str,
     vertex_as_minima: bool,
-    skeletons: Optional[Sequence[str]],
-) -> Tuple[Path, Dict[str, Path]]:
+    skeletons: Sequence[str] | None,
+    store_manifolds: bool = False,
+    load_msc: Path | None = None,
+) -> tuple[Path, dict[str, Path]]:
     """Run DisPerSE's Morse-Smale extractor (`mse`) on the Delaunay network.
 
     `mse` is where the topology happens: it simplifies the field using either
@@ -869,6 +879,8 @@ def run_mse(
     automatically so users do not have to guess the suffix.
     """
     cmd = [mse_bin, str(network_file), "-outName", prefix, "-outDir", str(output_dir)]
+    if load_msc is not None:
+        cmd.extend(["-loadMSC", str(load_msc)])
     if periodic:
         cmd.extend(["-periodicity", "111"])
     if threads and threads > 0:
@@ -877,10 +889,12 @@ def run_mse(
         cmd.extend(["-cut", ",".join(f"{val:g}" for val in persistence_cut)])
     elif nsig:
         cmd.extend(["-nsig", ",".join(f"{val:g}" for val in nsig)])
+    if store_manifolds and load_msc is None:
+        cmd.append("-manifolds")
     cmd.extend(["-dumpManifolds", manifold_spec])
     if vertex_as_minima:
         cmd.append("-vertexAsMinima")
-    requested_skeletons: List[str] = list(dict.fromkeys(skeletons or []))
+    requested_skeletons: list[str] = list(dict.fromkeys(skeletons or []))
     for tag in requested_skeletons:
         cmd.extend(["-dumpArcs", tag])
     run_command(cmd)
@@ -901,13 +915,13 @@ def run_mse(
             "--output-prefix if needed."
         )
     manifolds_result = sanitize_filename(max(matches, key=lambda path: path.stat().st_mtime))
-    skeleton_paths: Dict[str, Path] = {}
+    skeleton_paths: dict[str, Path] = {}
     for tag in requested_skeletons:
         skeleton_paths[tag] = locate_dump_arcs_file(output_dir, prefix, tag)
     return manifolds_result, skeleton_paths
 
 
-def _extract_persistence_tag(path: Path, prefix: str, marker: str) -> Optional[str]:
+def _extract_persistence_tag(path: Path, prefix: str, marker: str) -> str | None:
     """Extract the persistence token that mse injects (e.g., s5, s3.5) from a filename."""
     stem = path.stem
     normalized = stem.replace(".", "_")
@@ -928,6 +942,18 @@ def _extract_persistence_tag(path: Path, prefix: str, marker: str) -> Optional[s
     if m:
         return m.group(1).replace(".", "_")
     return None
+
+
+def locate_msc_file(output_dir: Path, prefix: str) -> Path | None:
+    """Find the MSC file produced by mse (newest match)."""
+    canonical = output_dir / f"{prefix}.MSC"
+    matches = []
+    if canonical.exists():
+        matches.append(canonical)
+    matches.extend(output_dir.glob(f"{prefix}*.MSC"))
+    if not matches:
+        return None
+    return max(matches, key=lambda path: path.stat().st_mtime)
 
 
 def locate_dump_arcs_file(output_dir: Path, prefix: str, tag: str) -> Path:
@@ -970,8 +996,8 @@ def convert_manifolds(
     prefix: str,
     fmt: str,
     smooth_iters: int,
-    manifolds_tag: Optional[str] = None,
-    persistence_tag: Optional[str] = None,
+    manifolds_tag: str | None = None,
+    persistence_tag: str | None = None,
     role: str = "manifolds",
 ) -> Path:
     """Convert the manifolds network into a visualization-friendly surface.
@@ -981,7 +1007,7 @@ def convert_manifolds(
     the resulting file path so the final summary can list it.
     """
     fmt_tag = sanitize_tag(fmt.lower())
-    parts: List[str] = [prefix]
+    parts: list[str] = [prefix]
     if persistence_tag:
         parts.append(sanitize_tag(persistence_tag))
     parts.append(sanitize_tag(role))
@@ -990,14 +1016,48 @@ def convert_manifolds(
     base_name = "_".join(parts)
     run_netconv(netconv_bin, manifolds_file, base_name, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
-    candidate = output_dir / f"{base_name}{ext}"
+    if smooth_iters and smooth_iters > 0:
+        expected_name = f"{base_name}_S{smooth_iters:03d}{ext}"
+    else:
+        expected_name = f"{base_name}{ext}"
+    candidate = output_dir / expected_name
     if not candidate.exists():
-        matches = sorted(output_dir.glob(f"{base_name}*{ext}"))
+        stem_re = re.compile(rf"^{re.escape(base_name)}(?:_S\d+)?$")
+        stem_re_dot = re.compile(rf"^{re.escape(base_name)}(?:\\.S\\d+)?$")
+        matches = [
+            path
+            for path in output_dir.glob(f"{base_name}*{ext}")
+            if stem_re.match(path.stem) or stem_re_dot.match(path.stem)
+        ]
+        if not matches:
+            role_tag = sanitize_tag(role)
+            tag_part = sanitize_tag(manifolds_tag) if manifolds_tag else ""
+            for path in output_dir.glob(f"{prefix}*{ext}"):
+                stem = path.stem
+                if f"_{role_tag}_" in stem and (
+                    not tag_part or stem.endswith(f"_{tag_part}") or f"_{tag_part}." in stem
+                ):
+                    if role_tag == "manifolds" and (
+                        "filament_manifolds" in stem or "cluster_manifolds" in stem
+                    ):
+                        continue
+                    matches.append(path)
+        if smooth_iters and smooth_iters > 0:
+            smooth_matches = [
+                path
+                for path in matches
+                if re.search(r"(_S\\d+|\\.S\\d+)$", path.stem)
+            ]
+            if smooth_matches:
+                matches = smooth_matches
         if matches:
-            candidate = matches[-1]
+            candidate = max(matches, key=lambda path: path.stat().st_mtime)
+            print(
+                f"[warn] netconv output name mismatch; using {candidate.name} instead of {expected_name}."
+            )
         else:
             raise FileNotFoundError(
-                f"netconv completed but the manifolds output file was not found. Expected {candidate.name}."
+                f"netconv completed but the manifolds output file was not found. Expected {expected_name}."
             )
     return sanitize_filename(candidate)
 
@@ -1010,7 +1070,7 @@ def convert_network(
     tag: str,
     fmt: str,
     smooth_iters: int,
-    persistence_tag: Optional[str] = None,
+    persistence_tag: str | None = None,
 ) -> Path:
     fmt_tag = fmt.lower()
     base_parts = [prefix]
@@ -1020,16 +1080,126 @@ def convert_network(
     base = "_".join(base_parts)
     run_netconv(netconv_bin, ndnet_file, base, output_dir, fmt, smooth_iters)
     ext = ".NDnet" if fmt.startswith("ndnet") else f".{fmt_tag.rstrip('_ascii')}"
-    candidate = output_dir / f"{base}{ext}"
+    if smooth_iters and smooth_iters > 0:
+        expected_name = f"{base}_S{smooth_iters:03d}{ext}"
+    else:
+        expected_name = f"{base}{ext}"
+    candidate = output_dir / expected_name
     if not candidate.exists():
-        matches = sorted(output_dir.glob(f"{base}*{ext}"))
+        stem_re = re.compile(rf"^{re.escape(base)}(?:_S\d+)?$")
+        stem_re_dot = re.compile(rf"^{re.escape(base)}(?:\\.S\\d+)?$")
+        matches = [
+            path
+            for path in output_dir.glob(f"{base}*{ext}")
+            if stem_re.match(path.stem) or stem_re_dot.match(path.stem)
+        ]
+        if not matches:
+            tag_part = sanitize_tag(tag)
+            for path in output_dir.glob(f"{prefix}*{ext}"):
+                stem = path.stem
+                if f"_{tag_part}" in stem:
+                    matches.append(path)
+        if smooth_iters and smooth_iters > 0:
+            smooth_matches = [
+                path
+                for path in matches
+                if re.search(r"(_S\\d+|\\.S\\d+)$", path.stem)
+            ]
+            if smooth_matches:
+                matches = smooth_matches
         if matches:
-            candidate = matches[-1]
+            candidate = max(matches, key=lambda path: path.stat().st_mtime)
+            print(
+                f"[warn] netconv output name mismatch; using {candidate.name} instead of {expected_name}."
+            )
         else:
             raise FileNotFoundError(
-                f"netconv completed but the Delaunay output file was not found. Expected {candidate.name}."
+                f"netconv completed but the Delaunay output file was not found. Expected {expected_name}."
             )
     return sanitize_filename(candidate)
+
+
+def ensure_delaunay_vtu_s000(
+    netconv_bin: str,
+    ndnet_file: Path,
+    output_dir: Path,
+    prefix: str,
+    persistence_tag: str | None = None,
+) -> Path:
+    parts = [prefix]
+    if persistence_tag:
+        parts.append(sanitize_tag(persistence_tag))
+    parts.append("delaunay")
+    base = "_".join(parts)
+    target = output_dir / f"{base}_S000.vtu"
+    if target.exists():
+        return sanitize_filename(target)
+    run_netconv(netconv_bin, ndnet_file, target.stem, output_dir, "vtu", 0)
+    if target.exists():
+        return sanitize_filename(target)
+    stem_re = re.compile(rf"^{re.escape(base)}(?:_S000|\\.S000)$")
+    matches = [path for path in output_dir.glob(f"{base}*vtu") if stem_re.match(path.stem)]
+    if matches:
+        return sanitize_filename(max(matches, key=lambda path: path.stat().st_mtime))
+    raise FileNotFoundError(
+        f"netconv completed but the Delaunay S000 file was not found. Expected {target}."
+    )
+
+
+def export_delaunay_points(
+    delaunay_vtu: Path,
+    output_dir: Path,
+    prefix: str,
+    persistence_tag: str | None = None,
+) -> tuple[Path | None, Path | None]:
+    """Export Delaunay vertices as a point cloud (VTP + VTU, S000 only)."""
+    try:
+        from vtkmodules.vtkCommonCore import vtkPoints
+        from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
+        from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
+    except Exception as exc:
+        print(f"[warn] vtkmodules not available for Delaunay points export: {exc}")
+        return None, None
+    try:
+        if delaunay_vtu.suffix.lower() == ".vtu":
+            from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
+
+            reader = vtkXMLUnstructuredGridReader()
+        else:
+            from vtkmodules.vtkIOXML import vtkXMLPolyDataReader
+
+            reader = vtkXMLPolyDataReader()
+    except Exception as exc:
+        print(f"[warn] vtkmodules not available for Delaunay points export: {exc}")
+        return None, None
+    reader.SetFileName(str(delaunay_vtu))
+    reader.Update()
+    data = reader.GetOutput()
+    if data is None or data.GetNumberOfPoints() == 0:
+        print(f"[warn] No points found in {delaunay_vtu}; skipping Delaunay point export.")
+        return None, None
+    pts = vtkPoints()
+    pts.SetData(data.GetPoints().GetData())
+    poly = vtkPolyData()
+    poly.SetPoints(pts)
+    verts = vtkCellArray()
+    for i in range(data.GetNumberOfPoints()):
+        verts.InsertNextCell(1)
+        verts.InsertCellPoint(i)
+    poly.SetVerts(verts)
+    poly.GetPointData().ShallowCopy(data.GetPointData())
+    parts = [prefix]
+    if persistence_tag:
+        parts.append(sanitize_tag(persistence_tag))
+    parts.append("delaunay_point")
+    base = "_".join(parts)
+    vtp_path = output_dir / f"{base}_S000.vtp"
+    writer = vtkXMLPolyDataWriter()
+    writer.SetFileName(str(vtp_path))
+    writer.SetInputData(poly)
+    writer.Write()
+    vtu_path = convert_vtp_to_vtu(vtp_path, vtp_path.with_suffix(".vtu"))
+    return sanitize_filename(vtp_path), sanitize_filename(vtu_path) if vtu_path else None
 
 
 def skeleton_suffix_for_format(fmt: str) -> str:
@@ -1055,7 +1225,7 @@ def convert_skeleton(
     label: str,
     fmt: str,
     smooth_iters: int,
-    persistence_tag: Optional[str] = None,
+    persistence_tag: str | None = None,
 ) -> Path:
     """Convert NDskl filaments into a VTK/ASCII format using skelconv."""
     fmt_clean = sanitize_tag(fmt.lower())
@@ -1094,8 +1264,143 @@ def convert_skeleton(
     return sanitize_filename(candidate)
 
 
+def locate_crits_file(output_dir: Path, base: str) -> Path:
+    """Find the crits ASCII file emitted by skelconv -to crits_ascii."""
+    patterns = [
+        f"{base}.S*.a.crits",
+        f"{base}*.crits",
+    ]
+    matches: list[Path] = []
+    for pattern in patterns:
+        matches.extend(output_dir.glob(pattern))
+    if not matches:
+        raise FileNotFoundError(
+            f"skelconv completed but no critical points file was found for {base}."
+        )
+    return max(matches, key=lambda path: path.stat().st_mtime)
+
+
+def read_crits_ascii(path: Path) -> dict[str, np.ndarray]:
+    """Read DisPerSE .crits ASCII and return arrays."""
+    coords: list[list[float]] = []
+    values: list[float] = []
+    crit_types: list[int] = []
+    pair_ids: list[int] = []
+    boundaries: list[int] = []
+    with path.open("r") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) < 7:
+                continue
+            x, y, z = (float(parts[0]), float(parts[1]), float(parts[2]))
+            coords.append([x, y, z])
+            values.append(float(parts[3]))
+            crit_types.append(int(float(parts[4])))
+            pair_ids.append(int(float(parts[5])))
+            boundaries.append(int(float(parts[6])))
+    data = {
+        "coords": np.asarray(coords, dtype=float),
+        "value": np.asarray(values, dtype=float),
+        "type": np.asarray(crit_types, dtype=int),
+        "pair_id": np.asarray(pair_ids, dtype=int),
+        "boundary": np.asarray(boundaries, dtype=int),
+    }
+    return data
+
+
+def map_points_to_delaunay(
+    delaunay_vtk: Path,
+    points: np.ndarray,
+    true_index_field: str = "true_index",
+) -> tuple[np.ndarray, np.ndarray]:
+    """Map points to nearest Delaunay vertex ids using vtkPointLocator."""
+    try:
+        from vtkmodules.vtkCommonDataModel import vtkPointLocator
+        from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
+        from vtkmodules.util.numpy_support import vtk_to_numpy
+    except Exception as exc:
+        raise RuntimeError(f"vtkmodules not available: {exc}") from exc
+    reader = vtkXMLUnstructuredGridReader()
+    reader.SetFileName(str(delaunay_vtk))
+    reader.Update()
+    mesh = reader.GetOutput()
+    locator = vtkPointLocator()
+    locator.SetDataSet(mesh)
+    locator.BuildLocator()
+    pts = mesh.GetPoints()
+    true_arr = mesh.GetPointData().GetArray(true_index_field)
+    if true_arr is None:
+        raise RuntimeError(f"Delaunay mesh missing '{true_index_field}' array.")
+    true_vals = vtk_to_numpy(true_arr)
+    mapped = np.zeros(len(points), dtype=true_vals.dtype)
+    distances = np.zeros(len(points), dtype=float)
+    for idx, (x, y, z) in enumerate(points):
+        pid = locator.FindClosestPoint(x, y, z)
+        mapped[idx] = true_vals[pid]
+        px, py, pz = pts.GetPoint(pid)
+        dx = x - px
+        dy = y - py
+        dz = z - pz
+        distances[idx] = (dx * dx + dy * dy + dz * dz) ** 0.5
+    return mapped, distances
+
+
+def write_cluster_critpoints_vtp(
+    output_path: Path,
+    coords: np.ndarray,
+    arrays: dict[str, np.ndarray],
+) -> None:
+    try:
+        from vtkmodules.vtkCommonCore import vtkPoints
+        from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
+        from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
+        from vtkmodules.util.numpy_support import numpy_to_vtk
+    except Exception as exc:
+        raise RuntimeError(f"vtkmodules not available: {exc}") from exc
+    poly = vtkPolyData()
+    pts = vtkPoints()
+    pts.SetData(numpy_to_vtk(coords, deep=True))
+    poly.SetPoints(pts)
+    verts = vtkCellArray()
+    for i in range(coords.shape[0]):
+        verts.InsertNextCell(1)
+        verts.InsertCellPoint(i)
+    poly.SetVerts(verts)
+    for name, values in arrays.items():
+        arr = numpy_to_vtk(values, deep=True)
+        arr.SetName(name)
+        poly.GetPointData().AddArray(arr)
+    writer = vtkXMLPolyDataWriter()
+    writer.SetFileName(str(output_path))
+    writer.SetInputData(poly)
+    writer.Write()
+
+
+def convert_vtp_to_vtu(vtp_path: Path, vtu_path: Path) -> Path | None:
+    """Convert a VTP PolyData file to a VTU UnstructuredGrid file."""
+    try:
+        from vtkmodules.vtkFiltersCore import vtkAppendFilter
+        from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLUnstructuredGridWriter
+    except Exception as exc:
+        print(f"[warn] vtkmodules not available for VTP->VTU conversion: {exc}")
+        return None
+    reader = vtkXMLPolyDataReader()
+    reader.SetFileName(str(vtp_path))
+    reader.Update()
+    append = vtkAppendFilter()
+    append.AddInputData(reader.GetOutput())
+    append.Update()
+    writer = vtkXMLUnstructuredGridWriter()
+    writer.SetFileName(str(vtu_path))
+    writer.SetInputData(append.GetOutput())
+    writer.Write()
+    return vtu_path
+
 def cleanup_ndfield(
-    ndfield_created: bool, ndfield_path: Optional[Path], keep_ndfield: bool, summary: Dict[str, str]
+    ndfield_created: bool, ndfield_path: Path | None, keep_ndfield: bool, summary: dict[str, str]
 ) -> None:
     """Remove the temporary NDfield catalog when requested."""
     if ndfield_created and not keep_ndfield and ndfield_path and ndfield_path.exists():
@@ -1104,104 +1409,6 @@ def cleanup_ndfield(
             summary["ndfield"] = "(removed)"
         except Exception as exc:  # pragma: no cover
             print(f"[warn] Could not remove {ndfield_path}: {exc}")
-
-
-def _compute_array_stats(arr: npt.NDArray[np.float64]) -> Dict[str, float]:
-    return {
-        "count": int(arr.size),
-        "sum": float(np.sum(arr)),
-        "mean": float(np.mean(arr)),
-        "median": float(np.median(arr)),
-        "q25": float(np.quantile(arr, 0.25)),
-        "q75": float(np.quantile(arr, 0.75)),
-        "min": float(np.min(arr)),
-        "max": float(np.max(arr)),
-        "std": float(np.std(arr)),
-    }
-
-
-def _read_vtk_dataset(path: Path) -> Optional[vtkDataSet]:
-    if dsa is None or vtk_to_numpy is None:  # pragma: no cover - optional
-        return None
-    reader: Optional[vtkDataSetReader]
-    if path.suffix.lower() == ".vtu":
-        reader = vtkXMLUnstructuredGridReader()
-    elif path.suffix.lower() == ".vtp":
-        reader = vtkXMLPolyDataReader()
-    elif path.suffix.lower() == ".vtk":
-        reader = vtkDataSetReader()
-    else:
-        return None
-    reader.SetFileName(str(path))
-    reader.Update()
-    return reader.GetOutput()
-
-
-def summarize_vtk(path: Path) -> List[Dict[str, object]]:
-    """Return summary stats for all point/cell arrays in a VTK data set."""
-    ds = _read_vtk_dataset(path)
-    if ds is None:
-        return []
-    wrapper = dsa.WrapDataObject(ds)
-    bounds = ds.GetBounds() if hasattr(ds, "GetBounds") else None
-    dx = dy = dz = vol = None
-    if bounds:
-        dx = bounds[1] - bounds[0]
-        dy = bounds[3] - bounds[2]
-        dz = bounds[5] - bounds[4]
-        vol = dx * dy * dz
-
-    rows: List[Dict[str, object]] = []
-    for location, collection in (("points", wrapper.PointData), ("cells", wrapper.CellData)):
-        for name in collection.keys():
-            # Persistence arrays can include extreme values that overflow summary aggregates.
-            if "persistence" in name.lower():
-                continue
-            arr = np.asarray(collection[name]).ravel()
-            if arr.size == 0 or not np.issubdtype(arr.dtype, np.number):
-                continue
-            stats = _compute_array_stats(arr.astype(np.float64, copy=False))
-            row: Dict[str, object] = {
-                "file": str(path),
-                "location": location,
-                "array": name,
-                **stats,
-            }
-            if bounds:
-                row.update({"bbox_dx": dx, "bbox_dy": dy, "bbox_dz": dz, "bbox_volume": vol})
-            rows.append(row)
-    return rows
-
-
-def write_stats_csv(rows: List[Dict[str, object]], out_path: Path) -> None:
-    if not rows:
-        return
-    import csv
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "file",
-        "location",
-        "array",
-        "count",
-        "sum",
-        "mean",
-        "median",
-        "q25",
-        "q75",
-        "min",
-        "max",
-        "std",
-        "bbox_dx",
-        "bbox_dy",
-        "bbox_dz",
-        "bbox_volume",
-    ]
-    with open(out_path, "w", newline="", encoding="ascii") as sink:
-        writer = csv.DictWriter(sink, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
 
 
 def shift_vtk_points(path: Path, offset: np.ndarray) -> None:
@@ -1241,27 +1448,27 @@ def shift_vtk_points(path: Path, offset: np.ndarray) -> None:
 
 def ensure_catalog(
     args: argparse.Namespace,
-    summary: Dict[str, str],
-    coords_path: Optional[Path],
-    network_path: Optional[Path],
-    manifolds_path: Optional[Path],
-) -> Tuple[
-    Optional[Path],
+    summary: dict[str, str],
+    coords_path: Path | None,
+    network_path: Path | None,
+    manifolds_path: Path | None,
+) -> tuple[
+    Path | None,
     bool,
-    Optional[int],
-    Optional[Dict[str, float]],
-    Optional[float],
-    Optional[Tuple[float, float, float, float, float, float]],
-    Optional[np.ndarray],
+    int | None,
+    dict[str, float] | None,
+    float | None,
+    tuple[float, float, float, float, float, float] | None,
+    np.ndarray | None,
 ]:
     """Generate or reuse the NDfield catalog and update summary/meta information."""
     crop_box = parse_crop_box(args.crop_box)
     ndfield_created = False
-    actual_written: Optional[int] = None
-    meta: Optional[Dict[str, float]] = None
-    box_scaled: Optional[float] = None
-    crop_min_scaled: Optional[np.ndarray] = None
-    crop_min: Optional[np.ndarray] = None
+    actual_written: int | None = None
+    meta: dict[str, float] | None = None
+    box_scaled: float | None = None
+    crop_min_scaled: np.ndarray | None = None
+    crop_min: np.ndarray | None = None
 
     need_ndfield = coords_path is None and network_path is None and manifolds_path is None
     if args.stop_after == "ndfield" and coords_path is None:
@@ -1352,7 +1559,7 @@ def ensure_catalog(
     return coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled
 
 
-def emit_summary(summary: Dict[str, str]) -> None:
+def emit_summary(summary: dict[str, str]) -> None:
     """Print a consistent recap of the artifacts produced in this run."""
     print("[info] Pipeline complete:")
     for key, value in summary.items():
@@ -1370,15 +1577,23 @@ def main() -> None:
     # `summary` collects a human-readable receipt of everything produced during
     # the run so the user can quickly inspect which files correspond to which
     # parameter choices.
-    summary: Dict[str, str] = {"dump_manifolds": args.dump_manifolds}
+    if args.dump_cluster_manifolds and not args.dump_clusters:
+        print(
+            "[warn] --dump-cluster-manifolds is deprecated; use --dump-clusters instead. "
+            "Cluster manifolds are no longer exported."
+        )
+        args.dump_clusters = args.dump_cluster_manifolds
+    summary: dict[str, str] = {"dump_manifolds": args.dump_manifolds}
     if args.dump_filament_manifolds:
         summary["dump_filament_manifolds"] = args.dump_filament_manifolds
+    if args.dump_clusters:
+        summary["dump_clusters"] = args.dump_clusters
 
     coords_path = expand_optional_path(args.coords_input)
     network_path = expand_optional_path(args.network_input)
     manifolds_path = expand_optional_path(args.manifolds_input)
-    skel_native_paths: Dict[str, Path] = {}
-    filament_manifolds_path: Optional[Path] = None
+    skel_native_paths: dict[str, Path] = {}
+    filament_manifolds_path: Path | None = None
 
     coords_path, ndfield_created, actual_written, meta, box_scaled, crop_box, crop_min_scaled = ensure_catalog(
         args, summary, coords_path, network_path, manifolds_path
@@ -1392,7 +1607,7 @@ def main() -> None:
     # Step 2: run delaunay_3D unless the user supplied --network-input. The
     # resulting NDnet is the prerequisite for mse, but you can quit here with
     # --stop-after delaunay to inspect the triangulation.
-    delaunay_bin: Optional[str] = None
+    delaunay_bin: str | None = None
     if network_path is not None:
         print(f"[info] Reusing existing NDnet {network_path}")
     elif manifolds_path is None:
@@ -1413,7 +1628,7 @@ def main() -> None:
             if gathered.exists():
                 network_path = gathered
         print(f"[info] Delaunay network saved to {network_path}")
-    delaunay_mesh_path: Optional[Path] = None
+    delaunay_mesh_path: Path | None = None
     if network_path is not None:
         summary["network"] = str(network_path)
         if args.export_delaunay:
@@ -1429,6 +1644,41 @@ def main() -> None:
             )
             print(f"[info] Delaunay mesh exported to {delaunay_mesh_path}")
             summary["delaunay_mesh"] = str(delaunay_mesh_path)
+        if args.export_delaunay_points:
+            netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
+            delaunay_vtu = None
+            if (
+                delaunay_mesh_path is not None
+                and delaunay_mesh_path.suffix.lower() == ".vtu"
+                and args.delaunay_smooth == 0
+            ):
+                delaunay_vtu = delaunay_mesh_path
+            else:
+                try:
+                    delaunay_vtu = ensure_delaunay_vtu_s000(
+                        netconv_bin,
+                        network_path,
+                        output_dir,
+                        prefix,
+                    )
+                except Exception as exc:
+                    print(f"[warn] Failed to export Delaunay points: {exc}")
+                    delaunay_vtu = None
+            if delaunay_vtu is not None:
+                delaunay_point_vtp, delaunay_point_vtu = export_delaunay_points(
+                    delaunay_vtu,
+                    output_dir,
+                    prefix,
+                )
+                if crop_min_scaled is not None:
+                    if delaunay_point_vtp is not None:
+                        shift_vtk_points(delaunay_point_vtp, crop_min_scaled)
+                    if delaunay_point_vtu is not None:
+                        shift_vtk_points(delaunay_point_vtu, crop_min_scaled)
+                if delaunay_point_vtp is not None:
+                    summary["delaunay_point_vtp"] = str(delaunay_point_vtp)
+                if delaunay_point_vtu is not None:
+                    summary["delaunay_point_vtu"] = str(delaunay_point_vtu)
 
     if stop_after == "delaunay":
         cleanup_ndfield(ndfield_created, coords_path, args.keep_ndfield, summary)
@@ -1438,12 +1688,14 @@ def main() -> None:
     # Step 3: run mse unless --manifolds-input was provided. This is where the
     # persistence thresholds, --dump-manifolds, and --dump-arcs choices matter.
     # The script captures every NDskl emitted by the requested -dumpArcs calls.
-    mse_bin: Optional[str] = None
-    skeleton_from_mse: Dict[str, Path] = {}
+    mse_bin: str | None = None
+    skeleton_from_mse: dict[str, Path] = {}
+    msc_path: Path | None = None
     if manifolds_path is not None:
         print(f"[info] Reusing existing manifolds {manifolds_path}")
     elif network_path is not None and stop_after != "ndfield":
         mse_bin = resolve_command("mse", args.disperse_bin_dir)
+        need_msc = bool(args.dump_filament_manifolds)
         manifolds_path, skeleton_from_mse = run_mse(
             mse_bin,
             network_path,
@@ -1456,7 +1708,12 @@ def main() -> None:
             manifold_spec=args.dump_manifolds,
             vertex_as_minima=args.mse_vertex_as_minima,
             skeletons=args.dump_arcs,
+            store_manifolds=need_msc,
         )
+        if need_msc:
+            msc_path = locate_msc_file(output_dir, prefix)
+            if msc_path is None:
+                print("[warn] Requested extra manifolds but no MSC file was found; will recompute for each dump.")
         print(f"[info] Wall manifolds saved to {manifolds_path}")
     elif manifolds_path is None and args.manifolds_input is None:
         raise SystemExit(
@@ -1487,9 +1744,14 @@ def main() -> None:
                 manifold_spec=args.dump_filament_manifolds,
                 vertex_as_minima=args.mse_vertex_as_minima,
                 skeletons=None,
+                load_msc=msc_path,
             )
             print(f"[info] Filament manifolds saved to {filament_manifolds_path}")
             summary["filament_manifolds_ndnet"] = str(filament_manifolds_path)
+
+    if args.dump_clusters and not skel_native_paths:
+        print("[warn] --dump-clusters requested but no skeletons were produced. "
+              "Pass --dump-arcs (e.g., U) or --skel-input to provide an NDskl.")
 
     skel_native_paths = skeleton_from_mse or {}
     if manual_skel_inputs:
@@ -1504,14 +1766,92 @@ def main() -> None:
         emit_summary(summary)
         return
 
+    cluster_critpoints_vtp: Path | None = None
+    if args.dump_clusters and skel_native_paths:
+        skel_label = "U" if "U" in skel_native_paths else next(iter(skel_native_paths))
+        skel_path = skel_native_paths[skel_label]
+        cluster_persistence = _extract_persistence_tag(skel_path, prefix, "arcs")
+        base_parts = [prefix]
+        if cluster_persistence:
+            base_parts.append(sanitize_tag(cluster_persistence))
+        base_parts.append("cluster_critpoints")
+        base_parts.append(sanitize_tag(args.dump_clusters))
+        crits_base = "_".join(base_parts)
+        skelconv_bin = resolve_command("skelconv", args.disperse_bin_dir)
+        run_command(
+            [
+                skelconv_bin,
+                str(skel_path),
+                "-outName",
+                crits_base,
+                "-outDir",
+                str(output_dir),
+                "-to",
+                "crits_ascii",
+                "-smooth",
+                "0",
+            ]
+        )
+        crits_path = locate_crits_file(output_dir, crits_base)
+        crits = read_crits_ascii(crits_path)
+        maxima_mask = crits["type"] == 3
+        coords = crits["coords"][maxima_mask]
+        if coords.size == 0:
+            print(f"[warn] No maxima critical points found in {crits_path.name}.")
+        arrays: dict[str, np.ndarray] = {
+            "field_value": crits["value"][maxima_mask],
+            "crit_type": crits["type"][maxima_mask],
+            "pair_id": crits["pair_id"][maxima_mask],
+            "boundary": crits["boundary"][maxima_mask],
+        }
+        field_vals = arrays["field_value"]
+        log_vals = np.full(field_vals.shape, np.nan, dtype=float)
+        positive = field_vals > 0
+        if np.any(positive):
+            log_vals[positive] = np.log(field_vals[positive])
+        arrays["log_field_value"] = log_vals
+        delaunay_vtk = None
+        if delaunay_mesh_path is not None and delaunay_mesh_path.suffix.lower() == ".vtu":
+            delaunay_vtk = delaunay_mesh_path
+        elif network_path is not None:
+            netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
+            delaunay_vtk = convert_network(
+                netconv_bin,
+                network_path,
+                output_dir,
+                prefix,
+                tag="delaunay",
+                fmt="vtu",
+                smooth_iters=0,
+            )
+        if delaunay_vtk is not None and coords.size:
+            try:
+                mapped_ids, mapped_dist = map_points_to_delaunay(delaunay_vtk, coords)
+                arrays["true_index"] = mapped_ids
+                arrays["match_distance"] = mapped_dist
+            except Exception as exc:
+                print(f"[warn] Failed to map cluster critical points to Delaunay ids: {exc}")
+        cluster_critpoints_vtp = output_dir / f"{crits_base}_S000.vtp"
+        write_cluster_critpoints_vtp(cluster_critpoints_vtp, coords, arrays)
+        if crop_min_scaled is not None:
+            shift_vtk_points(cluster_critpoints_vtp, crop_min_scaled)
+        print(f"[info] Cluster critical points exported to {cluster_critpoints_vtp}")
+        summary["cluster_critpoints_vtp"] = str(cluster_critpoints_vtp)
+        cluster_critpoints_vtu = convert_vtp_to_vtu(
+            cluster_critpoints_vtp, cluster_critpoints_vtp.with_suffix(".vtu")
+        )
+        if cluster_critpoints_vtu is not None:
+            summary["cluster_critpoints_vtu"] = str(cluster_critpoints_vtu)
+
     # Step 4: convert manifolds (netconv) if requested. netconv is optional
     # (disable it with --skip-netconv) so that a batch run can stop after mse or
     # rely on external conversion scripts.
-    manifolds_mesh_path: Optional[Path] = None
-    filament_manifolds_mesh_path: Optional[Path] = None
+    manifolds_mesh_path: Path | None = None
+    filament_manifolds_mesh_path: Path | None = None
+    cluster_manifolds_mesh_path: Path | None = None
     manifolds_label = sanitize_tag(args.dump_manifolds) if manifolds_path else ""
     persistence_tag = _extract_persistence_tag(manifolds_path, prefix, "manifolds") if manifolds_path else None
-    stats_rows: List[Dict[str, object]] = []
+    stats_rows: list[dict[str, object]] = []
     if args.run_netconv and manifolds_path is not None:
         netconv_bin = resolve_command("netconv", args.disperse_bin_dir)
         manifolds_mesh_path = convert_manifolds(
@@ -1550,10 +1890,14 @@ def main() -> None:
         summary["filament_manifolds_mesh"] = str(filament_manifolds_mesh_path)
         stats_rows.extend(summarize_vtk(filament_manifolds_mesh_path))
 
+    if cluster_critpoints_vtp is not None:
+        stats_rows.extend(summarize_vtk(cluster_critpoints_vtp))
+
     # Step 5: convert skeletons (skelconv) if requested. Skeleton conversion is
     # decoupled from extraction, so you can rerun skelconv alone on previously
     # saved NDskl files by using --skel-input and --skip-netconv.
-    skeleton_mesh_paths: Dict[str, Path] = {}
+    skeleton_mesh_paths: dict[str, Path] = {}
+    skeleton_vtu_paths: dict[str, Path] = {}
     if args.run_skelconv and skel_native_paths:
         fmt = args.skelconv_format
         fmt_tag = sanitize_tag(fmt.lower())
@@ -1575,9 +1919,20 @@ def main() -> None:
                 )
                 if crop_min_scaled is not None:
                     shift_vtk_points(skeleton_mesh_paths[label], crop_min_scaled)
+                if skeleton_mesh_paths[label].suffix.lower() == ".vtp":
+                    vtu_path = convert_vtp_to_vtu(
+                        skeleton_mesh_paths[label],
+                        skeleton_mesh_paths[label].with_suffix(".vtu"),
+                    )
+                    if vtu_path is not None:
+                        skeleton_vtu_paths[label] = vtu_path
         summary[f"skeletons_{fmt_tag}"] = ", ".join(
             f"{label}:{path}" for label, path in skeleton_mesh_paths.items()
         )
+        if skeleton_vtu_paths:
+            summary["skeletons_vtu"] = ", ".join(
+                f"{label}:{path}" for label, path in skeleton_vtu_paths.items()
+            )
         for path in skeleton_mesh_paths.values():
             stats_rows.extend(summarize_vtk(path))
 

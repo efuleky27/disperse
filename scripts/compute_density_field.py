@@ -76,11 +76,17 @@ def determine_mass(header_attrs, parttype: str, override: float | None) -> float
     mass_table = header_attrs.get("MassTable")
     if mass_table is None:
         raise KeyError("MassTable missing in Header attributes; specify --mass-override.")
-    part_index = int(parttype.replace("PartType", ""))
+    try:
+        part_index = int(parttype.replace("PartType", ""))
+    except ValueError:
+        raise ValueError(
+            f"Cannot parse particle index from parttype '{parttype}'. "
+            "Expected format: PartType0, PartType1, etc."
+        )
     mass = mass_table[part_index]
     if mass == 0.0:
         raise ValueError(
-            "MassTable entry is zero; pass --mass-override to specify per-particle mass."
+            f"MassTable[{part_index}] is zero; pass --mass-override to specify per-particle mass."
         )
     return float(mass)
 
@@ -133,6 +139,12 @@ def main() -> None:
     output_path = Path(args.output).expanduser()
 
     with h5py.File(input_path, "r") as snap:
+        if args.parttype not in snap:
+            available = [k for k in snap.keys() if k.startswith("PartType")]
+            raise KeyError(
+                f"Group '{args.parttype}' not found in {input_path}. "
+                f"Available particle groups: {available}"
+            )
         header_attrs = dict(snap["Header"].attrs)
         box_size = float(header_attrs["BoxSize"])
         coords_ds = snap[args.parttype]["Coordinates"]
@@ -148,7 +160,7 @@ def main() -> None:
     cell_volume = (box_size / args.grid_size) ** 3
     mean_density = mass * total_particles / (box_size**3)
     grid /= cell_volume
-    grid = grid.astype(np.float32)
+    grid = grid.astype(np.float32)  # intentional: halves file size; precision ~7 sig. figs.
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with h5py.File(output_path, "w") as out:

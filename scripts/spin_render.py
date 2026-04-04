@@ -107,6 +107,12 @@ def _parse_args() -> argparse.Namespace:
         default=2.0,
         help="Point size when using --representation points (default: 2.0).",
     )
+    parser.add_argument(
+        "--line-width",
+        type=float,
+        default=1.0,
+        help="Line width for line-based representations (default: 1.0).",
+    )
     parser.add_argument("--elev-start", type=float, default=20.0, help="Start elevation for animation.")
     parser.add_argument("--elev-peak", type=float, default=60.0, help="Peak elevation for animation.")
     parser.add_argument("--zoom-start", type=float, default=1.0, help="Start zoom for animation.")
@@ -178,10 +184,7 @@ def _camera_path(
     dx = xmax - xmin
     dy = ymax - ymin
     dz = zmax - zmin
-    zoom = max(zoom, 1e-6)
-    def lerp(a: float, b: float, t: float) -> float:
-        return a + (b - a) * t
-
+    zoom = max(zoom, 1e-3)
     keyframes = []
     loops = max(1, int(loops))
     for i in range(frames):
@@ -242,7 +245,10 @@ def main() -> None:
     disp = Show(src, view)
     if args.representation == "points":
         disp.Representation = "Points"
+    if hasattr(disp, "PointSize"):
         disp.PointSize = float(args.point_size)
+    if hasattr(disp, "LineWidth"):
+        disp.LineWidth = float(args.line_width)
     ResetCamera(view)
 
     array_names = _point_array_names(src)

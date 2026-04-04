@@ -13,7 +13,12 @@ import math
 import os
 import struct
 from pathlib import Path
-from typing import Dict, Generator, Iterable, List, Optional, Sequence, Tuple
+from typing import Generator, Iterable
+
+try:
+    from utils import unit_scale
+except ImportError:
+    from scripts.utils import unit_scale  # type: ignore[no-redef]
 
 # Ensure HDF5 finds the Blosc plugin when needed.
 if "HDF5_PLUGIN_PATH" not in os.environ:
@@ -111,7 +116,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def determine_stride(total: int, explicit: Optional[int], target: Optional[int]) -> Tuple[int, int]:
+def determine_stride(total: int, explicit: int | None, target: int | None) -> tuple[int, int]:
     if explicit and explicit > 0:
         stride = explicit
     elif target and target > 0:
@@ -121,15 +126,6 @@ def determine_stride(total: int, explicit: Optional[int], target: Optional[int])
     count = (total + stride - 1) // stride
     return stride, count
 
-
-def unit_scale(input_unit: str, output_unit: str) -> float:
-    if input_unit == output_unit:
-        return 1.0
-    if input_unit == "kpc/h" and output_unit == "mpc/h":
-        return 0.001
-    if input_unit == "mpc/h" and output_unit == "kpc/h":
-        return 1000.0
-    raise ValueError(f"Unsupported unit conversion {input_unit}->{output_unit}")
 
 
 def chunk_indices(total: int, chunk_size: int):
@@ -197,9 +193,9 @@ def resolve_dataset(handle: h5py.File, path: str) -> h5py.Dataset:
 
 def infer_spacing(
     dataset: h5py.Dataset,
-    header: Optional[h5py.Group],
-    override: Optional[Sequence[float]],
-) -> Tuple[float, float, float]:
+    header: h5py.Group | None,
+    override: list[float] | None,
+) -> tuple[float, float, float]:
     if override:
         return tuple(float(v) for v in override)
     spacing_attr = dataset.attrs.get("Spacing")
@@ -217,7 +213,7 @@ def infer_spacing(
     return (1.0, 1.0, 1.0)
 
 
-def infer_origin(dataset: h5py.Dataset, override: Optional[Sequence[float]]) -> Tuple[float, float, float]:
+def infer_origin(dataset: h5py.Dataset, override: list[float] | None) -> tuple[float, float, float]:
     if override:
         return tuple(float(v) for v in override)
     origin_attr = dataset.attrs.get("Origin")
@@ -234,8 +230,8 @@ def write_density_vti(
     input_file: Path,
     dataset_path: str,
     output_path: Path,
-    spacing_override: Optional[Sequence[float]],
-    origin_override: Optional[Sequence[float]],
+    spacing_override: list[float] | None,
+    origin_override: list[float] | None,
 ) -> None:
     with h5py.File(input_file, "r") as handle:
         dataset = resolve_dataset(handle, dataset_path)
@@ -245,7 +241,7 @@ def write_density_vti(
         header = handle.get("Header")
         spacing = infer_spacing(dataset, header, spacing_override)
         origin = infer_origin(dataset, origin_override)
-        name = dataset_path.split("/")[-1] or dataset.name.split("/")[-1]
+        name = Path(dataset_path.rstrip("/")).name or Path(dataset.name.rstrip("/")).name
 
     nz, ny, nx = data.shape
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -275,7 +271,7 @@ def write_density_vti(
 
 
 def register_block(
-    blocks: List[Dict],
+    blocks: list[dict],
     current_offset: int,
     name: str,
     vtk_type: str,
@@ -283,7 +279,7 @@ def register_block(
     dtype: np.dtype,
     count: int,
     iterator: Iterable[bytes],
-) -> Tuple[Dict, int]:
+) -> tuple[dict, int]:
     length = count * components * np.dtype(dtype).itemsize
     offset = current_offset
     block = {
@@ -317,6 +313,12 @@ def main() -> None:
         return
 
     with h5py.File(input_path, "r") as handle:
+        if args.parttype not in handle:
+            available = [k for k in handle.keys() if k.startswith("PartType")]
+            raise KeyError(
+                f"Group '{args.parttype}' not found in {input_path}. "
+                f"Available particle groups: {available}"
+            )
         group = handle[args.parttype]
         coords = group["Coordinates"]
         total = coords.shape[0]
@@ -350,7 +352,7 @@ def main() -> None:
                 }
             )
 
-        blocks: List[Dict] = []
+        blocks: list[dict] = []
         current_offset = 0
 
         _, current_offset = register_block(

@@ -11,19 +11,23 @@ Usage example:
       --mse-nsig 5.0 \
       --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
       --slab-step 10 --slab-thickness 10 \
-      --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-arcs U \
+      --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-clusters JE0a --dump-arcs U \
       --netconv-smooth 20 --skelconv-smooth 20
 """
 
 from __future__ import annotations
 
 import argparse
-import itertools
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, List, Tuple
+
+try:
+    from utils import unit_scale
+except ImportError:
+    from scripts.utils import unit_scale  # type: ignore[no-redef]
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,10 +48,23 @@ def parse_args() -> argparse.Namespace:
         "--dump-filament-manifolds",
         help="Optional manifolds tag for filament surfaces (e.g., JE2a).",
     )
+    p.add_argument(
+        "--dump-clusters",
+        help="Optional tag to export cluster critical points (maxima), e.g., JE3a.",
+    )
+    p.add_argument(
+        "--dump-cluster-manifolds",
+        help="Deprecated alias for --dump-clusters (kept for backward compatibility).",
+    )
     p.add_argument("--dump-arcs", default="U")
     p.add_argument("--netconv-smooth", type=int, default=20)
     p.add_argument("--skelconv-smooth", type=int, default=20)
     p.add_argument("--delaunay-smooth", type=int, default=0)
+    p.add_argument(
+        "--export-delaunay-points",
+        action="store_true",
+        help="Export Delaunay vertices as point clouds (VTU/VTP, S000 only).",
+    )
     p.add_argument("--slab-step", type=float, default=10.0, help="Spacing between slab origins (same units as snapshot).")
     p.add_argument("--slab-thickness", type=float, default=10.0, help="Thickness of each slab passed to batch_clip.py.")
     p.add_argument("--resample-dims", type=int, nargs=3, default=[500, 500, 100], metavar=("NX", "NY", "NZ"))
@@ -66,6 +83,18 @@ def parse_args() -> argparse.Namespace:
         help="Enable lighting for 3D surface PNGs (forwarded to batch_clip.py).",
     )
     p.add_argument(
+        "--png-align-composite",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Align composite overlays to density bounds (forwarded to batch_clip.py).",
+    )
+    p.add_argument(
+        "--png-transparent",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Save PNGs with transparent background (forwarded to batch_clip.py).",
+    )
+    p.add_argument(
         "--composite-filaments-source",
         choices=["arcs", "manifolds"],
         default="manifolds",
@@ -80,6 +109,15 @@ def parse_args() -> argparse.Namespace:
         help="Also write per-point topology CSVs (one per crop).",
     )
     p.add_argument(
+        "--write-topology-scalars-csv",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Also write a topology-scalars CSV per crop (stats computed from topology "
+            "datasets instead of the Delaunay mesh)."
+        ),
+    )
+    p.add_argument(
         "--skip-slabs",
         action="store_true",
         help="Skip running batch_clip.py slabs (analyze + stats only).",
@@ -88,23 +126,21 @@ def parse_args() -> argparse.Namespace:
 
 
 def frange(start: float, stop: float, step: float) -> Iterable[float]:
-    val = start
-    while val < stop:
+    """Yield evenly spaced values from start up to (not including) stop.
+
+    Uses index-based arithmetic to avoid floating-point accumulation drift.
+    """
+    i = 0
+    while True:
+        val = start + i * step
+        if val >= stop:
+            break
         yield val
-        val += step
+        i += 1
 
 
-def unit_scale(input_unit: str, output_unit: str) -> float:
-    if input_unit == output_unit:
-        return 1.0
-    if input_unit == "kpc/h" and output_unit == "mpc/h":
-        return 0.001
-    if input_unit == "mpc/h" and output_unit == "kpc/h":
-        return 1000.0
-    raise ValueError(f"Unsupported unit conversion {input_unit}->{output_unit}")
 
-
-def crop_boxes(xrng: Tuple[float, float], yrng: Tuple[float, float], zrng: Tuple[float, float], size: Tuple[float, float, float]) -> Iterable[Tuple[float, float, float, float, float, float]]:
+def crop_boxes(xrng: tuple[float, float], yrng: tuple[float, float], zrng: tuple[float, float], size: tuple[float, float, float]) -> Iterable[tuple[float, float, float, float, float, float]]:
     dx, dy, dz = size
     for x0 in frange(xrng[0], xrng[1], dx):
         x1 = min(x0 + dx, xrng[1])
@@ -125,19 +161,17 @@ def _fmt_num(val: float) -> str:
     return str(int(val)) if float(val).is_integer() else f"{val:.6g}"
 
 
-def fmt_box(box: Tuple[float, float, float, float, float, float]) -> str:
-    """Format box coords for folder/prefix names in Mpc/h (drop the 000s)."""
+def fmt_box(box: tuple[float, float, float, float, float, float], scale: float = 1.0) -> str:
+    """Format box coords for folder/prefix names, scaled to output units."""
     x0, y0, z0, x1, y1, z1 = box
-    def to_mpc(kpc_val: float) -> float:
-        return kpc_val / 1000.0
     return (
-        f"x{_fmt_num(to_mpc(x0))}-{_fmt_num(to_mpc(x1))}"
-        f"_y{_fmt_num(to_mpc(y0))}-{_fmt_num(to_mpc(y1))}"
-        f"_z{_fmt_num(to_mpc(z0))}-{_fmt_num(to_mpc(z1))}"
+        f"x{_fmt_num(x0 * scale)}-{_fmt_num(x1 * scale)}"
+        f"_y{_fmt_num(y0 * scale)}-{_fmt_num(y1 * scale)}"
+        f"_z{_fmt_num(z0 * scale)}-{_fmt_num(z1 * scale)}"
     )
 
 
-def run(cmd: List[str], allow_empty_crop: bool = False) -> bool:
+def run(cmd: list[str], allow_empty_crop: bool = False) -> bool:
     """Run a subprocess, optionally treating 'Crop box contains no particles.' as a skip."""
     print(f"[run] {' '.join(cmd)}")
     proc = subprocess.run(cmd, text=True, capture_output=True)
@@ -156,12 +190,18 @@ def run(cmd: List[str], allow_empty_crop: bool = False) -> bool:
 
 def main() -> None:
     args = parse_args()
+    if args.dump_cluster_manifolds and not args.dump_clusters:
+        print(
+            "[warn] --dump-cluster-manifolds is deprecated; use --dump-clusters instead. "
+            "Cluster manifolds are no longer exported."
+        )
+        args.dump_clusters = args.dump_cluster_manifolds
     out_root = Path(args.output_root)
     out_root.mkdir(parents=True, exist_ok=True)
     scale = unit_scale(args.input_unit, args.output_unit)
 
     for box in crop_boxes(tuple(args.x_range), tuple(args.y_range), tuple(args.z_range), tuple(args.crop_size)):
-        box_tag = fmt_box(box)
+        box_tag = fmt_box(box, scale=scale)
         crop_dir = out_root / f"crop_{box_tag}"
         crop_dir.mkdir(parents=True, exist_ok=True)
         crop_prefix = f"crop_{box_tag}"
@@ -183,11 +223,13 @@ def main() -> None:
             "--delaunay-btype",
             args.delaunay_btype,
             "--export-delaunay",
+            *(["--export-delaunay-points"] if args.export_delaunay_points else []),
             "--mse-nsig",
             str(args.mse_nsig),
             "--dump-manifolds",
             args.dump_manifolds,
             *(["--dump-filament-manifolds", args.dump_filament_manifolds] if args.dump_filament_manifolds else []),
+            *(["--dump-clusters", args.dump_clusters] if args.dump_clusters else []),
             "--dump-arcs",
             args.dump_arcs,
             "--netconv-smooth",
@@ -227,7 +269,19 @@ def main() -> None:
                 print(
                     f"[warn] No filament manifolds NDnet found for tag {args.dump_filament_manifolds} in {crop_dir}."
                 )
+        cluster_critpoints_vtp = None
+        if args.dump_clusters:
+            crit_matches = sorted(
+                crop_dir.glob(f"{crop_prefix}*cluster_critpoints*{args.dump_clusters}*.vtp")
+            )
+            if crit_matches:
+                cluster_critpoints_vtp = crit_matches[-1]
+            else:
+                print(
+                    f"[warn] No cluster critical points VTP found for tag {args.dump_clusters} in {crop_dir}."
+                )
         stats_csv = crop_dir / f"{crop_prefix}_topology_stats.csv"
+        topo_scalars_csv = crop_dir / f"{crop_prefix}_topology_stats_topology_scalars.csv"
         points_csv = crop_dir / f"{crop_prefix}_topology_points.csv"
         stats_cmd = [
             sys.executable,
@@ -249,12 +303,23 @@ def main() -> None:
         ]
         if args.write_per_point_csv:
             stats_cmd.extend(["--per-point-csv", str(points_csv)])
+        if args.write_topology_scalars_csv:
+            stats_cmd.extend(["--topology-scalars-csv", str(topo_scalars_csv)])
         if filament_manifolds_ndnet:
             stats_cmd.extend(
                 [
                     "--filament-manifolds-ndnet",
                     str(filament_manifolds_ndnet),
                     "--filament-manifolds-id-field",
+                    "true_index",
+                ]
+            )
+        if cluster_critpoints_vtp:
+            stats_cmd.extend(
+                [
+                    "--cluster-manifolds-vtk",
+                    str(cluster_critpoints_vtp),
+                    "--cluster-manifolds-id-field",
                     "true_index",
                 ]
             )
@@ -279,7 +344,6 @@ def main() -> None:
         persist_walls = _persist_from(walls_ndnet.stem)
         persist_fils = _persist_from(fils_ndskl.stem)
         persist_filman = _persist_from(filament_manifolds_ndnet.stem) if filament_manifolds_ndnet else ""
-
         if not persist_walls or not persist_fils:
             print(f"[warn] Could not determine persistence tag (walls:{persist_walls}, fils:{persist_fils}), skipping slabs for {crop_prefix}")
             continue
@@ -303,7 +367,6 @@ def main() -> None:
             if args.netconv_smooth:
                 filman_name += f"_S{args.netconv_smooth:03d}"
             filman_name += ".vtu"
-
         delaunay_name = f"{crop_prefix}_delaunay"
         if args.delaunay_smooth:
             delaunay_name += f"_S{args.delaunay_smooth:03d}"
@@ -326,7 +389,13 @@ def main() -> None:
             else:
                 print(f"[warn] Expected filament manifolds file not found ({candidate}), continuing without it.")
 
+        cluster_manifolds_file = None
+        if cluster_critpoints_vtp is not None:
+            cluster_manifolds_file = cluster_critpoints_vtp
+
         extra = f", filament_manifolds={filament_manifolds_file.name}" if filament_manifolds_file else ""
+        if cluster_manifolds_file:
+            extra += f", cluster_manifolds={cluster_manifolds_file.name}"
         print(f"[info] using walls={walls_file.name}, filaments={filaments_file.name}{extra}, density={delaunay_file.name}")
 
         # Slab origins for this crop (converted to output units for clipping)
@@ -348,6 +417,7 @@ def main() -> None:
                 "--filaments",
                 str(filaments_file.name),
                 *(["--filament-manifolds", str(filament_manifolds_file.name)] if filament_manifolds_file else []),
+                *(["--cluster-manifolds", str(cluster_manifolds_file.name)] if cluster_manifolds_file else []),
                 "--delaunay",
                 str(delaunay_file.name),
                 "--output-dir",
@@ -370,6 +440,10 @@ def main() -> None:
                 clip_cmd.extend(["--png-percentile-range", *[str(v) for v in args.png_percentile_range]])
             if args.png_lighting is not None:
                 clip_cmd.append("--png-lighting" if args.png_lighting else "--no-png-lighting")
+            if args.png_align_composite is not None:
+                clip_cmd.append("--png-align-composite" if args.png_align_composite else "--no-png-align-composite")
+            if args.png_transparent is not None:
+                clip_cmd.append("--png-transparent" if args.png_transparent else "--no-png-transparent")
             if args.composite_filaments_source:
                 clip_cmd.extend(["--composite-filaments-source", args.composite_filaments_source])
             run(clip_cmd)

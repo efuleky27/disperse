@@ -16,7 +16,6 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
 
 
 def parse_args() -> argparse.Namespace:
@@ -55,7 +54,15 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def find_crops(args: argparse.Namespace) -> List[Path]:
+def _pattern_to_stem(pattern: str) -> str:
+    """Convert a glob pattern like '*_walls.png' into a clean filename stem."""
+    name = pattern.replace("*", "").replace(".", "_").strip("_")
+    while "__" in name:
+        name = name.replace("__", "_")
+    return name
+
+
+def find_crops(args: argparse.Namespace) -> list[Path]:
     if args.crop_dir:
         return [Path(args.crop_dir)]
     if not args.root:
@@ -64,14 +71,14 @@ def find_crops(args: argparse.Namespace) -> List[Path]:
     return sorted([p for p in root.iterdir() if p.is_dir() and p.name.startswith("crop_")])
 
 
-def slab_key(path: Path) -> Optional[float]:
+def slab_key(path: Path) -> float | None:
     match = re.search(r"slab_z(-?\d+(?:\.\d+)?)", path.name)
     if not match:
         return None
     return float(match.group(1))
 
 
-def pick_png(slab_dir: Path, pattern: str) -> Optional[Path]:
+def pick_png(slab_dir: Path, pattern: str) -> Path | None:
     matches = sorted(slab_dir.glob(pattern))
     if not matches:
         return None
@@ -80,7 +87,7 @@ def pick_png(slab_dir: Path, pattern: str) -> Optional[Path]:
     return matches[0]
 
 
-def write_concat_list(paths: List[Path], list_path: Path, frame_duration: Optional[float]) -> None:
+def write_concat_list(paths: list[Path], list_path: Path, frame_duration: float | None) -> None:
     with open(list_path, "w", encoding="ascii") as handle:
         for path in paths:
             safe = str(path.resolve()).replace("'", "\\'")
@@ -143,7 +150,7 @@ def main() -> None:
     pattern = args.png_glob if args.png_glob else f"*_{args.png_suffix}"
 
     if args.combine_all:
-        frames: List[Tuple[float, str, Path]] = []
+        frames: list[tuple[float, str, Path]] = []
         for crop in crops:
             slab_dirs = sorted(
                 [p for p in crop.glob(args.slab_glob) if p.is_dir()],
@@ -168,10 +175,7 @@ def main() -> None:
         if args.output:
             output = Path(args.output)
         else:
-            name = f"all_{pattern.replace('*', '').replace('.', '_')}".strip("_")
-            name = name.lstrip("_")
-            while "__" in name:
-                name = name.replace("__", "_")
+            name = f"all_{_pattern_to_stem(pattern)}"
             output = (output_dir or (Path(args.root) / "movies")) / f"{name}.mp4"
             output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -183,7 +187,7 @@ def main() -> None:
 
     for crop in crops:
         slab_dirs = sorted([p for p in crop.glob(args.slab_glob) if p.is_dir()], key=lambda p: slab_key(p) or 0.0)
-        frames: List[Tuple[float, Path]] = []
+        frames: list[tuple[float, Path]] = []
         for slab in slab_dirs:
             zval = slab_key(slab)
             if zval is None:
@@ -204,10 +208,7 @@ def main() -> None:
         if args.output:
             output = Path(args.output)
         else:
-            name = f"{crop.name}_{pattern.replace('*', '').replace('.', '_')}".strip("_")
-            name = name.lstrip("_")
-            while "__" in name:
-                name = name.replace("__", "_")
+            name = f"{crop.name}_{_pattern_to_stem(pattern)}"
             output = (output_dir or crop) / f"{name}.mp4"
 
         list_path = output.with_suffix(".ffmpeg.txt")

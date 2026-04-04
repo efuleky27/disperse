@@ -1,15 +1,32 @@
 #!/usr/bin/env pvpython
 # save as batch_clip.py and run: pvpython batch_clip.py
 
+from __future__ import annotations
+
 import argparse
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 import numpy.typing as npt
-from paraview.simple import *  # noqa: F403
+from paraview.simple import (  # type: ignore
+    Calculator,
+    ColorBy,
+    CreateRenderView,
+    Delete,
+    GetColorTransferFunction,
+    GroupDatasets,
+    OpenDataFile,
+    ResampleToImage,
+    SaveData,
+    SaveScreenshot,
+    Show,
+    Transform,
+    TrivialProducer,
+    XMLPolyDataReader,
+    XMLUnstructuredGridReader,
+)
 from paraview import servermanager
 from paraview.numpy_support import vtk_to_numpy, numpy_to_vtk
 from vtkmodules.vtkCommonDataModel import vtkBox, vtkImageData, vtkPolyData
@@ -17,15 +34,10 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkFiltersGeometry import vtkGeometryFilter
 from vtkmodules.vtkIOXML import vtkXMLImageDataWriter, vtkXMLPolyDataWriter
 
-try:  # Optional: used for CSV summary stats on VTK outputs.
-    from vtkmodules.numpy_interface import dataset_adapter as dsa
-    from vtkmodules.util.numpy_support import vtk_to_numpy as vtk_to_numpy_raw
-    from vtkmodules.vtkCommonDataModel import vtkDataSet
-    from vtkmodules.vtkIOXML import vtkXMLPolyDataReader, vtkXMLUnstructuredGridReader
-    from vtkmodules.vtkIOLegacy import vtkDataSetReader
-except Exception:  # pragma: no cover - optional dependency
-    dsa = None  # type: ignore
-    vtk_to_numpy_raw = None  # type: ignore
+try:
+    from utils import _compute_array_stats, summarize_vtk, write_stats_csv
+except ImportError:
+    from scripts.utils import _compute_array_stats, summarize_vtk, write_stats_csv  # type: ignore[no-redef]
 
 
 def parse_args():
@@ -34,6 +46,7 @@ def parse_args():
     parser.add_argument("--walls", required=True, help="Input manifolds (walls) VTU.")
     parser.add_argument("--filaments", required=True, help="Input filaments VTP.")
     parser.add_argument("--filament-manifolds", help="Optional filament manifolds VTU (e.g., JE2a).")
+    parser.add_argument("--cluster-manifolds", help="Optional cluster manifolds VTU (e.g., JE0a or J0a).")
     parser.add_argument(
         "--composite-filaments-source",
         choices=["arcs", "manifolds"],
@@ -121,6 +134,49 @@ def _compute_bounds(info_or_bounds, axis, z0, thick):
     return bounds
 
 
+def _alignment_offset(
+    dens_bounds,
+    src_bounds,
+    tol: float,
+    rel: float = 0.005,
+) -> tuple[float, float, float] | None:
+    """Return translation offset if bounds look like the same-sized volume.
+
+    We only align overlays when extents nearly match density extents; otherwise
+    we would wrongly shift structures that occupy only a subset of the slab.
+    """
+    dens_ext = np.array(
+        [
+            dens_bounds[1] - dens_bounds[0],
+            dens_bounds[3] - dens_bounds[2],
+            dens_bounds[5] - dens_bounds[4],
+        ],
+        dtype=float,
+    )
+    src_ext = np.array(
+        [
+            src_bounds[1] - src_bounds[0],
+            src_bounds[3] - src_bounds[2],
+            src_bounds[5] - src_bounds[4],
+        ],
+        dtype=float,
+    )
+    mask = dens_ext > tol
+    if not np.any(mask):
+        return None
+    if np.any(src_ext[mask] <= tol):
+        return None
+    max_allowed = np.maximum(tol, rel * dens_ext[mask])
+    if not np.all(np.abs(src_ext[mask] - dens_ext[mask]) <= max_allowed):
+        return None
+    dx = dens_bounds[0] - src_bounds[0]
+    dy = dens_bounds[2] - src_bounds[2]
+    dz = dens_bounds[4] - src_bounds[4]
+    return (dx, dy, dz)
+
+
+
+
 def clip_slab(src, axis, z0, thick):
     src.UpdatePipeline()
     bounds = _compute_bounds(src.GetDataInformation(), axis, z0, thick)
@@ -165,120 +221,38 @@ def flatten(src, axis):
     return tf
 
 
-def _compute_array_stats(arr: npt.NDArray[np.float64]) -> Dict[str, float]:
-    return {
-        "count": int(arr.size),
-        "sum": float(np.sum(arr)),
-        "mean": float(np.mean(arr)),
-        "median": float(np.median(arr)),
-        "q25": float(np.quantile(arr, 0.25)),
-        "q75": float(np.quantile(arr, 0.75)),
-        "min": float(np.min(arr)),
-        "max": float(np.max(arr)),
-        "std": float(np.std(arr)),
-    }
-
-
-def _read_vtk_dataset(path: Path):
-    if dsa is None or vtk_to_numpy_raw is None:
-        return None
-    if path.suffix.lower() == ".vtu":
-        reader = vtkXMLUnstructuredGridReader()
-    elif path.suffix.lower() == ".vtp":
-        reader = vtkXMLPolyDataReader()
+def _slab_2d_axes(axis: str, slab_bounds) -> tuple[int, int, list[float]]:
+    """Return (ax1, ax2, [xmin, xmax, ymin, ymax]) for the two non-slab spatial axes."""
+    if axis == "z":
+        return 0, 1, [slab_bounds[0], slab_bounds[1], slab_bounds[2], slab_bounds[3]]
+    elif axis == "y":
+        return 0, 2, [slab_bounds[0], slab_bounds[1], slab_bounds[4], slab_bounds[5]]
     else:
-        return None
-    reader.SetFileName(str(path))
-    reader.Update()
-    return reader.GetOutput()
-
-
-def summarize_vtk(path: Path) -> List[Dict[str, object]]:
-    ds = _read_vtk_dataset(path)
-    if ds is None:
-        return []
-    wrapper = dsa.WrapDataObject(ds)
-    bounds = ds.GetBounds() if hasattr(ds, "GetBounds") else None
-    dx = dy = dz = vol = None
-    if bounds:
-        dx = bounds[1] - bounds[0]
-        dy = bounds[3] - bounds[2]
-        dz = bounds[5] - bounds[4]
-        vol = dx * dy * dz
-    rows: List[Dict[str, object]] = []
-    for location, collection in (("points", wrapper.PointData), ("cells", wrapper.CellData)):
-        for name in collection.keys():
-            # Persistence arrays can include extreme values that overflow summary aggregates.
-            if "persistence" in name.lower():
-                continue
-            arr = np.asarray(collection[name]).ravel()
-            if arr.size == 0 or not np.issubdtype(arr.dtype, np.number):
-                continue
-            stats = _compute_array_stats(arr.astype(np.float64, copy=False))
-            row: Dict[str, object] = {
-                "file": str(path),
-                "location": location,
-                "array": name,
-                **stats,
-            }
-            if bounds:
-                row.update({"bbox_dx": dx, "bbox_dy": dy, "bbox_dz": dz, "bbox_volume": vol})
-            rows.append(row)
-    return rows
-
-
-def write_stats_csv(rows: List[Dict[str, object]], out_path: Path) -> None:
-    if not rows:
-        return
-    import csv
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = [
-        "file",
-        "location",
-        "array",
-        "count",
-        "sum",
-        "mean",
-        "median",
-        "q25",
-        "q75",
-        "min",
-        "max",
-        "std",
-        "bbox_dx",
-        "bbox_dy",
-        "bbox_dz",
-        "bbox_volume",
-    ]
-    with open(out_path, "w", newline="", encoding="ascii") as sink:
-        writer = csv.DictWriter(sink, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+        return 1, 2, [slab_bounds[2], slab_bounds[3], slab_bounds[4], slab_bounds[5]]
 
 
 def average_unstructured_to_2d(src, slab_bounds, dims, axis, scalar_name, out_path):
     """Bin point data onto a 2D grid over the slab bounds and average along the slab axis."""
     src.UpdatePipeline()
     data_obj = servermanager.Fetch(src)
-    pts = vtk_to_numpy(data_obj.GetPoints().GetData())
+    if data_obj is None:
+        print(f"[warn] No data for {out_path}. Writing zeros.")
+        _write_empty_vti(slab_bounds, dims, axis, scalar_name, out_path)
+        return
+    pts_obj = data_obj.GetPoints()
+    if pts_obj is None or pts_obj.GetNumberOfPoints() == 0:
+        print(f"[warn] No points to average for {out_path}. Writing zeros.")
+        _write_empty_vti(slab_bounds, dims, axis, scalar_name, out_path)
+        return
+    pts = vtk_to_numpy(pts_obj.GetData())
     arr = data_obj.GetPointData().GetArray(scalar_name)
     if arr is None:
-        raise RuntimeError(f"Point array '{scalar_name}' not found on source for {out_path}.")
+        print(f"[warn] Missing point array '{scalar_name}', writing zeros for {out_path}.")
+        _write_empty_vti(slab_bounds, dims, axis, scalar_name, out_path)
+        return
     vals = vtk_to_numpy(arr)
-    if pts.shape[0] == 0:
-        raise RuntimeError(f"No points to average for {out_path}.")
 
-    if axis == "z":
-        ax1, ax2 = 0, 1
-        bounds = [slab_bounds[0], slab_bounds[1], slab_bounds[2], slab_bounds[3]]
-    elif axis == "y":
-        ax1, ax2 = 0, 2
-        bounds = [slab_bounds[0], slab_bounds[1], slab_bounds[4], slab_bounds[5]]
-    else:
-        ax1, ax2 = 1, 2
-        bounds = [slab_bounds[2], slab_bounds[3], slab_bounds[4], slab_bounds[5]]
+    ax1, ax2, bounds = _slab_2d_axes(axis, slab_bounds)
 
     nx, ny = dims[0], dims[1]
     # Ensure bounds are increasing; if degenerate, pad by epsilon
@@ -312,6 +286,32 @@ def average_unstructured_to_2d(src, slab_bounds, dims, axis, scalar_name, out_pa
     writer.Write()
 
 
+def _write_empty_vti(slab_bounds, dims, axis, scalar_name, out_path):
+    _, _, bounds = _slab_2d_axes(axis, slab_bounds)
+    nx, ny = dims[0], dims[1]
+    x0, x1 = bounds[0], bounds[1]
+    y0, y1 = bounds[2], bounds[3]
+    eps = 1e-6
+    if x1 <= x0:
+        x1 = x0 + eps
+    if y1 <= y0:
+        y1 = y0 + eps
+    spacing_x = (x1 - x0) / nx if nx > 0 else 1.0
+    spacing_y = (y1 - y0) / ny if ny > 0 else 1.0
+    out_img = vtkImageData()
+    out_img.SetDimensions(nx, ny, 1)
+    out_img.SetSpacing(spacing_x, spacing_y, 1.0)
+    out_img.SetOrigin(x0, y0, 0.0)
+    zeros = np.zeros((ny, nx), dtype=np.float32)
+    out_arr = numpy_to_vtk(zeros.T.ravel(order="C"), deep=True)
+    out_arr.SetName(scalar_name)
+    out_img.GetPointData().SetScalars(out_arr)
+    writer = vtkXMLImageDataWriter()
+    writer.SetFileName(out_path)
+    writer.SetInputData(out_img)
+    writer.Write()
+
+
 def render_png(
     source_path: str,
     png_path: str,
@@ -319,9 +319,9 @@ def render_png(
     view_mode: str,
     resolution,
     slice_axis="z",
-    percentile_range: Optional[Tuple[float, float]] = None,
-    log_range: Optional[Tuple[float, float]] = None,
-    colormap: Optional[str] = None,
+    percentile_range: tuple[float, float] | None = None,
+    log_range: tuple[float, float] | None = None,
+    colormap: str | None = None,
     background: str = "white",
     transparent: bool = False,
     hide_axes: bool = False,
@@ -347,8 +347,8 @@ def render_png(
             if axis_token:
                 try:
                     display.SliceMode = axis_token
-                except Exception:
-                    pass
+                except Exception as exc:
+                    print(f"[warn] Could not set SliceMode to '{axis_token}': {exc}")
         ext = info.GetExtent()
         if hasattr(display, "Slice"):
             if slice_axis.lower() == "x":
@@ -358,7 +358,12 @@ def render_png(
             else:
                 display.Slice = int(0.5 * (ext[4] + ext[5]))
     else:
-        display.Representation = "Surface"
+        if "clusters" in os.path.basename(source_path):
+            display.Representation = "Points"
+            if hasattr(display, "PointSize"):
+                display.PointSize = 6.0
+        else:
+            display.Representation = "Surface"
         if hasattr(display, "Lighting"):
             display.Lighting = 1 if lighting else 0
         if not lighting:
@@ -375,12 +380,19 @@ def render_png(
             if hasattr(view, "LightSwitch"):
                 view.LightSwitch = 0
     ColorBy(display, ('POINTS', array))
-    if array == "log_field_value" and colormap:
+    if array == "topology_type":
+        lut = GetColorTransferFunction(array)
+        lut.RGBPoints = [0, 1.0, 1.0, 1.0, 1, 1.0, 1.0, 1.0]
+        lut.ColorSpace = "RGB"
+        lut.ScalarRangeInitialized = 1.0
+        display.LookupTable = lut
+        display.RescaleTransferFunctionToDataRange(True, False)
+    elif array == "log_field_value" and colormap:
         lut = GetColorTransferFunction(array)
         try:
             lut.ApplyPreset(colormap, True)
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"[warn] Could not apply colormap preset '{colormap}': {exc}")
     if array == "log_field_value" and log_range is not None:
         lut = GetColorTransferFunction(array)
         lut.RescaleTransferFunction(float(log_range[0]), float(log_range[1]))
@@ -418,11 +430,12 @@ def render_composite_png(
     png_path: str,
     resolution,
     opacity: float,
-    percentile_range: Optional[Tuple[float, float]] = None,
-    filament_manifolds_path: Optional[str] = None,
+    percentile_range: tuple[float, float] | None = None,
+    filament_manifolds_path: str | None = None,
+    clusters_path: str | None = None,
     filaments_source: str = "manifolds",
-    log_range: Optional[Tuple[float, float]] = None,
-    colormap: Optional[str] = None,
+    log_range: tuple[float, float] | None = None,
+    colormap: str | None = None,
     background: str = "white",
     transparent: bool = False,
     hide_axes: bool = False,
@@ -469,8 +482,8 @@ def render_composite_png(
         lut = GetColorTransferFunction("log_field_value")
         try:
             lut.ApplyPreset(colormap, True)
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"[warn] Could not apply colormap preset '{colormap}': {exc}")
     if log_range is not None:
         lut = GetColorTransferFunction("log_field_value")
         lut.RescaleTransferFunction(float(log_range[0]), float(log_range[1]))
@@ -496,18 +509,18 @@ def render_composite_png(
     walls_source = walls
     if align_overlays:
         w_bounds = walls.GetDataInformation().GetBounds()
-        dx = dens_bounds[0] - w_bounds[0]
-        dy = dens_bounds[2] - w_bounds[2]
-        dz = dens_bounds[4] - w_bounds[4]
-        if abs(dx) < tol:
-            dx = 0.0
-        if abs(dy) < tol:
-            dy = 0.0
-        if abs(dz) < tol:
-            dz = 0.0
-        if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
-            walls_source = Transform(Input=walls)
-            walls_source.Transform.Translate = [dx, dy, dz]
+        offset = _alignment_offset(dens_bounds, w_bounds, tol)
+        if offset is not None:
+            dx, dy, dz = offset
+            if abs(dx) < tol:
+                dx = 0.0
+            if abs(dy) < tol:
+                dy = 0.0
+            if abs(dz) < tol:
+                dz = 0.0
+            if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+                walls_source = Transform(Input=walls)
+                walls_source.Transform.Translate = [dx, dy, dz]
     walls_disp = Show(walls_source, view)
     walls_disp.Representation = "Surface"
     walls_disp.Opacity = opacity
@@ -538,18 +551,18 @@ def render_composite_png(
     fils_source = fils
     if align_overlays:
         f_bounds = fils.GetDataInformation().GetBounds()
-        dx = dens_bounds[0] - f_bounds[0]
-        dy = dens_bounds[2] - f_bounds[2]
-        dz = dens_bounds[4] - f_bounds[4]
-        if abs(dx) < tol:
-            dx = 0.0
-        if abs(dy) < tol:
-            dy = 0.0
-        if abs(dz) < tol:
-            dz = 0.0
-        if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
-            fils_source = Transform(Input=fils)
-            fils_source.Transform.Translate = [dx, dy, dz]
+        offset = _alignment_offset(dens_bounds, f_bounds, tol)
+        if offset is not None:
+            dx, dy, dz = offset
+            if abs(dx) < tol:
+                dx = 0.0
+            if abs(dy) < tol:
+                dy = 0.0
+            if abs(dz) < tol:
+                dz = 0.0
+            if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+                fils_source = Transform(Input=fils)
+                fils_source.Transform.Translate = [dx, dy, dz]
     fils_disp = Show(fils_source, view)
     fils_disp.Representation = "Surface"
     fils_disp.Opacity = 1.0
@@ -580,18 +593,18 @@ def render_composite_png(
         filman_source = filman
         if align_overlays:
             m_bounds = filman.GetDataInformation().GetBounds()
-            dx = dens_bounds[0] - m_bounds[0]
-            dy = dens_bounds[2] - m_bounds[2]
-            dz = dens_bounds[4] - m_bounds[4]
-            if abs(dx) < tol:
-                dx = 0.0
-            if abs(dy) < tol:
-                dy = 0.0
-            if abs(dz) < tol:
-                dz = 0.0
-            if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
-                filman_source = Transform(Input=filman)
-                filman_source.Transform.Translate = [dx, dy, dz]
+            offset = _alignment_offset(dens_bounds, m_bounds, tol)
+            if offset is not None:
+                dx, dy, dz = offset
+                if abs(dx) < tol:
+                    dx = 0.0
+                if abs(dy) < tol:
+                    dy = 0.0
+                if abs(dz) < tol:
+                    dz = 0.0
+                if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+                    filman_source = Transform(Input=filman)
+                    filman_source.Transform.Translate = [dx, dy, dz]
         filman_disp = Show(filman_source, view)
         filman_disp.Representation = "Surface"
         filman_disp.Opacity = 1.0
@@ -615,6 +628,50 @@ def render_composite_png(
         filman_disp.RescaleTransferFunctionToDataRange(True, False)
         filman_disp.SetScalarBarVisibility(view, False)
 
+    cluster = None
+    if clusters_path:
+        cluster = OpenDataFile(clusters_path)
+        cluster.UpdatePipeline()
+        cluster_source = cluster
+        if align_overlays:
+            c_bounds = cluster.GetDataInformation().GetBounds()
+            offset = _alignment_offset(dens_bounds, c_bounds, tol)
+            if offset is not None:
+                dx, dy, dz = offset
+                if abs(dx) < tol:
+                    dx = 0.0
+                if abs(dy) < tol:
+                    dy = 0.0
+                if abs(dz) < tol:
+                    dz = 0.0
+                if abs(dx) > 1e-6 or abs(dy) > 1e-6 or abs(dz) > 1e-6:
+                    cluster_source = Transform(Input=cluster)
+                    cluster_source.Transform.Translate = [dx, dy, dz]
+        cluster_disp = Show(cluster_source, view)
+        cluster_disp.Representation = "Points"
+        if hasattr(cluster_disp, "PointSize"):
+            cluster_disp.PointSize = 6.0
+        cluster_disp.Opacity = 1.0
+        if hasattr(cluster_disp, "Lighting"):
+            cluster_disp.Lighting = 1 if lighting else 0
+        if not lighting:
+            if hasattr(cluster_disp, "Specular"):
+                cluster_disp.Specular = 0.0
+            if hasattr(cluster_disp, "Diffuse"):
+                cluster_disp.Diffuse = 0.0
+            if hasattr(cluster_disp, "Ambient"):
+                cluster_disp.Ambient = 1.0
+            if hasattr(cluster_disp, "Shade"):
+                cluster_disp.Shade = 0
+        ColorBy(cluster_disp, ('POINTS', 'topology_type'))
+        lut_c = GetColorTransferFunction('clusters_topology_type')
+        lut_c.RGBPoints = [0, 0.9, 0.2, 0.2, 1, 0.9, 0.2, 0.2]
+        lut_c.ColorSpace = 'RGB'
+        lut_c.ScalarRangeInitialized = 1.0
+        cluster_disp.LookupTable = lut_c
+        cluster_disp.RescaleTransferFunctionToDataRange(True, False)
+        cluster_disp.SetScalarBarVisibility(view, False)
+
     view.ResetCamera()
     SaveScreenshot(
         png_path,
@@ -625,21 +682,27 @@ def render_composite_png(
     Delete(view); Delete(dens); Delete(walls); Delete(fils)
     if filman is not None:
         Delete(filman)
+    if cluster is not None:
+        Delete(cluster)
 
 
-def process_field(name, path, axis, z0, thick, dims, scalar_name, out_dir, prefix, tag_value=None):
+def process_field(name, path, axis, z0, thick, dims, scalar_name, out_dir, prefix, tag_value=None, force_points=False):
     reader_cls = XMLUnstructuredGridReader if path.lower().endswith(".vtu") else XMLPolyDataReader
+    is_poly = not path.lower().endswith(".vtu")
     src = reader_cls(FileName=[path])
     clip = clip_slab(src, axis, z0, thick)
     if tag_value is not None:
         clip = tag_type(clip, tag_value)
     slab_bounds = _compute_bounds(clip.GetDataInformation(), axis, z0, thick)
-
-    out_3d = os.path.join(out_dir, f"{prefix}_{name}_3d.vtu" if name != "filaments" else f"{prefix}_{name}_3d.vtp")
+    if force_points and not is_poly:
+        out_ext = "vtu"
+    else:
+        out_ext = "vtp" if is_poly else "vtu"
+    out_3d = os.path.join(out_dir, f"{prefix}_{name}_3d.{out_ext}")
     SaveData(out_3d, proxy=clip)
 
     flat = flatten(clip, axis)
-    out_flat = os.path.join(out_dir, f"{prefix}_{name}.vtu" if name != "filaments" else f"{prefix}_{name}.vtp")
+    out_flat = os.path.join(out_dir, f"{prefix}_{name}.{out_ext}")
     SaveData(out_flat, proxy=flat)
 
     out_avg = os.path.join(out_dir, f"{prefix}_{name}_avg.vti")
@@ -661,6 +724,13 @@ def main():
             if os.path.isabs(args.filament_manifolds)
             else os.path.join(base_dir, args.filament_manifolds)
         )
+    clusters_path = None
+    if args.cluster_manifolds:
+        clusters_path = (
+            args.cluster_manifolds
+            if os.path.isabs(args.cluster_manifolds)
+            else os.path.join(base_dir, args.cluster_manifolds)
+        )
     density_path = args.delaunay if os.path.isabs(args.delaunay) else os.path.join(base_dir, args.delaunay)
     axis = args.slab_axis
     z0 = args.slab_origin
@@ -669,13 +739,15 @@ def main():
     scalar_name = args.scalar_name
     out_dir = args.output_dir
     os.makedirs(out_dir, exist_ok=True)
-    stats_rows: List[Dict[str, object]] = []
+    stats_rows: list[dict[str, object]] = []
 
     # Input summaries (if readable).
     stats_rows.extend(summarize_vtk(Path(walls_path)))
     stats_rows.extend(summarize_vtk(Path(filaments_path)))
     if filament_manifolds_path:
         stats_rows.extend(summarize_vtk(Path(filament_manifolds_path)))
+    if clusters_path:
+        stats_rows.extend(summarize_vtk(Path(clusters_path)))
     stats_rows.extend(summarize_vtk(Path(density_path)))
 
     # Walls and filaments
@@ -695,6 +767,21 @@ def main():
             prefix,
             tag_value=3,
         )
+    cluster_info = None
+    if clusters_path:
+        cluster_info = process_field(
+            "clusters",
+            clusters_path,
+            axis,
+            z0,
+            thick,
+            [nx, ny],
+            scalar_name,
+            out_dir,
+            prefix,
+            tag_value=4,
+            force_points=True,
+        )
     stats_rows.extend(summarize_vtk(Path(walls_info["paths"]["3d"])))
     stats_rows.extend(summarize_vtk(Path(fils_info["paths"]["3d"])))
     stats_rows.extend(summarize_vtk(Path(walls_info["paths"]["flat"])))
@@ -702,6 +789,9 @@ def main():
     if filman_info:
         stats_rows.extend(summarize_vtk(Path(filman_info["paths"]["3d"])))
         stats_rows.extend(summarize_vtk(Path(filman_info["paths"]["flat"])))
+    if cluster_info:
+        stats_rows.extend(summarize_vtk(Path(cluster_info["paths"]["3d"])))
+        stats_rows.extend(summarize_vtk(Path(cluster_info["paths"]["flat"])))
 
     # Density: clip/save, flatten, average; plus resampled VTI
     density_reader = XMLUnstructuredGridReader(FileName=[density_path])
@@ -735,6 +825,8 @@ def main():
     print(f"[info] fils3d: points={fils_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={fils_info['clip'].GetDataInformation().GetNumberOfCells()}")
     if filman_info:
         print(f"[info] filman3d: points={filman_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={filman_info['clip'].GetDataInformation().GetNumberOfCells()}")
+    if cluster_info:
+        print(f"[info] cluster3d: points={cluster_info['clip'].GetDataInformation().GetNumberOfPoints()} cells={cluster_info['clip'].GetDataInformation().GetNumberOfCells()}")
     print(f"[info] density3d (vti) dims: {density_vti.GetDimensions()}")
 
     # PNGs
@@ -744,6 +836,8 @@ def main():
         percentile_range = tuple(args.png_percentile_range) if args.png_percentile_range else None
         log_range = tuple(args.png_log_range) if args.png_log_range else None
         bg = args.png_background.lower()
+        individual_bg = bg
+        composite_bg = bg
         transparent = bool(args.png_transparent)
         hide_axes = bool(args.png_hide_orientation_axes)
         colormap = args.png_colormap
@@ -758,7 +852,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=composite_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -772,7 +866,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -787,7 +881,22 @@ def main():
                 percentile_range=percentile_range,
                 log_range=log_range,
                 colormap=colormap,
-                background=bg,
+                background=composite_bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
+            )
+        if cluster_info:
+            render_png(
+                cluster_info["paths"]["3d"],
+                os.path.join(out_dir, f"{prefix}_clusters_3d.png"),
+                scalar_name,
+                "3d",
+                res,
+                percentile_range=percentile_range,
+                log_range=log_range,
+                colormap=colormap,
+                background=individual_bg,
                 transparent=transparent,
                 hide_axes=hide_axes,
                 lighting=lighting,
@@ -798,7 +907,7 @@ def main():
             "topology_type",
             "2d",
             res,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -812,7 +921,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -823,7 +932,7 @@ def main():
             "topology_type",
             "2d",
             res,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -837,7 +946,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -849,7 +958,7 @@ def main():
                 "topology_type",
                 "2d",
                 res,
-                background=bg,
+                background=individual_bg,
                 transparent=transparent,
                 hide_axes=hide_axes,
                 lighting=lighting,
@@ -863,7 +972,33 @@ def main():
                 percentile_range=percentile_range,
                 log_range=log_range,
                 colormap=colormap,
-                background=bg,
+                background=individual_bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
+            )
+        if cluster_info:
+            render_png(
+                cluster_info["paths"]["flat"],
+                os.path.join(out_dir, f"{prefix}_clusters_topology.png"),
+                "topology_type",
+                "2d",
+                res,
+                background=individual_bg,
+                transparent=transparent,
+                hide_axes=hide_axes,
+                lighting=lighting,
+            )
+            render_png(
+                cluster_info["paths"]["flat"],
+                os.path.join(out_dir, f"{prefix}_clusters_logfield.png"),
+                scalar_name,
+                "2d",
+                res,
+                percentile_range=percentile_range,
+                log_range=log_range,
+                colormap=colormap,
+                background=individual_bg,
                 transparent=transparent,
                 hide_axes=hide_axes,
                 lighting=lighting,
@@ -878,7 +1013,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -892,7 +1027,7 @@ def main():
             percentile_range=percentile_range,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
@@ -908,30 +1043,36 @@ def main():
             filaments_source=args.composite_filaments_source,
             log_range=log_range,
             colormap=colormap,
-            background=bg,
+            background=individual_bg,
             transparent=transparent,
             hide_axes=hide_axes,
             lighting=lighting,
             align_overlays=align_overlays,
         )
-        if filman_info:
+        if filman_info or cluster_info:
+            suffix = []
+            if filman_info:
+                suffix.append("filament_manifolds")
+            if cluster_info:
+                suffix.append("clusters")
             render_composite_png(
                 density_flat_path,
                 walls_info["paths"]["flat"],
                 fils_info["paths"]["flat"],
-                os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_filament_manifolds.png"),
+                os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_{'_'.join(suffix)}.png"),
                 res,
                 opacity=args.composite_opacity,
                 percentile_range=percentile_range,
                 filaments_source=args.composite_filaments_source,
                 log_range=log_range,
                 colormap=colormap,
-                background=bg,
+                background=individual_bg,
                 transparent=transparent,
                 hide_axes=hide_axes,
                 lighting=lighting,
                 align_overlays=align_overlays,
-                filament_manifolds_path=filman_info["paths"]["flat"],
+                filament_manifolds_path=filman_info["paths"]["flat"] if filman_info else None,
+                clusters_path=cluster_info["paths"]["flat"] if cluster_info else None,
             )
 
     # Combine walls+filaments flattened
@@ -939,9 +1080,17 @@ def main():
     mb = GroupDatasets(Input=[walls_info["flat"], fils_info["flat"]])
     SaveData(combined_2d, proxy=mb)
     combined_all = None
-    if filman_info:
-        combined_all = os.path.join(out_dir, f"{prefix}_walls_filaments_filament_manifolds.vtm")
-        mb_all = GroupDatasets(Input=[walls_info["flat"], fils_info["flat"], filman_info["flat"]])
+    if filman_info or cluster_info:
+        parts = ["walls", "filaments"]
+        datasets = [walls_info["flat"], fils_info["flat"]]
+        if filman_info:
+            parts.append("filament_manifolds")
+            datasets.append(filman_info["flat"])
+        if cluster_info:
+            parts.append("clusters")
+            datasets.append(cluster_info["flat"])
+        combined_all = os.path.join(out_dir, f"{prefix}_{'_'.join(parts)}.vtm")
+        mb_all = GroupDatasets(Input=datasets)
         SaveData(combined_all, proxy=mb_all)
     stats_path = os.path.join(out_dir, f"{prefix}_summary_stats.csv")
     write_stats_csv(stats_rows, Path(stats_path))
@@ -969,11 +1118,24 @@ def main():
                 filman_info["avg"],
             ]
         )
+    if cluster_info:
+        output_paths.extend(
+            [
+                cluster_info["paths"]["3d"],
+                cluster_info["paths"]["flat"],
+                cluster_info["avg"],
+            ]
+        )
     if combined_all:
         output_paths.append(combined_all)
-    if args.save_pngs and filman_info:
+    if args.save_pngs and (filman_info or cluster_info):
+        suffix = []
+        if filman_info:
+            suffix.append("filament_manifolds")
+        if cluster_info:
+            suffix.append("clusters")
         output_paths.append(
-            os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_filament_manifolds.png")
+            os.path.join(out_dir, f"{prefix}_composite_density_walls_filaments_{'_'.join(suffix)}.png")
         )
     for path in output_paths:
         print(f"  {path}")
