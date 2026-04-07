@@ -528,22 +528,18 @@ def render_master_by_day(all_messages):
             lines.append("<details>")
             lines.append(f"<summary>{session_label}</summary>")
             lines.append("")
-            if session_out:
-                lines.append(f"Session file: [{session_out}]({session_out})")
-                lines.append("")
             for msg in session["messages"]:
+                text = msg.get("text") or ""
+                # skip messages that are only tool-call labels e.g. "[Grep]\n[Read]"
+                if not re.sub(r'\[[A-Za-z_]+\]\s*', '', text).strip():
+                    continue
                 dt = msg.get("ts_dt") or msg.get("session_start_dt")
                 time_label = dt.strftime("%H:%M:%SZ") if dt else "unknown-time"
                 role = msg.get("role") or "unknown"
-                idx = msg.get("index") or 0
-                link = f"[link]({session_out}#m-{idx:04d})" if session_out else ""
                 header = f"{time_label} — {role}"
-                if link:
-                    header = f"{header} — {link}"
                 lines.append(header)
                 lines.append("")
-                text = msg.get("text") or ""
-                lines.append(text if text else "_No content_")
+                lines.append(text)
                 lines.append("")
             lines.append("</details>")
             lines.append("")

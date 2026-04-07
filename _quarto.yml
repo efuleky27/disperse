@@ -1,7 +1,10 @@
 project:
   type: website
-  resources:
-    - sessions/export/MASTER_BY_DAY.html
+  render:
+    - index.qmd
+    - documents/*.qmd
+    - documents/readme.md
+    - sessions/export/MASTER_BY_DAY.md
 
 website:
   title: "DisPerSE Cosmic Web Pipeline"
@@ -37,7 +40,7 @@ website:
           - href: documents/OTHER_TOOLS_USER_GUIDE.qmd
             text: Other Tools
     right:
-      - href: sessions/export/MASTER_BY_DAY.html
+      - href: sessions/export/MASTER_BY_DAY.md
         text: AI Sessions
 
 format:
