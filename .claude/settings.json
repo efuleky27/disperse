@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/fules/Documents/disperse/outputs -name *_topology_stats.csv)",
+      "Bash(python scripts/redshift_evolution.py --help)",
+      "Bash(for batch:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/fules/Documents/disperse/outputs/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(find /Users/fules/Documents/disperse -name *.hdf5 -o -name snap_*.hdf5)",
+      "Bash(conda env:*)",
+      "Bash(/Users/fules/miniforge3/envs/disperse/bin/python3 -c \":*)",
+      "Bash(pvpython /Users/fules/Documents/disperse/scripts/redshift_evolution.py --help)",
+      "Bash(python3 -c \"import sys,json; [print\\(json.dumps\\(json.loads\\(l\\), indent=2\\)[:800]\\) for l in sys.stdin]\")",
+      "Bash(python3 sessions/export_sessions.py)",
+      "Bash(ls sessions/export/*.md)",
+      "Bash(grep -v INDEX head -20 sessions/export/2026-03-22__00-49-28__7766f39a-484a-4eed-973d-dc5bc26f7175.md)",
+      "Bash(ls /Users/fules/.claude/projects/-Users-fules-Documents-disperse/*.jsonl)",
+      "Bash(ls -la /Users/fules/.claude/projects/-Users-fules-Documents-disperse/*.jsonl)",
+      "Bash(wc -l /Users/fules/Documents/disperse/sessions/claude/*.jsonl)"
+    ],
+    "additionalDirectories": [
+      "/Users/fules/.claude/projects/-Users-fules-Documents-disperse"
+    ]
+  },
+  "hooks": {
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cp /Users/fules/.claude/projects/-Users-fules-Documents-disperse/*.jsonl sessions/claude/ && python3 sessions/export_sessions.py"
+          }
+        ]
+      }
+    ]
+  }
+}

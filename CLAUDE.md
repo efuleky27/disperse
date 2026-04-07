@@ -31,13 +31,15 @@ aggregate_topology_points.py      → combined statistics across all crops
 | `batch_clip.py` | Clip 3D topology to 2D slabs, render PNGs | **pvpython** |
 | `batch_crop_and_clip.py` | Orchestrate above three across a volume grid | python |
 | `aggregate_topology_points.py` | Aggregate per-point CSVs across crops into stats + histograms | python |
+| `compare_simulations.py` | Side-by-side boxplots comparing two simulations' topology_stats.csv | python |
 | `spin_render.py` | Rotating 3D renders → PNG sequence or MP4 | **pvpython** |
+| `redshift_evolution.py` | Smooth redshift-evolution movie across multiple VTU snapshots | **pvpython** |
 | `stitch_slab_pngs.py` | Assemble slab PNGs → MP4 via ffmpeg | python |
 | `compute_density_field.py` | Particles → CIC density field HDF5 | python |
 | `export_snapshot_vtu.py` | Particles → VTU point cloud | python |
 | `export_grid_vti.py` | HDF5 3D array → VTI structured grid | python |
 
-> **`batch_clip.py` and `spin_render.py` must be run via `pvpython`** (ParaView's Python interpreter), not standard Python. They use `from paraview.simple import *`.
+> **`batch_clip.py`, `spin_render.py`, and `redshift_evolution.py` must be run via `pvpython`** (ParaView's Python interpreter), not standard Python. They use `from paraview.simple import *`.
 
 ---
 
@@ -129,8 +131,8 @@ All three engines must produce identical output for the same input. When modifyi
 | Binary | From | Used by |
 |---|---|---|
 | `delaunay_3D`, `mse`, `netconv`, `skelconv` | DisPerSE build | analyze_snapshot.py |
-| `pvpython` | ParaView | batch_clip.py, spin_render.py |
-| `ffmpeg` | system | spin_render.py, stitch_slab_pngs.py |
+| `pvpython` | ParaView | batch_clip.py, spin_render.py, redshift_evolution.py |
+| `ffmpeg` | system | spin_render.py, stitch_slab_pngs.py, redshift_evolution.py |
 
 DisPerSE binaries path: typically `/path/to/DisPerSE/build/src/` — must be on `$PATH`.
 

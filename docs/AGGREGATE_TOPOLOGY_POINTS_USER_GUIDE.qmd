@@ -117,6 +117,57 @@ python scripts/aggregate_topology_points.py \
   --hist-percentile-range 1 99
 ```
 
+---
+
+## `compare_simulations.py` User Guide
+
+Use `scripts/compare_simulations.py` to place two simulations' boxplots side-by-side for direct comparison.  It reads one `*_topology_stats.csv` per simulation (auto-discovered from a folder or its `combined/` subdirectory) and produces a multi-panel figure with one column-pair per category.
+
+### What it does
+- Reads aggregated `topology_stats.csv` files from two simulation output folders.
+- Renders side-by-side box plots for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars.
+- Adds a summary-statistics table below the plots.
+- Category labels on the x-axis are coloured to match the boxplot colours.
+
+### Requirements
+- Python with `matplotlib`, `numpy`, and `polars` (or `pandas`).
+
+### CLI
+```bash
+python scripts/compare_simulations.py \
+  --folder-a <SIM_A_DIR> \
+  --folder-b <SIM_B_DIR> \
+  [--labels "z=0" "z=3"] \
+  [--scalars log_field_value field_value] \
+  [--output-dir <OUTPUT_DIR>] \
+  [--output-prefix <PREFIX>]
+```
+
+### Key options
+- `--folder-a / --folder-b` — Root output directories for each simulation. The script searches for `*_topology_stats.csv` directly or inside a `combined/` subdirectory.
+- `--labels` — Display names for the two simulations (default: folder basenames).
+- `--scalars` — Which scalar columns to plot (default: all detected scalars).
+- `--output-dir` — Where to write the figure (default: current directory).
+- `--output-prefix` — Filename prefix for the output PNG.
+
+### Example
+```bash
+python scripts/compare_simulations.py \
+  --folder-a outputs/quijote_batches_000_w_clusters_points \
+  --folder-b outputs/quijote_batches_004_w_clusters_points \
+  --labels "z=3" "z=0" \
+  --scalars log_field_value \
+  --output-dir outputs/comparison_000_vs_004 \
+  --output-prefix compare_z3_vs_z0
+```
+
+### Notes
+- The figure uses the same four-category colour scheme as `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
+- Simulation A boxes are lighter with a `////` hatch; simulation B boxes are solid and darker.
+- The x-axis shows only the coloured category label — no tick marks.
+
+---
+
 ### More Examples (for science fair)
 ```bash
 python scripts/aggregate_topology_points.py \
@@ -133,3 +184,21 @@ python scripts/aggregate_topology_points.py \
   --plot-fontscale 1.2 \
   --plot-dpi 600
 ```
+
+### More Examples (for science fair)
+```bash
+python scripts/aggregate_topology_points.py \
+  --root outputs/quijote_batches_004_w_clusters_points \
+  --output-dir outputs/quijote_batches_004_w_clusters_points/combined \
+  --output-prefix quijote_batches_004_w_clusters_points \
+  --engine polars \
+  --polars-chunks 4 \
+  --log10-field-value \
+  --violin-scalar log10_field_value \
+  --hist-bin-mode global \
+  --hist-percentile-range 1 99 \
+  --plot-percentile-range .1 99.9 \
+  --plot-fontscale 1.2 \
+  --plot-dpi 600
+```
+

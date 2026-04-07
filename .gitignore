@@ -27,3 +27,5 @@ bkp
 
 
 /.quarto/
+
+**/*.quarto_ipynb

@@ -5,79 +5,57 @@ format:
     embed-resources: true
 ---
 
-## DisPerSE Workflow Cheatsheet
+## DisPerSE Cosmic Web Pipeline
 
-Concise reference for pulling Quijote data, running the DisPerSE pipelines, and exporting visualization-ready artifacts.
+This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
-### Documentation
-- Core pipelines: [Analyze Snapshot (3D)](ANALYZE_SNAPSHOT_USER_GUIDE.html) and [Analyze Snapshot 2D](ANALYZE_SNAPSHOT_2D_USER_GUIDE.html)
-- Slab + PNGs: [Batch Clip](BATCH_CLIP_USER_GUIDE.html)
-- Batch tiling + per-slab: [Batch Crop + Clip](BATCH_CROP_AND_CLIP_USER_GUIDE.html)
-- Topology overlap stats: [ND Topo Stats](ND_TOPO_STATS_USER_GUIDE.html)
-- Per-point aggregation + histograms: [Aggregate Topology Points](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html)
-- 3D spin renders: [Spin Render](SPIN_RENDER_USER_GUIDE.html)
-- Slab PNG stitching: [Stitch Slab PNGs](STITCH_SLAB_PNGS_USER_GUIDE.html)
-- End-to-end runbook: [Topology Analysis](TOPOLOGY_ANALYSIS_USER_GUIDE.html)
-- Methods summary: [Project Methods](PROJECT_METHODS.html)
-- Workflow flowchart: [Workflow Flowchart](WORKFLOW_FLOWCHART.html)
-- Utilities/other tools: [Other Tools](OTHER_TOOLS_USER_GUIDE.html)
-- Results examples: [Results](results.html)
+---
 
-### Workflow Flowchart
-[Workflow Flowchart](WORKFLOW_FLOWCHART.html)
+## Documentation Index
 
-### Project Layout
-- All scripts live in `scripts/`:
-  - `scripts/analyze_snapshot.py` / `scripts/analyze_snapshot_2d.py`: main 3D/2D pipelines (decimate/crop, rebase for periodic Delaunay, MSE, convert to VTK/VTU/VTP with global shift-back).
-  - `scripts/compute_density_field.py`: build a CIC density grid (HDF5).
-  - `scripts/export_grid_vti.py`: wrap a 3D HDF5 grid as VTI for ParaView.
-  - `scripts/export_snapshot_vtu.py`: stream snapshot particles to VTU (or VTI from an existing grid with `--density-field`).
-  - `scripts/batch_clip.py`: clip slabs, flatten to 2D, average density, and render PNGs.
-  - `scripts/ndtopo_stats.py`: compute overlap/unique/unassigned stats (uses Delaunay scalars; configurable ID fields and `cell` handling for Delaunay/walls/filaments).
-  - `scripts/batch_crop_and_clip.py`: tile a snapshot into many crops, run analyze → stats → slab clips for each.
-- `scripts/aggregate_topology_points.py`: aggregate per-point CSVs into global stats, histograms, and composition/violin/box plots (configurable scalars/binning).
-- `scripts/spin_render.py`: render rotating PNG sequences (and MP4 via ffmpeg), with configurable resolution, background, and multi‑loop camera paths.
-  - `scripts/stitch_slab_pngs.py`: stitch slab PNGs into per-crop or combined MP4s.
-- `data/`: place snapshots or density grids here. `outputs/`: per-run artifacts.
+| Document | What it covers |
+|---|---|
+| [Workflow Runbook](WORKFLOW_RUNBOOK.html) | End-to-end pipeline runbook: all stages, methods, rationale, troubleshooting |
+| [Workflow Flowchart](WORKFLOW_FLOWCHART.html) | Mermaid flowchart of the full pipeline |
+| [Analyze Snapshot](ANALYZE_SNAPSHOT_USER_GUIDE.html) | `analyze_snapshot.py` — full CLI reference |
+| [Batch Clip](BATCH_CLIP_USER_GUIDE.html) | `batch_clip.py` — slab clipping and PNG rendering |
+| [ND Topo Stats](ND_TOPO_STATS_USER_GUIDE.html) | `ndtopo_stats.py` — topology overlap stats |
+| [Batch Crop + Clip](BATCH_CROP_AND_CLIP_USER_GUIDE.html) | `batch_crop_and_clip.py` — full pipeline over tiled crops |
+| [Aggregate Topology Points](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html) | `aggregate_topology_points.py` + `compare_simulations.py` |
+| [Spin Render](SPIN_RENDER_USER_GUIDE.html) | `spin_render.py` + `redshift_evolution.py` |
+| [Stitch Slab PNGs](STITCH_SLAB_PNGS_USER_GUIDE.html) | `stitch_slab_pngs.py` — assemble slab PNGs into MP4s |
+| [Other Tools](OTHER_TOOLS_USER_GUIDE.html) | `compute_density_field.py`, `export_grid_vti.py`, `export_snapshot_vtu.py` |
 
-### Key Links
-- DisPerSE docs: https://github.com/thierry-sousbie/DisPerSE | https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html
-- Quijote data: https://quijote-simulations.readthedocs.io/en/latest/access.html | https://quijote-simulations.readthedocs.io/en/latest/bsq.html
-- Globus CLI: https://docs.globus.org/cli/
+---
 
-### Globus Transfers
-Snapshot (BSQ/0):
+## Prerequisites
+
+### Python Environment
+
 ```bash
-globus endpoint local-id
-export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
-globus endpoint search quijote
-export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437
-globus ls "$SRC:/Snapshots/fiducial/0/snapdir_000/"
-globus transfer "$SRC:/Snapshots/fiducial/0/snapdir_000/" "$DST:~/Downloads/snapdir_000/" --label "Quijote Snapshot Fiducial 0 z0"
-```
-Snapshot (BSQ/0):
-```bash
-globus endpoint local-id
-export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
-globus endpoint search quijote
-export SRC=f4863854-3819-11eb-b171-0ee0d5d9299f
-globus ls "$SRC:/Snapshots/BSQ/0/"
-globus transfer "$SRC:/Snapshots/BSQ/0/snap_010.hdf5" "$DST:~/Downloads/snap_010.hdf5" --label "Quijote Snapshot BSQ 0 z0"
-```
-Density field (3D_cubes/BSQ/0):
-```bash
-globus endpoint local-id
-export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
-globus endpoint search quijote
-export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437
-globus ls "$SRC:/3D_cubes/BSQ/0/"
-globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df_m_CIC_z=0.00.hdf5" --label "Quijote Density Field BSQ 0 z0"
+conda create -n disperse -c conda-forge python=3.11 \
+  numpy scipy h5py hdf5plugin polars matplotlib
+conda activate disperse
 ```
 
-### Snapshot → walls/filaments (DisPerSE)
-Environment: `conda activate disperse` (with `hdf5plugin`, `vtkmodules`).
+`hdf5plugin` is required to read Blosc-compressed Quijote snapshots. `polars` is needed for the fast aggregation path. `scipy` is needed for proximity-based alignment in `redshift_evolution.py`.
 
-To keep `pvpython` on PATH whenever you activate the environment:
+### DisPerSE Binaries
+
+`analyze_snapshot.py` calls `delaunay_3D`, `mse`, `netconv`, and `skelconv`. Add their build directory to PATH:
+
+```bash
+export PATH="/path/to/DisPerSE/build/src:$PATH"
+```
+
+See [Build DisPerSE from Source](#build-disperse-from-source) below for macOS build instructions.
+
+### ParaView / pvpython
+
+`batch_clip.py`, `spin_render.py`, and `redshift_evolution.py` must be run via `pvpython` (ParaView's Python interpreter), not standard Python.
+
+To keep `pvpython` on PATH whenever you activate the conda environment:
+
 ```bash
 mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
 
@@ -92,17 +70,59 @@ unset _PV_OLD_PATH
 EOF
 ```
 
-Typical run (cropped, periodic, rebased for tessellation, shifted VTK outputs):
+---
+
+## Pipeline Overview
+
+```
+HDF5 Snapshot
+  └─ analyze_snapshot.py          → Delaunay VTU, walls VTU, filaments VTP, cluster VTP
+      ├─ ndtopo_stats.py          → topology_stats.csv, topology_points.csv (per crop)
+      └─ batch_clip.py            → slab VTUs, 2D VTIs, composite PNGs
+              └─ stitch_slab_pngs.py → MP4 movies
+
+batch_crop_and_clip.py            → orchestrates the above across a tiled grid of crops
+                                     (per crop: analyze → ndtopo_stats → batch_clip per slab)
+
+aggregate_topology_points.py      → combined stats, histograms, and plots across all crops
+compare_simulations.py            → side-by-side boxplots across two simulation runs
+
+spin_render.py                    → rotating 3D animation of any VTK dataset
+redshift_evolution.py             → smooth movie evolving across redshift snapshots
+```
+
+---
+
+## Stage 1: Topology Extraction (`analyze_snapshot.py`)
+
+Streams particle coordinates from an HDF5 snapshot, optionally crops and decimates, builds a Delaunay tessellation (DTFE density), runs the Morse–Smale complex to identify walls/filaments/clusters, and exports VTK files.
+
+For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.
+
+**Key flags:**
+- `--input`: HDF5 snapshot path
+- `--crop-box xmin ymin zmin xmax ymax zmax`: restrict to a sub-volume (in `--input-unit`, default kpc/h)
+- `--stride N` / `--target-count N`: particle decimation
+- `--delaunay-btype periodic`: recommended over `--periodic` (avoids artifacts)
+- `--mse-nsig`: persistence threshold in sigma units (higher = fewer, more significant features)
+- `--dump-manifolds JE1a`: wall manifolds
+- `--dump-filament-manifolds JE2a`: optional filament-bounding manifolds
+- `--dump-clusters JE3a`: cluster critical points (maxima)
+- `--dump-arcs U`: filament arcs (1D skeleton)
+- `--netconv-smooth 20 --skelconv-smooth 20`: smoothing passes on export
+- `--export-delaunay`: also export the Delaunay tessellation as VTU
+
+**Example (cropped, periodic):**
 ```bash
 python scripts/analyze_snapshot.py \
   --input data/snap_010.hdf5 \
   --output-dir outputs/snap_010_subbox \
   --output-prefix snap_010 \
   --crop-box 0 0 0 500000 500000 100000 \
-  --stride 1 \ 
+  --stride 1 \
   --delaunay-btype periodic \
   --export-delaunay \
-  --mse-nsig 3.0 \
+  --mse-nsig 5.0 \
   --dump-manifolds JE1a \
   --dump-filament-manifolds JE2a \
   --dump-clusters JE3a \
@@ -110,173 +130,306 @@ python scripts/analyze_snapshot.py \
   --netconv-smooth 20 \
   --skelconv-smooth 20
 ```
-Notes:
-- Coordinates are rebased to the crop origin for `-periodic` tessellation, then VTKs are shifted back to global.
-- Outputs include shifted VTKs (`*_delaunay.vtu`, `*_manifolds_<TAG>.vtu`, `*_arcs_<ARC>.vtp`, optional `*_filament_manifolds_<TAG>.vtu`, and `*_cluster_critpoints_<TAG>_S000.vtp/.vtu`) plus per-file summary stats CSV.
-- You can replace `--stride 1` with `--target-count 2000000` to auto-pick a stride near 2M particles.
 
-### Density Workflows
-From snapshot to density grid:
+**Outputs:** `*_delaunay_S###.vtu`, `*_manifolds_<TAG>_S###.vtu`, `*_arcs_<ARC>_S###.vtp`, `*_filament_manifolds_<TAG>_S###.vtu`, `*_cluster_critpoints_<TAG>_S000.vtp/.vtu`, `*_summary_stats.csv`.
+
+→ Full reference: [Analyze Snapshot User Guide](ANALYZE_SNAPSHOT_USER_GUIDE.html)
+
+---
+
+## Stage 2: Topology Overlap Stats (`ndtopo_stats.py`)
+
+Matches Delaunay vertex IDs to walls/filaments/clusters and computes how many points fall in each category (walls, filaments, both, clusters, unassigned, etc.), aggregating Delaunay scalars (mass, field_value, log_field_value) per category.
+
+**Key flags:**
+- `--delaunay-vtk`, `--walls-vtk`, `--filaments-vtk`: VTK inputs (or `--*-ndnet` / `--*-ndskl` with `--write-vtk`)
+- `--filament-manifolds-vtk`, `--cluster-manifolds-vtk`: optional additional inputs
+- `--per-point-csv PATH`: write one row per Delaunay vertex with boolean membership flags — needed for downstream aggregation
+
+**Example:**
 ```bash
-python scripts/compute_density_field.py \
-  --input data/snap_010.hdf5 \
-  --parttype PartType1 \
-  --output outputs/snap_010_density.hdf5 \
-  --grid-size 256 \
-  --chunk-size 2000000 \
-  --store-contrast
-```
-Visualize grid in ParaView (VTI):
-```bash
-python scripts/export_snapshot_vtu.py \
-  --density-field \
-  --input outputs/snap_010_density.hdf5 \
-  --grid-dataset DensityField/density \
-  --output outputs/snap_010_density.vti
-```
-Convert an existing grid directly:
-```bash
-python scripts/export_grid_vti.py \
-  --input data/df_m_CIC_z_1_00.hdf5 \
-  --dataset df \
-  --output outputs/df_m_CIC_z_1_00.vti \
-  --spacing 1 1 1 \
-  --origin 0 0 0 \
-  --field-name density
+python scripts/ndtopo_stats.py \
+  --delaunay-vtk outputs/snap_010_subbox/snap_010_delaunay_S000.vtu \
+  --walls-vtk    outputs/snap_010_subbox/snap_010_manifolds_JE1a_S020.vtu \
+  --filaments-vtk outputs/snap_010_subbox/snap_010_arcs_U_S020.vtp \
+  --delaunay-id-field true_index \
+  --walls-id-field true_index \
+  --filaments-id-field cell \
+  --scalar-fields mass field_value log_field_value \
+  --output-csv outputs/snap_010_subbox/snap_010_topology_stats.csv \
+  --per-point-csv outputs/snap_010_subbox/snap_010_topology_points.csv
 ```
 
-### Slab clip + PNGs
-Clip a slab, flatten, average density, and render overlays:
+→ Full reference: [ND Topo Stats User Guide](ND_TOPO_STATS_USER_GUIDE.html)
+
+---
+
+## Stage 3: Slab Clip and 2D Rendering (`batch_clip.py`)
+
+Clips walls, filaments, and density to a thin slab along a chosen axis, flattens to 2D, averages density across the slab, and renders composite PNGs. Must be run via `pvpython`.
+
+**Key flags:**
+- `--walls`, `--filaments`, `--delaunay`: VTK inputs (relative to `--input-dir`)
+- `--slab-axis z --slab-origin 0 --slab-thickness 10`: slab position (in output units, mpc/h)
+- `--resample-dims 512 512 64`: resampling grid
+- `--save-pngs`: render PNG outputs
+- `--png-colormap "Inferno (matplotlib)"`: colormap preset
+- `--composite-filaments-source manifolds`: use filament manifolds for composite renders
+
+**Example:**
 ```bash
-PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
+pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_subbox \
-  --walls snap_010_manifolds_JE1a.vtu \
-  --filaments snap_010_arcs_U.vtp \
-  --delaunay snap_010_delaunay.vtu \
-  --output-dir outputs/snap_010_subbox/auto2d \
+  --walls snap_010_manifolds_JE1a_S020.vtu \
+  --filaments snap_010_arcs_U_S020.vtp \
+  --delaunay snap_010_delaunay_S000.vtu \
+  --output-dir outputs/snap_010_subbox/slab_z0 \
   --output-prefix snap_010 \
   --slab-axis z --slab-origin 0 --slab-thickness 10 \
   --resample-dims 512 512 64 \
   --scalar-name log_field_value \
   --save-pngs \
   --png-colormap "Inferno (matplotlib)" \
-  --png-log-range -3 1 \
-  --png-dpi 600 \
-  --no-png-transparent \
-  --png-align-composite \
-  --no-png-hide-orientation-axes
+  --png-log-range -3 1
 ```
-Outputs: per-slab VTKs (3D + flattened + averaged density), PNGs, and summary stats.
 
-### Topology overlap stats
-Use Delaunay scalars to quantify shared/unique/unassigned topology membership:
-```bash
-python scripts/ndtopo_stats.py \
-  --delaunay-vtk outputs/snap_010_subbox/snap_010_delaunay.vtu \
-  --walls-vtk    outputs/snap_010_subbox/snap_010_manifolds_JE1a.vtu \
-  --filaments-vtk outputs/snap_010_subbox/snap_010_arcs_U.vtp \
-  --delaunay-id-field true_index \
-  --walls-id-field true_index \
-  --filaments-id-field cell \
-  --scalar-fields mass field_value log_field_value \
-  --output-csv outputs/snap_010_subbox/snap_010_topology_stats.csv
-```
-`--write-vtk` will auto-convert NDnet/NDskl (unsmoothed) if VTKs are not present.
+→ Full reference: [Batch Clip User Guide](BATCH_CLIP_USER_GUIDE.html)
 
-### Batch crops + slabs
-Tile the box, run analyze → stats → slab clips for each crop:
+---
+
+## Stage 4: Batch Tiling (`batch_crop_and_clip.py`)
+
+Orchestrates Stages 1–3 across a tiled grid of non-overlapping crop boxes, running `analyze_snapshot.py` → `ndtopo_stats.py` → `batch_clip.py` for each crop and slab. This is the main entry point for large-volume analysis.
+
+**Key flags:**
+- `--snapshot`, `--output-root`: input snapshot and output root
+- `--crop-size DX DY DZ`: tile dimensions (in `--input-unit`, default kpc/h)
+- `--x-range`, `--y-range`, `--z-range`: volume to tile
+- `--mse-nsig`, `--dump-manifolds`, `--dump-arcs`, etc.: forwarded to `analyze_snapshot.py`
+- `--slab-step`, `--slab-thickness`: slab spacing within each crop
+- `--write-per-point-csv`: write `topology_points.csv` per crop (needed for aggregation)
+- `--skip-slabs`: run analysis + stats only, skip slab clipping
+
+**Example:**
 ```bash
 python scripts/batch_crop_and_clip.py \
   --snapshot data/snap_010.hdf5 \
   --output-root outputs/quijote_batches \
   --crop-size 500000 500000 100000 \
-  --x-range 0 1000000 --y-range 0 1000000 --z-range 0 200000 \
+  --x-range 0 1000000 --y-range 0 1000000 --z-range 0 1000000 \
   --mse-nsig 5.0 \
-  --dump-manifolds JE1a --dump-filament-manifolds JE2a --dump-clusters JE3a --dump-arcs U \
+  --dump-manifolds JE1a --dump-filament-manifolds JE2a \
+  --dump-clusters JE3a --dump-arcs U \
   --netconv-smooth 20 --skelconv-smooth 20 \
   --slab-step 10 --slab-thickness 10 \
   --resample-dims 500 500 100 \
-  --scalar-name log_field_value
-```
-Outputs are organized per crop (`*_delaunay.vtu`, walls/filaments VTKs, per-crop topology stats) and per slab subfolder (flattened VTKs, PNGs, stats).
-
-### Other Utilities
-- CosmoFlow snapshot prep:
-```bash
-python scripts/prepare_cosmoflow_snapshot.py \
-  --input data/univ_ics_2019-03_a10000668.hdf5 \
-  --output data/cosmoflow_z0_snapshot.hdf5 \
-  --redshift-index 0 \
-  --target-count 1000000 \
-  --threshold 5
-```
-- ParaView automation example:
-```bash
-/Applications/ParaView-6.0.1.app/Contents/bin/pvpython visualize_walls_paraview.py \
-  --input outputs/snap_010/snap_010_walls.vtu \
-  --field field_value \
-  --threshold 0.001 0.02 \
-  --scalar-bar-size 0.035 0.20 \
-  --scalar-bar-position 0.85 0.1 \
-  --scalar-bar-font-sizes 8 7 \
-  --screenshot outputs/snap_010/walls_preview.png
+  --scalar-name log_field_value \
+  --write-per-point-csv
 ```
 
+**Output layout:**
+```
+outputs/quijote_batches/
+  crop_x0-500_y0-500_z0-100/
+    *_delaunay_S###.vtu
+    *_manifolds_<TAG>_S###.vtu
+    *_arcs_<ARC>_S###.vtp
+    *_topology_stats.csv
+    *_topology_points.csv
+    slab_z0/
+      *_density.png
+      *_composite_density_walls_filaments.png
+    slab_z10/ ...
+  crop_x0-500_y500-1000_z0-100/ ...
+```
 
-## some AI queries (detailed guide)
-> What is the benefit of DisPerSE? Could I just analyze the HDF5 in ParaView?
-
-### Why DisPerSE vs. ParaView
-- Reconstructs the Delaunay tessellation and Morse–Smale complex; persistence keeps only significant walls/filaments and honors periodic boxes.
-- ParaView visualizes particles/grids but does no topology extraction; you’d only see raw density/points.
-- `netconv`/`skelconv` convert DisPerSE outputs into VTK meshes you can inspect anywhere.
-
-### Knobs that shape wall/filament geometry
-- Particle sampling: `--stride` / `--target-count` (denser preserves fine structure; more thinning smooths).
-- Boundaries: `--periodic`, `--delaunay-btype` (wraparound, block options).
-+- Persistence: `--mse-nsig` or `--persistence-cut` (higher → prune weaker features; multiple values allowed, e.g., `--nsig 3.5 4.0 5.0`).
-- Manifolds: `--dump-manifolds` (JD1d walls, J0a void minima, etc.).
-- Filament manifolds (optional): `--dump-filament-manifolds` (e.g., JE2a).
-- Clusters (optional): `--dump-clusters` (exports maxima critical points; e.g., JE3a). `--dump-cluster-manifolds` remains as a deprecated alias.
-- Threshold style: absolute (`--persistence-cut`) vs. sigma (`--mse-nsig`).
-- Units: `--input-unit` / `--output-unit` to keep coordinate scales consistent.
-- Post-visualization: `visualize_walls_paraview.py --threshold` can hide/show ranges.
-
-If you’re experimenting, tweak in order: (1) input density/stride, (2) mse thresholds (-nsig vs -cut), (3) -dumpManifolds choice.
+→ Full reference: [Batch Crop and Clip User Guide](BATCH_CROP_AND_CLIP_USER_GUIDE.html)
 
 ---
 
-### Build/setup walkthrough (macOS)
+## Stage 5: Cross-Crop Aggregation (`aggregate_topology_points.py`)
 
-**What we’re building**
-- A reproducible setup that:
-  - builds DisPerSE from source (CGAL, GMP/MPFR, GSL, CFITSIO),
-  - downloads a Quijote snapshot (e.g., `snap_010.hdf5`),
-  - optionally grids particles (CIC),
-  - runs DisPerSE to extract filaments/walls,
-  - converts results to VTK for ParaView.
+Combines all `*_topology_points.csv` files across crops into global statistics, per-category histograms, and composition/violin/box plots for four primary categories: **Clusters**, **Filaments** (filament manifolds not clusters), **Walls** (walls only), and **Unassigned**.
 
-**One-time prerequisites**
-- Command Line Tools (if needed): `xcode-select --install`
-- Homebrew libs (Apple Silicon paths assumed):
+**Key flags:**
+- `--root`: root directory to scan for `*_topology_points.csv`
+- `--output-dir`, `--output-prefix`: output location
+- `--engine polars`: fast path (default); `--polars-chunks N` for large datasets
+- `--hist-bin-mode global`: shared bins across categories (better for comparison)
+- `--log10-field-value`: convert field_value to log10 before aggregating
+- `--plot-dpi`, `--plot-fontscale`: control figure quality
+
+**Example:**
 ```bash
+python scripts/aggregate_topology_points.py \
+  --root outputs/quijote_batches \
+  --output-dir outputs/quijote_batches/combined \
+  --output-prefix quijote_batches \
+  --engine polars \
+  --polars-chunks 4 \
+  --log10-field-value \
+  --violin-scalar log10_field_value \
+  --hist-bin-mode global \
+  --hist-percentile-range 1 99 \
+  --plot-percentile-range .1 99.9 \
+  --plot-fontscale 1.2 \
+  --plot-dpi 300
+```
+
+**Outputs:** aggregated `*_topology_stats.csv`, per-category histogram CSVs and PNGs, composition barchart, violin/box plots.
+
+→ Full reference: [Aggregate Topology Points User Guide](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html)
+
+---
+
+## Visualization Scripts
+
+These scripts are standalone — they are not part of the batch pipeline but consume its outputs.
+
+### `spin_render.py` — rotating 3D animation
+
+Orbits a camera around any VTK dataset and writes a PNG sequence or MP4. Must be run via `pvpython`.
+
+```bash
+pvpython scripts/spin_render.py \
+  --input outputs/crop_x0-500_y0-500_z0-100/crop_manifolds_JE1a_S020.vtu \
+  --output outputs/spin.mp4 \
+  --frames 360 \
+  --scalar log_field_value \
+  --colormap "Inferno (matplotlib)" \
+  --range-min -3 --range-max 1 \
+  --resolution 1920 1080 --background black \
+  --animate-elev-zoom --loops 2
+```
+
+→ Full reference: [Spin Render User Guide](SPIN_RENDER_USER_GUIDE.html)
+
+### `redshift_evolution.py` — redshift evolution movie
+
+Takes one Delaunay VTU per redshift snapshot and produces an interpolated or slideshow movie showing cosmic web evolution. Must be run via `pvpython`.
+
+```bash
+pvpython scripts/redshift_evolution.py \
+  --inputs snap_000_delaunay.vtu snap_001_delaunay.vtu snap_002_delaunay.vtu \
+  --labels "z=3" "z=1" "z=0" \
+  --output-dir outputs/evolution --output-prefix evolution \
+  --scalar log_field_value \
+  --range-min -3.0 --range-max 1.0 \
+  --slideshow --slideshow-duration 2.0
+```
+
+→ Full reference: [Spin Render User Guide](SPIN_RENDER_USER_GUIDE.html) (includes `redshift_evolution.py` section)
+
+### `compare_simulations.py` — side-by-side comparison
+
+Reads two simulations' `topology_stats.csv` files and renders side-by-side boxplots.
+
+```bash
+python scripts/compare_simulations.py \
+  --folder-a outputs/quijote_batches_000_w_clusters_points \
+  --folder-b outputs/quijote_batches_004_w_clusters_points \
+  --labels "z=3" "z=0" \
+  --scalars log_field_value \
+  --output-dir outputs/comparison --output-prefix compare_z3_vs_z0
+```
+
+→ Full reference: [Aggregate Topology Points User Guide](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html) (includes `compare_simulations.py` section)
+
+### `stitch_slab_pngs.py` — slab PNG → MP4
+
+Assembles the per-slab PNGs produced by `batch_clip.py` into MP4 movies.
+
+```bash
+python scripts/stitch_slab_pngs.py \
+  --root outputs/quijote_batches \
+  --png-suffix composite_density_walls_filaments.png \
+  --output-dir outputs/quijote_batches/movies
+```
+
+→ Full reference: [Stitch Slab PNGs User Guide](STITCH_SLAB_PNGS_USER_GUIDE.html)
+
+---
+
+## Utility Tools
+
+### `compute_density_field.py` — CIC density grid
+
+Deposits snapshot particles onto a regular N³ grid using Cloud-In-Cell interpolation and saves to HDF5.
+
+```bash
+python scripts/compute_density_field.py \
+  --input data/snap_010.hdf5 \
+  --output outputs/snap_010_density.hdf5 \
+  --grid-size 256 --store-contrast
+```
+
+### `export_grid_vti.py` — HDF5 grid → VTI
+
+Wraps an existing 3D HDF5 dataset as ParaView VTI for volume rendering.
+
+```bash
+python scripts/export_grid_vti.py \
+  --input outputs/snap_010_density.hdf5 \
+  --dataset DensityField/density \
+  --output outputs/snap_010_density.vti
+```
+
+### `export_snapshot_vtu.py` — snapshot particles → VTU
+
+Streams snapshot particles to a VTU point cloud, with optional stride/decimation.
+
+```bash
+python scripts/export_snapshot_vtu.py \
+  --input data/snap_010.hdf5 \
+  --output outputs/snap_010_points.vtu \
+  --target-count 2000000
+```
+
+→ Full reference: [Other Tools User Guide](OTHER_TOOLS_USER_GUIDE.html)
+
+---
+
+## Data Access (Globus)
+
+### Snapshot (Fiducial/0, all redshifts)
+```bash
+export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b   # your local endpoint
+export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437   # Quijote NERSC endpoint
+globus transfer "$SRC:/Snapshots/fiducial/0/snapdir_000/" "$DST:~/Downloads/snapdir_000/" \
+  --label "Quijote Snapshot Fiducial 0 z=0"
+```
+
+### Snapshot (BSQ/0, single file)
+```bash
+export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
+export SRC=f4863854-3819-11eb-b171-0ee0d5d9299f   # Quijote BSQ endpoint
+globus transfer "$SRC:/Snapshots/BSQ/0/snap_010.hdf5" "$DST:~/Downloads/snap_010.hdf5" \
+  --label "Quijote BSQ 0 z=0"
+```
+
+### Pre-computed density field (BSQ/0)
+```bash
+export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
+export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437
+globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df_m_CIC_z=0.00.hdf5" \
+  --label "Quijote Density Field BSQ 0 z=0"
+```
+
+---
+
+## Build DisPerSE from Source (macOS)
+
+**One-time prerequisites:**
+```bash
+xcode-select --install
 brew install cgal gmp mpfr gsl cfitsio boost@1.85
 ```
-- Conda env (example):
-```bash
-conda create -n disperse -c conda-forge python=3.11 \
-  numpy scipy h5py astropy tqdm numba psutil
-conda activate disperse
-# avoid HDF5 plugin crash:
-unset HDF5_PLUGIN_PATH
-export HDF5_USE_FILE_LOCKING=FALSE
-```
 
-**Build DisPerSE (once)**
+**Build:**
 ```bash
-cd /Users/fules/src/DisPerSE
+cd /path/to/DisPerSE
 
-# 1) Shim to ensure CGAL/GMP/MPFR are found
+# Shim to ensure CGAL/GMP/MPFR are found
 cat > cgal_use_dummy.cmake <<'CMAKE'
 if (DEFINED CGAL_DIR AND EXISTS "${CGAL_DIR}/UseCGAL.cmake")
   include("${CGAL_DIR}/UseCGAL.cmake")
@@ -297,7 +450,6 @@ if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)
 endif()
 CMAKE
 
-# 2) Configure & build
 rm -rf build && mkdir build && cd build
 cmake .. -Wno-dev \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
@@ -311,55 +463,76 @@ cmake .. -Wno-dev \
   -DCGAL_USE_FILE="$PWD/../cgal_use_dummy.cmake" \
   -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_CXX_EXTENSIONS=OFF \
   -DCMAKE_CXX_FLAGS="-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS"
-make -j4  # builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D
+make -j4
 ```
 
-If you see `Undefined symbols ___gmpn_*`, GMP/MPFR weren’t linked—this shim + Homebrew gmp/mpfr fixes it.
-
-**PATH**
+**Add to PATH:**
 ```bash
-export PATH="/Users/fules/src/DisPerSE/build/src:$PATH"
+export PATH="/path/to/DisPerSE/build/src:$PATH"
+# Add to ~/.zshrc to persist
 ```
-Add to `~/.zshrc` if desired.
 
-Docs: DisPerSE converters (skelconv) usage is on the DisPerSE site; the cosmology pipeline examples there mirror the `mse`/`skelconv`/`-manifolds` calls used here.
+If you see `Undefined symbols ___gmpn_*`, the GMP/MPFR shim above fixes the link.
+
+---
+
+## Why DisPerSE?
+
+ParaView can visualize particles and density grids, but does no topology extraction. DisPerSE reconstructs the Delaunay tessellation and Morse–Smale complex, applying persistence filtering to keep only statistically significant walls and filaments while respecting periodic boundaries. The key knobs:
+
+| Knob | Flag | Effect |
+|---|---|---|
+| Particle sampling | `--stride` / `--target-count` | Denser = more detail; sparser = faster |
+| Boundary handling | `--delaunay-btype` | `periodic` recommended for crops |
+| Persistence | `--mse-nsig` | Higher = fewer, stronger features |
+| Structure types | `--dump-manifolds` / `--dump-arcs` | Walls, filament manifolds, arcs |
+| Cluster export | `--dump-clusters` | Exports maxima as critical points |
+| Smoothing | `--netconv-smooth` / `--skelconv-smooth` | Smooths converted VTK geometry |
+
+---
+
+## Repository Layout
+
+```
+disperse/
+  scripts/          Python and pvpython scripts (the full pipeline)
+  docs/             Quarto documentation files (this readme + user guides)
+  data/             Input snapshots and density grids (not version-controlled)
+  outputs/          Pipeline run artifacts (not version-controlled)
+  sessions/         AI conversation history
+    2025/           Codex sessions (JSONL)
+    claude/         Claude Code sessions (JSONL)
+    export/         Rendered session exports (INDEX.md, MASTER.md, HTML)
+```
+
+Session exports are auto-updated whenever the Claude Code context window is compacted (via a PostCompact hook in `.claude/settings.json`). To sync manually:
 
 ```bash
-if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)
-  add_library(MPFR::mpfr UNKNOWN IMPORTED)
-  set_target_properties(MPFR::mpfr PROPERTIES
-    IMPORTED_LOCATION "${MPFR_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${MPFR_INCLUDE_DIR};${MPFR_INCLUDE_DIRS}")
-endif()
-CMAKE
-
-# 3.2 Configure & build
-rm -rf build && mkdir build && cd build
-
-cmake .. -Wno-dev \
-  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-  -DGSL_DIR="$(brew --prefix gsl)" \
-  -DCFITSIO_DIR="$(brew --prefix cfitsio)" \
-  -DCGAL_DIR="$(brew --prefix cgal)/lib/cmake/CGAL" \
-  -DBoost_NO_BOOST_CMAKE=ON \
-  -DBoost_NO_SYSTEM_PATHS=ON \
-  -DBOOST_ROOT="/opt/homebrew/opt/boost@1.85" \
-  -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/boost@1.85:/opt/homebrew" \
-  -DCGAL_USE_FILE="$PWD/../cgal_use_dummy.cmake" \
-  -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_CXX_EXTENSIONS=OFF \
-  -DCMAKE_CXX_FLAGS="-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS"
-
-make -j4  # builds: mse, skelconv, netconv, fieldconv, delaunay_2D/3D
+cp ~/.claude/projects/-Users-fules-Documents-disperse/*.jsonl sessions/claude/ && \
+  python3 sessions/export_sessions.py
 ```
 
-If you ever see Undefined symbols ___gmpn_* again, it means CGAL needs GMP/MPFR. The shim above, plus Homebrew’s gmp/mpfr, fixes that.
+---
 
-Add the binaries to your shell PATH:
+## Technologies Used
 
-### Add to ~/.zshrc (or just export in the shell you use to run)
-```bash
-export PATH="/Users/fules/src/DisPerSE/build/src:$PATH"
-```
+| Category | Tool |
+|---|---|
+| Hardware | Apple M1 Pro, 16 GB, macOS Tahoe |
+| Data transfer | Globus (CLI) |
+| Topology extraction | DisPerSE (`delaunay_3D`, `mse`, `netconv`, `skelconv`) |
+| Visualization | ParaView / `pvpython` |
+| Scripting | Python, `pvpython` |
+| IDE | VS Code, Positron |
+| Documentation | Quarto (Markdown), Mermaid (flowcharts) |
+| Version control | Git, GitHub |
+| AI assistance | ChatGPT, Codex, Claude Code, GitHub Copilot |
 
-Docs: DisPerSE converters (skelconv) usage is here (formats, flags).  ￼
-A typical DisPerSE pipeline used in cosmological catalogs is illustrated here (you’ll recognize the mse/skelconv calls and the -manifolds flag).
+---
+
+## Key Links
+
+- DisPerSE: <https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html>
+- Quijote simulations: <https://quijote-simulations.readthedocs.io/en/latest/access.html>
+- Globus CLI: <https://docs.globus.org/cli/>
+- ParaView: <https://www.paraview.org/>

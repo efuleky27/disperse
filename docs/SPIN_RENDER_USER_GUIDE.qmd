@@ -248,3 +248,129 @@ pvpython scripts/spin_render.py \
 - Coloring uses **point-data** arrays. If your scalar is only in cell data, convert to point data before rendering.
 - If colors look washed out, try a tighter range with `--range-min/--range-max`.
 - If you’re re-running with different settings, change the output prefix or remove old `*_####.png` frames first.
+- Default colormap is `Fast`; use `--colormap "Inferno (matplotlib)"` to match the rest of the pipeline.
+
+---
+
+## `redshift_evolution.py` User Guide
+
+Use `scripts/redshift_evolution.py` to generate a smooth movie showing the evolution of the cosmic web across redshift snapshots.  Given one Delaunay VTU per redshift, the script linearly interpolates point positions and scalar values between consecutive snapshots and assembles a PNG sequence and MP4.
+
+Must be run via `pvpython`.
+
+### What it does
+- Reads one Delaunay VTU per snapshot (earliest universe first).
+- Optionally aligns particle ordering across snapshots using chained nearest-neighbour matching (via `scipy.spatial.cKDTree`), so interpolation traces the same physical particle rather than position-index correspondence.
+- Interpolates both coordinates and scalar values linearly between consecutive snapshots.
+- Renders each frame as a point cloud coloured by `log_field_value` (Inferno colormap, range −3 to 2 by default).
+- Shows a redshift label (e.g. `z=3`) in the lower-left corner of each frame.
+- Writes numbered PNGs and stitches them into an MP4 via `ffmpeg`.
+
+### Rendering modes
+
+| Mode | Flag | Description |
+|---|---|---|
+| Interpolation | *(default)* | Smoothly interpolates positions and scalars between snapshots. Requires `scipy`. |
+| Cross-fade | *(automatic fallback)* | Opacity blending when point counts differ after alignment. |
+| Slideshow | `--slideshow` | No interpolation — holds each snapshot for `--frames-hold` frames then cuts. Skips alignment entirely. |
+
+### Requirements
+- `pvpython` (ParaView’s Python interpreter).
+- `scipy` (for proximity alignment; ships with recent ParaView builds).
+- `ffmpeg` (optional, for MP4 assembly).
+
+### CLI
+```bash
+pvpython scripts/redshift_evolution.py \
+  --inputs SNAP_000.vtu SNAP_001.vtu ... \
+  --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
+  --output-dir <OUTPUT_DIR> \
+  --output-prefix <PREFIX> \
+  [--scalar log_field_value] \
+  [--range-min -3.0 --range-max 2.0] \
+  [--colormap "Inferno (matplotlib)"] \
+  [--frames-per-transition 30] \
+  [--frames-hold 10] \
+  [--point-size 2.0] \
+  [--resolution 1920 1080] \
+  [--background black|white] \
+  [--fps 30] \
+  [--label-position X Y] \
+  [--label-font-size 28] \
+  [--no-align] \
+  [--slideshow] \
+  [--no-mp4]
+```
+
+### Key options
+- `--inputs` — VTU files in time order (earliest redshift first, i.e. `000` → `004`).
+- `--labels` — Redshift label per snapshot, shown in the lower-left corner. Must match `--inputs` count.
+- `--frames-per-transition` — Interpolated frames between each pair (default 30).
+- `--frames-hold` — Frames to pause on each snapshot (default 10).
+- `--scalar` — Point-data array to colour by (default `log_field_value`). Use `none` for solid colour.
+- `--range-min/--range-max` — Fixed colour range (default −3 / 2).
+- `--percentile-range` — Derive colour range from percentiles across all snapshots (overrides fixed range).
+- `--colormap` — ParaView preset name (default `Inferno (matplotlib)`).
+- `--no-align` — Skip proximity alignment; assume all files share the same point ordering.
+- `--slideshow` — Cut directly between snapshots with no interpolation or alignment.
+- `--no-mp4` — Keep PNGs only, skip ffmpeg.
+
+### Example (5 Quijote redshift snapshots, one crop)
+```bash
+pvpython scripts/redshift_evolution.py \
+    --inputs \
+        outputs/quijote_batches_000_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_001_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_002_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_003_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_004_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+    --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
+    --scalar log_field_value \
+    --range-min -3.0 --range-max 2.0 \
+    --frames-per-transition 30 \
+    --frames-hold 10 \
+    --output-dir outputs/evolution \
+    --output-prefix evolution
+```
+
+### Slideshow example
+```bash
+pvpython scripts/redshift_evolution.py \
+    --inputs \
+        outputs/quijote_batches_000_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_001_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_002_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_003_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+        outputs/quijote_batches_004_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu \
+    --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
+    --scalar log_field_value \
+    --range-min -3.0 --range-max 1.0 \
+    --slideshow \
+    --slideshow-duration 2.0 \
+    --output-dir outputs/evolution_slideshow_100 \
+    --output-prefix evolution_slideshow_100
+```
+
+### Slideshow example (10Mpc slab)
+```bash
+pvpython scripts/redshift_evolution.py \
+    --inputs \
+        outputs/evolution_slideshow_10/particle_simulation_0.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_1.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_2.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_3.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_4.vtu \
+    --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
+    --scalar log_field_value \
+    --range-min -3.0 --range-max 1.0 \
+    --slideshow \
+    --slideshow-duration 2.0 \
+    --output-dir outputs/evolution_slideshow_10 \
+    --output-prefix evolution_slideshow_10
+```
+
+### Notes
+- The Delaunay VTU files produced by `analyze_snapshot.py` contain `log_field_value` (DTFE log-density) and a `true_index` array — these are the recommended input files.
+- Proximity alignment uses chained nearest-neighbour matching (snapshot *i* matched to snapshot *i−1*), so small per-step displacements accumulate correctly across many redshifts. This requires `scipy`; if unavailable the script falls back to positional ordering with a warning.
+- Total frame count = `(N−1) × (frames_hold + frames_per_transition) + frames_hold` for interpolation mode, or N frames (one per snapshot) for slideshow mode.
+- Label position is given in normalized viewport coordinates (`--label-position X Y`); default is `0.45 0.05` (center-bottom). Requires ParaView 6.0+; position is ignored on older builds.

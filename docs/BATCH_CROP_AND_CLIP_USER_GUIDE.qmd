@@ -140,6 +140,26 @@ python scripts/batch_crop_and_clip.py \
       --export-delaunay-points \
       --skip-slabs
 ```
+
+```bash
+python scripts/batch_crop_and_clip.py \
+      --snapshot data/snapdir_000 \
+      --output-root outputs/quijote_batches_000_w_clusters_points \
+      --crop-size 500000 500000 100000 \
+      --mse-nsig 3.5 \
+      --x-range 0 500000 --y-range 0 500000 --z-range 900000 1000000 \
+      --slab-step 5 --slab-thickness 5 \
+      --dump-manifolds J1a --dump-arcs U \
+      --dump-filament-manifolds J2a \
+      --dump-clusters J3a \
+      --netconv-smooth 20 --skelconv-smooth 20 \
+      --png-percentile-range 0 99 \
+      --write-per-point-csv \
+      --no-png-lighting \
+      --no-png-transparent \
+      --export-delaunay-points \
+      --skip-slabs
+```
      
 ### Tips
 - If a crop contains no particles, the script logs “[skip] Crop box contains no particles.” and moves on.

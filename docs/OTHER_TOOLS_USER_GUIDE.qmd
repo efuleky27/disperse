@@ -162,7 +162,7 @@ Because the script uses appended binary, ParaView can load these files quickly. 
 - `compute_density_field.py`: builds a CIC density grid (N³) from a snapshot and writes HDF5 (optionally overdensity). No topology; use when you want a volumetric density field.
 - `export_grid_vti.py`: wraps an existing 3-D HDF5 dataset as VTI (ImageData) for ParaView. Typically run on the HDF5 produced by `compute_density_field.py`.
 - `export_snapshot_vtu.py`: streams snapshot particles to VTU (polyvertex) with optional stride/attributes; with `--density-field` it converts an existing 3-D grid HDF5 to VTI. It converts; it does not compute a grid.
-- `analyze_snapshot.py` / `analyze_snapshot_2d.py`: decimate/crop, run DisPerSE (Delaunay + MSE) to produce manifolds/skeletons, then convert NDnet/NDskl to VTK. They do not emit full density grids or raw particle VTUs.
+- `analyze_snapshot.py`: decimate/crop, run DisPerSE (Delaunay + MSE) to produce manifolds/skeletons, then convert NDnet/NDskl to VTK. Does not emit full density grids or raw particle VTUs.
 
 ### Typical combos
 

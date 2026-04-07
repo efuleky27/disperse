@@ -28,6 +28,8 @@ graph TD
 - **batch_crop_and_clip.py**: Tiles the snapshot into crops, runs `analyze_snapshot.py`, `ndtopo_stats.py`, and `batch_clip.py` per crop/slab; organizes outputs by crop/slab.
 - **aggregate_topology_points.py**: Combines per-point CSVs across crops; writes global stats, histogram CSV/PNG outputs, and composition/violin/box plots.
 - **spin_render.py**: Produces rotating PNG sequences (optionally stitched to MP4 with ffmpeg).
+- **redshift_evolution.py**: Generates a smooth interpolation movie (or slideshow) across redshift snapshots from one Delaunay VTU per snapshot; run via `pvpython`.
+- **compare_simulations.py**: Reads two simulations' `topology_stats.csv` files and produces side-by-side boxplots for direct comparison.
 - **stitch_slab_pngs.py**: Stitches per-slab PNGs into MP4s (per crop or combined across crops).
 
 ### Notes
@@ -35,16 +37,3 @@ graph TD
 - Naming: `<prefix>_sX_manifolds_<TAG>_S###.vtu`, `<prefix>_sX_arcs_<TAG>_S###.vtp`, `<prefix>_cluster_critpoints_<TAG>_S000.vtp`, `<prefix>_delaunay_S###.vtu`; unsmoothed conversions use `_S000`.
 - Use shifted Delaunay VTKs (non-`_S000`) for slabs to avoid origin offsets.
 
-### Technologies used
-- Hardware - Apple M1 Pro, 16GB, MacOS Tahoe
-- Terminal - interaction with scripts and command line utilities
-- Globus - data transfer via CLI
-- DisPerSE - Discrete Persistent Structures Extractor
-- Paraview - post-processing visualization engine
-- VS Code, Positron - IDE for python code development and documentation
-- python, pvpython - batch scripting for workflow orchestration, visualization
-- Quarto - documentation (markdown)
-- mermaid - flowchart generation (markdown)
-- Git, Github - version control, public sharing
-- ChatGPT-5.2, Codex, Github copilot - learning support, coding assistance
-- YouTube - learning resources
