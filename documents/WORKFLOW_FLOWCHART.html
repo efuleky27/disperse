@@ -200,8 +200,7 @@ ul.task-list li input[type="checkbox"] {
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
-<pre class="mermaid mermaid-js">%%{init: {'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}}}%%
-graph TD
+<pre class="mermaid mermaid-js">graph TD
     A[Data acquisition&lt;br/&gt;Download Quijote snapshot - HDF5] --&gt; B[analyze_snapshot.py&lt;br/&gt;Stage 1: Stream, crop, stride and target count&lt;br/&gt;Write NDfield - rebased crop]
     B --&gt; C[delaunay_3D&lt;br/&gt;Stage 2: Build Delaunay NDnet&lt;br/&gt;DTFE density]
     C --&gt; D[mse&lt;br/&gt;Stage 3: Persistence - nsig/cut&lt;br/&gt;Dump manifolds - walls&lt;br/&gt;Dump filament manifolds (optional)&lt;br/&gt;Export cluster critical points (maxima)&lt;br/&gt;Dump arcs - filaments]
