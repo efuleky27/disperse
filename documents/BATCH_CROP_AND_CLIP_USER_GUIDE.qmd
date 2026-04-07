@@ -1,7 +1,5 @@
 ---
 title: "`batch_crop_and_clip.py` User Guide"
-format:
-  html:
 ---
 
 ## `batch_crop_and_clip.py` User Guide

@@ -1,7 +1,5 @@
 ---
 title: "Readme"
-format:
-  html:
 ---
 
 ## DisPerSE Cosmic Web Pipeline

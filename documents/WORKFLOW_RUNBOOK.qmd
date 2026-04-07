@@ -1,7 +1,5 @@
 ---
 title: "Workflow Runbook"
-format:
-  html:
 ---
 
 ## Introduction

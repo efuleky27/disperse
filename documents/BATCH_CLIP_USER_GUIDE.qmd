@@ -1,7 +1,5 @@
 ---
 title: "`batch_clip.py` User Guide"
-format:
-  html:
 ---
 
 ## `batch_clip.py` User Guide

@@ -1,7 +1,5 @@
 ---
 title: "Other Tools User Guide"
-format:
-  html:
 ---
 
 ## `compute_density_field.py` User Guide

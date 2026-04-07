@@ -1,7 +1,5 @@
 ---
 title: "`ndtopo_stats.py` User Guide"
-format:
-  html:
 ---
 
 ## `ndtopo_stats.py` User Guide

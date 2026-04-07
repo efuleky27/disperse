@@ -1,7 +1,5 @@
 ---
 title: "`aggregate_topology_points.py` User Guide"
-format:
-  html:
 ---
 
 ## `aggregate_topology_points.py` User Guide

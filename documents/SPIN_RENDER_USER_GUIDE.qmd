@@ -1,7 +1,5 @@
 ---
 title: "`spin_render.py` User Guide"
-format:
-  html:
 ---
 
 ## `spin_render.py` User Guide

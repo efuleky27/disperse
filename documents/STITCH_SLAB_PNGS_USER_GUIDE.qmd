@@ -1,7 +1,5 @@
 ---
 title: "`stitch_slab_pngs.py` User Guide"
-format:
-  html:
 ---
 
 ## `stitch_slab_pngs.py` User Guide

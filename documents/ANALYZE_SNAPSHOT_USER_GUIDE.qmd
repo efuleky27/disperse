@@ -1,7 +1,5 @@
 ---
 title: "`analyze_snapshot.py` User Guide"
-format:
-  html:
 ---
 
 ## `analyze_snapshot.py` User Guide
