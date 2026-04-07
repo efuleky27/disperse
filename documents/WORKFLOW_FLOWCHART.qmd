@@ -3,7 +3,6 @@ title: "Workflow Flowchart"
 ---
 
 ```{mermaid}
-%%{init: {'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}}}%%
 graph TD
     A[Data acquisition<br/>Download Quijote snapshot - HDF5] --> B[analyze_snapshot.py<br/>Stage 1: Stream, crop, stride and target count<br/>Write NDfield - rebased crop]
     B --> C[delaunay_3D<br/>Stage 2: Build Delaunay NDnet<br/>DTFE density]
