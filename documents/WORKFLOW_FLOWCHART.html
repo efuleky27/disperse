@@ -203,8 +203,8 @@ ul.task-list li input[type="checkbox"] {
 <pre class="mermaid mermaid-js">graph TD
     A[Data acquisition&lt;br/&gt;Download Quijote snapshot - HDF5] --&gt; B[analyze_snapshot.py&lt;br/&gt;Stage 1: Stream, crop, stride and target count&lt;br/&gt;Write NDfield - rebased crop]
     B --&gt; C[delaunay_3D&lt;br/&gt;Stage 2: Build Delaunay NDnet&lt;br/&gt;DTFE density]
-    C --&gt; D[mse&lt;br/&gt;Stage 3: Persistence - nsig/cut&lt;br/&gt;Dump manifolds - walls&lt;br/&gt;Dump filament manifolds (optional)&lt;br/&gt;Export cluster critical points (maxima)&lt;br/&gt;Dump arcs - filaments]
-    D --&gt; E[netconv/skelconv&lt;br/&gt;Shift VTKs to global&lt;br/&gt;walls: manifolds&lt;br/&gt;filaments: arcs&lt;br/&gt;filament manifolds (optional)&lt;br/&gt;cluster critical points (optional)&lt;br/&gt;Delaunay: density]
+    C --&gt; D[mse&lt;br/&gt;Stage 3: Persistence - nsig/cut&lt;br/&gt;Dump manifolds - walls&lt;br/&gt;Dump filament manifolds - optional&lt;br/&gt;Export cluster critical points - maxima&lt;br/&gt;Dump arcs - filaments]
+    D --&gt; E[netconv/skelconv&lt;br/&gt;Shift VTKs to global&lt;br/&gt;walls: manifolds&lt;br/&gt;filaments: arcs&lt;br/&gt;filament manifolds - optional&lt;br/&gt;cluster critical points - optional&lt;br/&gt;Delaunay: density]
     E --&gt; F1[ndtopo_stats.py - optional&lt;br/&gt;Match IDs to Delaunay&lt;br/&gt;all topology types&lt;br/&gt;stats CSV]
 
     F1 --&gt; G[PNG outputs&lt;br/&gt;2D and 3D density, walls, filaments, composite]
