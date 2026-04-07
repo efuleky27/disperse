@@ -11,6 +11,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize gh-pages branch if missing
+        run: |
+          if ! git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            git checkout --orphan gh-pages
+            git rm -rf . --quiet
+            git commit --allow-empty -m "Initialize gh-pages branch"
+            git push origin gh-pages
+            git checkout main
+          fi
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
