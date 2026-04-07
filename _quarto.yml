@@ -1,5 +1,7 @@
 project:
   type: website
+  resources:
+    - sessions/export/MASTER_BY_DAY.html
 
 website:
   title: "DisPerSE Cosmic Web Pipeline"
@@ -34,6 +36,9 @@ website:
             text: Stitch Slab PNGs
           - href: documents/OTHER_TOOLS_USER_GUIDE.qmd
             text: Other Tools
+    right:
+      - href: sessions/export/MASTER_BY_DAY.html
+        text: AI Sessions
 
 format:
   html:
