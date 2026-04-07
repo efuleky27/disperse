@@ -153,6 +153,12 @@ ul.task-list li input[type="checkbox"] {
     </ul>
   </li>
 </ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../sessions/export/MASTER_BY_DAY.html"> 
+<span class="menu-text">AI Sessions</span></a>
+  </li>  
+</ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
@@ -200,13 +206,14 @@ ul.task-list li input[type="checkbox"] {
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
-<pre class="mermaid mermaid-js">graph TD
+<pre class="mermaid mermaid-js">%%{init: {'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}}}%%
+graph TD
     A[Data acquisition&lt;br/&gt;Download Quijote snapshot - HDF5] --&gt; B[analyze_snapshot.py&lt;br/&gt;Stage 1: Stream, crop, stride and target count&lt;br/&gt;Write NDfield - rebased crop]
     B --&gt; C[delaunay_3D&lt;br/&gt;Stage 2: Build Delaunay NDnet&lt;br/&gt;DTFE density]
     C --&gt; D[mse&lt;br/&gt;Stage 3: Persistence - nsig/cut&lt;br/&gt;Dump manifolds - walls&lt;br/&gt;Dump filament manifolds - optional&lt;br/&gt;Export cluster critical points - maxima&lt;br/&gt;Dump arcs - filaments]
     D --&gt; E[netconv/skelconv&lt;br/&gt;Shift VTKs to global&lt;br/&gt;walls: manifolds&lt;br/&gt;filaments: arcs&lt;br/&gt;filament manifolds - optional&lt;br/&gt;cluster critical points - optional&lt;br/&gt;Delaunay: density]
     E --&gt; F1[ndtopo_stats.py - optional&lt;br/&gt;Match IDs to Delaunay&lt;br/&gt;all topology types&lt;br/&gt;stats CSV]
-
+    %% E --&gt; F2[batch_clip.py&lt;br/&gt;Clip slab - axis/origin/thickness&lt;br/&gt;Flatten walls/filaments&lt;br/&gt;Average density&lt;br/&gt;Resample/grid]
     F1 --&gt; G[PNG outputs&lt;br/&gt;2D and 3D density, walls, filaments, composite]
     G --&gt; G2[MP4 outputs&lt;br/&gt;Spin renders-3D rotation&lt;br/&gt;Slab-stitch movies across z]
     E --&gt; H[batch_crop_and_clip.py&lt;br/&gt;Tile multiple crops/slabs&lt;br/&gt;Runs Stage 1-3 per crop&lt;br/&gt;Runs slab clips per slab]
