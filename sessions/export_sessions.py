@@ -461,6 +461,14 @@ STOPWORDS = {
 }
 
 
+def shift_headers(text, shift=3):
+    """Shift all markdown headers in text down by `shift` levels (max depth 6)."""
+    def replacer(m):
+        new_level = min(len(m.group(1)) + shift, 6)
+        return "#" * new_level + m.group(2)
+    return re.sub(r'^(#{1,6})([ \t])', replacer, text, flags=re.MULTILINE)
+
+
 def extract_keywords(messages, limit=10):
     counts = Counter()
     for msg in messages:
@@ -536,10 +544,9 @@ def render_master_by_day(all_messages):
                 dt = msg.get("ts_dt") or msg.get("session_start_dt")
                 time_label = dt.strftime("%H:%M:%SZ") if dt else "unknown-time"
                 role = msg.get("role") or "unknown"
-                header = f"{time_label} — {role}"
-                lines.append(header)
+                lines.append(f"#### {time_label} — {role}")
                 lines.append("")
-                lines.append(text)
+                lines.append(shift_headers(text, shift=4))
                 lines.append("")
             lines.append("</details>")
             lines.append("")
