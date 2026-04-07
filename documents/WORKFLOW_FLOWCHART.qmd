@@ -9,7 +9,7 @@ graph TD
     C --> D[mse<br/>Stage 3: Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump filament manifolds (optional)<br/>Export cluster critical points (maxima)<br/>Dump arcs - filaments]
     D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>filament manifolds (optional)<br/>cluster critical points (optional)<br/>Delaunay: density]
     E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>all topology types<br/>stats CSV]
-    %% E --> F2[batch_clip.py<br/>Clip slab - axis/origin/thickness<br/>Flatten walls/filaments<br/>Average density<br/>Resample/grid]
+
     F1 --> G[PNG outputs<br/>2D and 3D density, walls, filaments, composite]
     G --> G2[MP4 outputs<br/>Spin renders-3D rotation<br/>Slab-stitch movies across z]
     E --> H[batch_crop_and_clip.py<br/>Tile multiple crops/slabs<br/>Runs Stage 1-3 per crop<br/>Runs slab clips per slab]
