@@ -1,11 +1,6 @@
 ---
-title: "Readme"
-format:
-  html:
-    embed-resources: true
+title: "DisPerSE Cosmic Web Pipeline"
 ---
-
-## DisPerSE Cosmic Web Pipeline
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
@@ -15,16 +10,16 @@ This project automates the full workflow for extracting, analyzing, and visualiz
 
 | Document | What it covers |
 |---|---|
-| [Workflow Runbook](WORKFLOW_RUNBOOK.html) | End-to-end pipeline runbook: all stages, methods, rationale, troubleshooting |
-| [Workflow Flowchart](WORKFLOW_FLOWCHART.html) | Mermaid flowchart of the full pipeline |
-| [Analyze Snapshot](ANALYZE_SNAPSHOT_USER_GUIDE.html) | `analyze_snapshot.py` — full CLI reference |
-| [Batch Clip](BATCH_CLIP_USER_GUIDE.html) | `batch_clip.py` — slab clipping and PNG rendering |
-| [ND Topo Stats](ND_TOPO_STATS_USER_GUIDE.html) | `ndtopo_stats.py` — topology overlap stats |
-| [Batch Crop + Clip](BATCH_CROP_AND_CLIP_USER_GUIDE.html) | `batch_crop_and_clip.py` — full pipeline over tiled crops |
-| [Aggregate Topology Points](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html) | `aggregate_topology_points.py` + `compare_simulations.py` |
-| [Spin Render](SPIN_RENDER_USER_GUIDE.html) | `spin_render.py` + `redshift_evolution.py` |
-| [Stitch Slab PNGs](STITCH_SLAB_PNGS_USER_GUIDE.html) | `stitch_slab_pngs.py` — assemble slab PNGs into MP4s |
-| [Other Tools](OTHER_TOOLS_USER_GUIDE.html) | `compute_density_field.py`, `export_grid_vti.py`, `export_snapshot_vtu.py` |
+| [Workflow Runbook](documents/WORKFLOW_RUNBOOK.qmd) | End-to-end pipeline runbook: all stages, methods, rationale, troubleshooting |
+| [Workflow Flowchart](documents/WORKFLOW_FLOWCHART.qmd) | Mermaid flowchart of the full pipeline |
+| [Analyze Snapshot](documents/ANALYZE_SNAPSHOT_USER_GUIDE.qmd) | `analyze_snapshot.py` — full CLI reference |
+| [Batch Clip](documents/BATCH_CLIP_USER_GUIDE.qmd) | `batch_clip.py` — slab clipping and PNG rendering |
+| [ND Topo Stats](documents/ND_TOPO_STATS_USER_GUIDE.qmd) | `ndtopo_stats.py` — topology overlap stats |
+| [Batch Crop + Clip](documents/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd) | `batch_crop_and_clip.py` — full pipeline over tiled crops |
+| [Aggregate Topology Points](documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.qmd) | `aggregate_topology_points.py` + `compare_simulations.py` |
+| [Spin Render](documents/SPIN_RENDER_USER_GUIDE.qmd) | `spin_render.py` + `redshift_evolution.py` |
+| [Stitch Slab PNGs](documents/STITCH_SLAB_PNGS_USER_GUIDE.qmd) | `stitch_slab_pngs.py` — assemble slab PNGs into MP4s |
+| [Other Tools](documents/OTHER_TOOLS_USER_GUIDE.qmd) | `compute_density_field.py`, `export_grid_vti.py`, `export_snapshot_vtu.py` |
 
 ---
 
@@ -133,7 +128,7 @@ python scripts/analyze_snapshot.py \
 
 **Outputs:** `*_delaunay_S###.vtu`, `*_manifolds_<TAG>_S###.vtu`, `*_arcs_<ARC>_S###.vtp`, `*_filament_manifolds_<TAG>_S###.vtu`, `*_cluster_critpoints_<TAG>_S000.vtp/.vtu`, `*_summary_stats.csv`.
 
-→ Full reference: [Analyze Snapshot User Guide](ANALYZE_SNAPSHOT_USER_GUIDE.html)
+→ Full reference: [Analyze Snapshot User Guide](documents/ANALYZE_SNAPSHOT_USER_GUIDE.qmd)
 
 ---
 
@@ -160,7 +155,7 @@ python scripts/ndtopo_stats.py \
   --per-point-csv outputs/snap_010_subbox/snap_010_topology_points.csv
 ```
 
-→ Full reference: [ND Topo Stats User Guide](ND_TOPO_STATS_USER_GUIDE.html)
+→ Full reference: [ND Topo Stats User Guide](documents/ND_TOPO_STATS_USER_GUIDE.qmd)
 
 ---
 
@@ -193,7 +188,7 @@ pvpython scripts/batch_clip.py \
   --png-log-range -3 1
 ```
 
-→ Full reference: [Batch Clip User Guide](BATCH_CLIP_USER_GUIDE.html)
+→ Full reference: [Batch Clip User Guide](documents/BATCH_CLIP_USER_GUIDE.qmd)
 
 ---
 
@@ -243,7 +238,7 @@ outputs/quijote_batches/
   crop_x0-500_y500-1000_z0-100/ ...
 ```
 
-→ Full reference: [Batch Crop and Clip User Guide](BATCH_CROP_AND_CLIP_USER_GUIDE.html)
+→ Full reference: [Batch Crop and Clip User Guide](documents/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd)
 
 ---
 
@@ -278,7 +273,7 @@ python scripts/aggregate_topology_points.py \
 
 **Outputs:** aggregated `*_topology_stats.csv`, per-category histogram CSVs and PNGs, composition barchart, violin/box plots.
 
-→ Full reference: [Aggregate Topology Points User Guide](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html)
+→ Full reference: [Aggregate Topology Points User Guide](documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.qmd)
 
 ---
 
@@ -302,7 +297,7 @@ pvpython scripts/spin_render.py \
   --animate-elev-zoom --loops 2
 ```
 
-→ Full reference: [Spin Render User Guide](SPIN_RENDER_USER_GUIDE.html)
+→ Full reference: [Spin Render User Guide](documents/SPIN_RENDER_USER_GUIDE.qmd)
 
 ### `redshift_evolution.py` — redshift evolution movie
 
@@ -318,7 +313,7 @@ pvpython scripts/redshift_evolution.py \
   --slideshow --slideshow-duration 2.0
 ```
 
-→ Full reference: [Spin Render User Guide](SPIN_RENDER_USER_GUIDE.html) (includes `redshift_evolution.py` section)
+→ Full reference: [Spin Render User Guide](documents/SPIN_RENDER_USER_GUIDE.qmd) (includes `redshift_evolution.py` section)
 
 ### `compare_simulations.py` — side-by-side comparison
 
@@ -333,7 +328,7 @@ python scripts/compare_simulations.py \
   --output-dir outputs/comparison --output-prefix compare_z3_vs_z0
 ```
 
-→ Full reference: [Aggregate Topology Points User Guide](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html) (includes `compare_simulations.py` section)
+→ Full reference: [Aggregate Topology Points User Guide](documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.qmd) (includes `compare_simulations.py` section)
 
 ### `stitch_slab_pngs.py` — slab PNG → MP4
 
@@ -346,7 +341,7 @@ python scripts/stitch_slab_pngs.py \
   --output-dir outputs/quijote_batches/movies
 ```
 
-→ Full reference: [Stitch Slab PNGs User Guide](STITCH_SLAB_PNGS_USER_GUIDE.html)
+→ Full reference: [Stitch Slab PNGs User Guide](documents/STITCH_SLAB_PNGS_USER_GUIDE.qmd)
 
 ---
 
@@ -385,7 +380,7 @@ python scripts/export_snapshot_vtu.py \
   --target-count 2000000
 ```
 
-→ Full reference: [Other Tools User Guide](OTHER_TOOLS_USER_GUIDE.html)
+→ Full reference: [Other Tools User Guide](documents/OTHER_TOOLS_USER_GUIDE.qmd)
 
 ---
 
@@ -417,7 +412,7 @@ globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df
 
 ---
 
-## Build DisPerSE from Source (macOS)
+## Build DisPerSE from Source (macOS) {#build-disperse-from-source}
 
 **One-time prerequisites:**
 ```bash
@@ -496,20 +491,13 @@ ParaView can visualize particles and density grids, but does no topology extract
 ```
 disperse/
   scripts/          Python and pvpython scripts (the full pipeline)
-  docs/             Quarto documentation files (this readme + user guides)
+  documents/        Quarto documentation files (user guides)
   data/             Input snapshots and density grids (not version-controlled)
   outputs/          Pipeline run artifacts (not version-controlled)
   sessions/         AI conversation history
     2025/           Codex sessions (JSONL)
     claude/         Claude Code sessions (JSONL)
     export/         Rendered session exports (INDEX.md, MASTER.md, HTML)
-```
-
-Session exports are auto-updated whenever the Claude Code context window is compacted (via a PostCompact hook in `.claude/settings.json`). To sync manually:
-
-```bash
-cp ~/.claude/projects/-Users-fules-Documents-disperse/*.jsonl sessions/claude/ && \
-  python3 sessions/export_sessions.py
 ```
 
 ---

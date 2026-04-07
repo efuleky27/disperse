@@ -2,7 +2,6 @@
 title: "`ndtopo_stats.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `ndtopo_stats.py` User Guide

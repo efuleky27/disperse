@@ -1,0 +1,44 @@
+project:
+  type: website
+
+website:
+  title: "DisPerSE Cosmic Web Pipeline"
+  description: "Automated topology analysis of the cosmic web using DisPerSE"
+  repo-url: https://github.com/efuleky27/disperse
+  repo-actions: [issue]
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: Workflow
+        menu:
+          - href: documents/WORKFLOW_RUNBOOK.qmd
+            text: Workflow Runbook
+          - href: documents/WORKFLOW_FLOWCHART.qmd
+            text: Workflow Flowchart
+      - text: Guides
+        menu:
+          - href: documents/ANALYZE_SNAPSHOT_USER_GUIDE.qmd
+            text: Analyze Snapshot
+          - href: documents/BATCH_CLIP_USER_GUIDE.qmd
+            text: Batch Clip
+          - href: documents/ND_TOPO_STATS_USER_GUIDE.qmd
+            text: ND Topo Stats
+          - href: documents/BATCH_CROP_AND_CLIP_USER_GUIDE.qmd
+            text: Batch Crop + Clip
+          - href: documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.qmd
+            text: Aggregate Topology Points
+          - href: documents/SPIN_RENDER_USER_GUIDE.qmd
+            text: Spin Render
+          - href: documents/STITCH_SLAB_PNGS_USER_GUIDE.qmd
+            text: Stitch Slab PNGs
+          - href: documents/OTHER_TOOLS_USER_GUIDE.qmd
+            text: Other Tools
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap

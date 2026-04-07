@@ -2,10 +2,6 @@
 title: "Workflow Runbook"
 format:
   html:
-    embed-resources: true
-  pdf:
-    documentclass: article
-    toc: true
 ---
 
 ## Introduction

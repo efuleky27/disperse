@@ -2,7 +2,6 @@
 title: "Other Tools User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `compute_density_field.py` User Guide

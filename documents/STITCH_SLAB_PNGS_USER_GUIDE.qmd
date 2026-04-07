@@ -2,7 +2,6 @@
 title: "`stitch_slab_pngs.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `stitch_slab_pngs.py` User Guide

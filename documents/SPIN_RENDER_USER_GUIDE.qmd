@@ -2,7 +2,6 @@
 title: "`spin_render.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `spin_render.py` User Guide

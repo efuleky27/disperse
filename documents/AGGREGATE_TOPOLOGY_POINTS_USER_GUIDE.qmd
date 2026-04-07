@@ -2,7 +2,6 @@
 title: "`aggregate_topology_points.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `aggregate_topology_points.py` User Guide

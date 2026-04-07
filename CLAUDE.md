@@ -155,7 +155,7 @@ All scripts that open Quijote HDF5 files must import `hdf5plugin` before `h5py` 
 - The codebase **works but has never been cleaned** — expect some dead code, duplicated logic, and inconsistent naming across scripts (especially `ndtopo_stats.py` vs `aggregate_topology_points.py` category naming)
 - `aggregate_topology_points.py` has been significantly refactored: shared helpers extracted, schema detection consolidated, category system updated to sigma-algebra
 - Backup scripts (`aggregate_topology_points_old.py`, `aggregate_topology_points_031726.py`, `spin_render_layers.py`) in `/scripts/` are untracked — treat as reference only
-- Docs in `/docs/` describe intended behavior but may lag behind script changes — the scripts are the source of truth
+- Docs in `/documents/` describe intended behavior but may lag behind script changes — the scripts are the source of truth
 - Do not assume docs and scripts are consistent with each other
 
 ---

@@ -2,7 +2,6 @@
 title: "`analyze_snapshot.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `analyze_snapshot.py` User Guide

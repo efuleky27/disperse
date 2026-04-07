@@ -2,7 +2,6 @@
 title: "`batch_crop_and_clip.py` User Guide"
 format:
   html:
-    embed-resources: true
 ---
 
 ## `batch_crop_and_clip.py` User Guide
