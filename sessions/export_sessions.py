@@ -533,8 +533,9 @@ def render_master_by_day(all_messages):
             tool_badge = f" [{tool}]" if tool else ""
             time_label = format_time(session["first_dt"], session["session_time"])
             session_label = f"{time_label}{tool_badge} — `{session_id}` ({len(session['messages'])} msgs)"
-            lines.append("<details>")
-            lines.append(f"<summary>{session_label}</summary>")
+            # Use Quarto callout div — Pandoc handles these correctly unlike <details>
+            escaped_label = session_label.replace('"', "'")
+            lines.append(f'::: {{.callout-note collapse="true" title="{escaped_label}"}}')
             lines.append("")
             for msg in session["messages"]:
                 text = msg.get("text") or ""
@@ -548,7 +549,7 @@ def render_master_by_day(all_messages):
                 lines.append("")
                 lines.append(shift_headers(text, shift=4))
                 lines.append("")
-            lines.append("</details>")
+            lines.append(":::")
             lines.append("")
 
     return "\n".join(lines) + "\n"

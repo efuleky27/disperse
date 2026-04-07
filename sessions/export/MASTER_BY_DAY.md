@@ -1,6 +1,6 @@
 # AI Sessions Timeline
 
-Generated: `2026-04-07 18:48:53Z`
+Generated: `2026-04-07 18:59:49Z`
 
 ## 2025-11-11
 
@@ -9,8 +9,7 @@ Sessions: `2`  Messages: `74`
 ### Summary (keywords)
 Top keywords: `paraview`, `disperse`, `snap_010`, `file`, `visualize_walls_paraview`, `outputs`, `line`, `fules`, `vtu`, `pvpython`, `script`, `python`
 
-<details>
-<summary>02:08:42Z [codex] — `019a70ab-7d61-7680-bc86-ca7ae73efd5e` (20 msgs)</summary>
+::: {.callout-note collapse="true" title="02:08:42Z [codex] — `019a70ab-7d61-7680-bc86-ca7ae73efd5e` (20 msgs)"}
 
 #### 02:08:42Z — user
 
@@ -312,10 +311,9 @@ For example:
 
 You only need the GUI if you want interactive exploration; otherwise `pvpython` uses the same rendering engine headlessly, so all scripting can stay in VS Code. If you invoke it often, add that `bin` directory to your `PATH` (e.g., via shell profile) to just type `pvpython`.
 
-</details>
+:::
 
-<details>
-<summary>04:08:39Z [codex] — `019a7119-2771-7b60-ae75-79f20639f25b` (54 msgs)</summary>
+::: {.callout-note collapse="true" title="04:08:39Z [codex] — `019a7119-2771-7b60-ae75-79f20639f25b` (54 msgs)"}
 
 #### 04:08:39Z — user
 
@@ -823,7 +821,7 @@ Render()                  # redraws the view so you see it
 
 Once you run these, the GUI updates immediately; you can then keep adjusting display/thresholds interactively.
 
-</details>
+:::
 
 ## 2025-11-26
 
@@ -832,8 +830,7 @@ Sessions: `1`  Messages: `18`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `disperse`, `readme`, `file`, `test`, `snapshot`, `script`, `stride`, `visualize_walls_paraview`, `paraview`, `open`, `context`
 
-<details>
-<summary>19:44:00Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (18 msgs)</summary>
+::: {.callout-note collapse="true" title="19:44:00Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (18 msgs)"}
 
 #### 19:44:00Z — user
 
@@ -1086,7 +1083,7 @@ add a gitignore file that excludes all files typically not backed up to github
 
 Added a new `.gitignore` covering standard Python cache/build artifacts, virtualenv folders, logs/editor cruft, plus the large `data/` inputs and `outputs/` products so only source and configs sync to GitHub. Let me know if you want to keep any of those directories under version control instead.
 
-</details>
+:::
 
 ## 2025-12-06
 
@@ -1095,8 +1092,7 @@ Sessions: `1`  Messages: `16`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `disperse`, `outputs`, `readme`, `walls`, `jd1d`, `file`, `snap_010`, `snap_010_resampled`, `vtu`, `like`, `surfaces`
 
-<details>
-<summary>02:57:28Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (16 msgs)</summary>
+::: {.callout-note collapse="true" title="02:57:28Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (16 msgs)"}
 
 #### 02:57:28Z — user
 
@@ -1410,7 +1406,7 @@ Why are you using """ style comments instead of # style everywhere?
 
 The triple-quoted blocks appear only where Python expects a string literal—module docstring and function docstrings. They aren’t comments; they’re the idiomatic place to put user-facing descriptions of a module/function/class, and tools like `help()` or IDEs read them. Everywhere else I added inline explanations with `#` comments. Let me know if you’d prefer shorter docstrings or more inline `#` notes instead.
 
-</details>
+:::
 
 ## 2025-12-08
 
@@ -1419,8 +1415,7 @@ Sessions: `1`  Messages: `8`
 ### Summary (keywords)
 Top keywords: `file`, `disperse`, `done`, `outputs`, `hdf5`, `data`, `cosmoflow_z0`, `analyze_snapshot`, `fules`, `line`, `h5py`, `prepare_cosmoflow_snapshot`
 
-<details>
-<summary>06:45:06Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (8 msgs)</summary>
+::: {.callout-note collapse="true" title="06:45:06Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (8 msgs)"}
 
 #### 06:45:06Z — user
 
@@ -1692,7 +1687,7 @@ add detailed comments to the scripts/prepare_cosmoflow_snapshot.py script that e
 
 Added extensive plain-language docstrings and inline comments throughout `scripts/prepare_cosmoflow_snapshot.py` explaining how CosmoFlow cubes are sampled, how pseudo-particles are chosen/positioned, and how the Gadget-style snapshot is written (`scripts/prepare_cosmoflow_snapshot.py` lines 1‑150). The annotations now walk a reader through each decision without assuming coding or DisPerSE knowledge. No further changes needed; you can rerun the converter exactly as before.
 
-</details>
+:::
 
 ## 2025-12-10
 
@@ -1701,8 +1696,7 @@ Sessions: `1`  Messages: `6`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `scripts`, `periodic`, `btype`, `delaunay-btype`, `readme`, `delaunay_3d`, `active`, `file`, `want`, `request`, `boundary`
 
-<details>
-<summary>07:39:54Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (6 msgs)</summary>
+::: {.callout-note collapse="true" title="07:39:54Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (6 msgs)"}
 
 #### 07:39:54Z — user
 
@@ -1781,7 +1775,7 @@ python scripts/analyze_snapshot.py \
 
 `--delaunay-btype mirror` (the default) mirrors particles across the boundary, `smooth` adds guard particles, and `void` assumes zero density outside. Combine `--periodic` if you also want `delaunay_3D`/`mse` to reconnect cells across the box.
 
-</details>
+:::
 
 ## 2025-12-12
 
@@ -1790,8 +1784,7 @@ Sessions: `1`  Messages: `11`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `scripts`, `readme`, `netconv`, `skelconv`, `mse`, `file`, `run`, `snap_010`, `outputs`, `manual`, `active`
 
-<details>
-<summary>06:37:35Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (11 msgs)</summary>
+::: {.callout-note collapse="true" title="06:37:35Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (11 msgs)"}
 
 #### 06:37:35Z — user
 
@@ -1999,7 +1992,7 @@ python scripts/analyze_snapshot.py \
 ```
 Both commands run without touching other stages, so you can follow the Quick‑Start recipes exactly while still using a single driver script.
 
-</details>
+:::
 
 ## 2025-12-13
 
@@ -2008,8 +2001,7 @@ Sessions: `1`  Messages: `8`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `scripts`, `netconv`, `readme`, `skelconv`, `manifolds`, `active`, `file`, `argument`, `format`, `names`, `dump-manifolds`
 
-<details>
-<summary>06:26:55Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (8 msgs)</summary>
+::: {.callout-note collapse="true" title="06:26:55Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (8 msgs)"}
 
 #### 06:26:55Z — user
 
@@ -2122,7 +2114,7 @@ look through the script and see if you can improve it in any way. any need to re
 - Updated `--manifold-spec` to the clearer `--dump-manifolds`, and ensured the chosen spec shows up in summaries/output filenames so each artifact advertises both the manifold descriptor and any smoothing (`scripts/analyze_snapshot.py:235-273`, `scripts/analyze_snapshot.py:579-608`, `scripts/analyze_snapshot.py:816-872`).  
 - Verified each pipeline stage already has descriptive comments (e.g., Step 1–5 blocks in `main`) explaining what happens and how it ties to DisPerSE’s manifolds vs arcs workflow, so no further refactor was needed beyond the naming cleanup.
 
-</details>
+:::
 
 ## 2025-12-14
 
@@ -2131,8 +2123,7 @@ Sessions: `1`  Messages: `2`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `user`, `scripts`, `script`, `output`, `active`, `file`, `readme`, `comments`, `top`, `guide`, `options`
 
-<details>
-<summary>21:54:29Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (2 msgs)</summary>
+::: {.callout-note collapse="true" title="21:54:29Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (2 msgs)"}
 
 #### 21:54:29Z — user
 
@@ -2155,7 +2146,7 @@ now revise the explanatory comments in the script to make clear to the user what
 - Strengthened in-code documentation: each stage in `main` now carries explicit comments about what it does, how to skip/resume via the CLI, and why certain artifacts are generated; plus noted that the `summary` dict records parameter choices for the final receipt.
 - The script already groups the two object families clearly (manifolds ↔ networks/netconv, arcs ↔ skeletons/skelconv), so no structural refactor was needed beyond documenting those steps.
 
-</details>
+:::
 
 ## 2025-12-15
 
@@ -2164,8 +2155,7 @@ Sessions: `1`  Messages: `102`
 ### Summary (keywords)
 Top keywords: `scripts`, `file`, `analyze_snapshot`, `readme`, `hdf5`, `request`, `disperse`, `open`, `paraview`, `script`, `data`, `export_snapshot_vtp`
 
-<details>
-<summary>00:18:19Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (102 msgs)</summary>
+::: {.callout-note collapse="true" title="00:18:19Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (102 msgs)"}
 
 #### 00:18:19Z — user
 
@@ -3966,7 +3956,7 @@ So instead of converting the density HDF5 back into snapshot format, stick with:
 
 If your goal is “analyze the snapshot,” the Delaunay step in `analyze_snapshot.py` already produces the density estimate DisPerSE expects. The CIC grid is helpful for visualization or other analyses, but wrapping it back into the snapshot pipeline would just degrade the result.
 
-</details>
+:::
 
 ## 2025-12-17
 
@@ -3975,8 +3965,7 @@ Sessions: `1`  Messages: `47`
 ### Summary (keywords)
 Top keywords: `outputs`, `file`, `snap_010_blocked`, `snap_010`, `done`, `network`, `error`, `builddgcomponent_rec`, `analyze_snapshot`, `write`, `chunk`, `converting`
 
-<details>
-<summary>01:40:56Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (47 msgs)</summary>
+::: {.callout-note collapse="true" title="01:40:56Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (47 msgs)"}
 
 #### 01:40:56Z — user
 
@@ -5418,7 +5407,7 @@ Example command:
 
 This streams PartType1 from `snap_010.hdf5`, deposits onto a 256³ CIC grid (2 M particles per chunk), and writes an HDF5 file containing `DensityField/density` plus `DensityField/delta`. Use `--mass-override` if the snapshot’s `MassTable` entry is zero, or `--field-name` to rename the output dataset.
 
-</details>
+:::
 
 ## 2025-12-18
 
@@ -5427,8 +5416,7 @@ Sessions: `1`  Messages: `39`
 ### Summary (keywords)
 Top keywords: `scripts`, `analyze_snapshot_2d`, `file`, `analyze_snapshot`, `script`, `export_snapshot_user_guide`, `outputs`, `workflow`, `active`, `request`, `done`, `setup`
 
-<details>
-<summary>02:34:18Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (39 msgs)</summary>
+::: {.callout-note collapse="true" title="02:34:18Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (39 msgs)"}
 
 #### 02:34:18Z — user
 
@@ -6096,7 +6084,7 @@ Fastest way forward:
 
 Unfortunately there isn’t a direct fix inside our script—the segfault is in DisPerSE’s `mse`. The usual workaround is to trim the input (crop box, lower particle count) or run JD1d and U in separate passes so `mse` handles less work per invocation.
 
-</details>
+:::
 
 ## 2025-12-19
 
@@ -6105,8 +6093,7 @@ Sessions: `1`  Messages: `4`
 ### Summary (keywords)
 Top keywords: `done`, `outputs`, `snap_010_density_analysis`, `disperse`, `file`, `computing`, `fules`, `snap_010`, `mse`, `scripts`, `users`, `cells`
 
-<details>
-<summary>00:00:53Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (4 msgs)</summary>
+::: {.callout-note collapse="true" title="00:00:53Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (4 msgs)"}
 
 #### 00:00:53Z — user
 
@@ -6238,7 +6225,7 @@ generate a user guide similar to ANALYZE_SNAPSHOT_USER_GUIDE.md for analyze_snap
 
 Created `ANALYZE_SNAPSHOT_2D_USER_GUIDE.md`, mirroring the structure of the 3D guide. It explains every argument in `analyze_snapshot_2d.py`, highlights the projection/crop controls, and gives sample commands for a full slab analysis, cropped run, and conversion-only workflow, plus a stage-by-stage summary. Let me know if you’d like it cross-linked from the main README.
 
-</details>
+:::
 
 ## 2025-12-22
 
@@ -6247,8 +6234,7 @@ Sessions: `2`  Messages: `8`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot`, `file`, `scripts`, `analyze_snapshot_user_guide`, `disperse`, `mse`, `output`, `outputs`, `fules`, `open`, `ndnet`, `vtu`
 
-<details>
-<summary>04:34:00Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (4 msgs)</summary>
+::: {.callout-note collapse="true" title="04:34:00Z [codex] — `019ac1b1-b65c-7dc3-b63b-852119fbaed4` (4 msgs)"}
 
 #### 04:34:00Z — user
 
@@ -6337,10 +6323,9 @@ To keep that run from being killed:
 
 The script can’t catch or recover from SIGKILL because the process never returns—`mse` is terminated by the OS. So dialing back the number of particles (or running on a bigger machine) is the only way forward for that specific command.
 
-</details>
+:::
 
-<details>
-<summary>06:28:09Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (4 msgs)</summary>
+::: {.callout-note collapse="true" title="06:28:09Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (4 msgs)"}
 
 #### 06:28:09Z — user
 
@@ -6392,7 +6377,7 @@ Next steps to verify:
 2) `ls -lt <output-dir>` and confirm the VTU/VTK has an updated timestamp.
 3) Reload in ParaView (or open fresh) to ensure you’re viewing the new file.
 
-</details>
+:::
 
 ## 2025-12-24
 
@@ -6401,8 +6386,7 @@ Sessions: `1`  Messages: `32`
 ### Summary (keywords)
 Top keywords: `results`, `markdown`, `analyze_snapshot`, `scripts`, `analyze_snapshot_user_guide`, `file`, `open`, `pandoc`, `readme`, `ide`, `active`, `context`
 
-<details>
-<summary>01:32:56Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (32 msgs)</summary>
+::: {.callout-note collapse="true" title="01:32:56Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (32 msgs)"}
 
 #### 01:32:56Z — user
 
@@ -6877,7 +6861,7 @@ They serve different cases:
 
 So: use `export_snapshot_vtu.py` when you want raw particles (or a quick VTI from an existing grid). Use `compute_density_field.py` + `export_grid_vti.py` when you need to create a density grid from the snapshot and then visualize it.
 
-</details>
+:::
 
 ## 2025-12-25
 
@@ -6886,8 +6870,7 @@ Sessions: `1`  Messages: `20`
 ### Summary (keywords)
 Top keywords: `readme`, `docs`, `results`, `disperse`, `other_tools_user_guide`, `markdown`, `file`, `readme_bkp`, `gmp`, `mpfr`, `setup`, `open`
 
-<details>
-<summary>02:21:29Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (20 msgs)</summary>
+::: {.callout-note collapse="true" title="02:21:29Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (20 msgs)"}
 
 #### 02:21:29Z — user
 
@@ -7264,7 +7247,7 @@ Fixes (pick one):
   ```
 Any of these will make the figures show up.
 
-</details>
+:::
 
 ## 2025-12-26
 
@@ -7273,8 +7256,7 @@ Sessions: `1`  Messages: `17`
 ### Summary (keywords)
 Top keywords: `docs`, `readme`, `ndnet`, `disperse`, `results`, `other_tools_user_guide`, `file`, `scripts`, `vtu`, `basin`, `active`, `particle`
 
-<details>
-<summary>02:06:42Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (17 msgs)</summary>
+::: {.callout-note collapse="true" title="02:06:42Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (17 msgs)"}
 
 #### 02:06:42Z — user
 
@@ -7560,7 +7542,7 @@ Let me know which input you have:
 - If you can produce a `segs_ascii` (or similar per-vertex labels) from `mse/skelconv`, I’ll extend the script to ingest that and write exact `basin_id`.
 - If you want the custom NDnet gradient implementation instead, confirm which NDnet file and scalar field to use, and I’ll build it into a new script.
 
-</details>
+:::
 
 ## 2025-12-28
 
@@ -7569,8 +7551,7 @@ Sessions: `2`  Messages: `4`
 ### Summary (keywords)
 Top keywords: `ndnet`, `file`, `disperse`, `points`, `full`, `active`, `docs`, `results`, `qmd`, `walls`, `network`, `mesh`
 
-<details>
-<summary>03:07:52Z [codex] — `019b62ed-3975-7a00-828f-678342680037` (2 msgs)</summary>
+::: {.callout-note collapse="true" title="03:07:52Z [codex] — `019b62ed-3975-7a00-828f-678342680037` (2 msgs)"}
 
 #### 03:07:52Z — user
 
@@ -7591,10 +7572,9 @@ so what is saved in NDnet file because in this discription: "Full cube. Smoothed
 
 NDnet is DisPerSE’s binary “network” format, not a particle dump. Each NDnet stores the mesh built by DisPerSE: vertex coordinates plus connectivity for the simplices (edges/triangles/tets) and fields like the Morse function / DTFE density. In this workflow you get two flavors: the raw Delaunay NDnet from `delaunay_3D` (tet mesh over the sampled particles), and the manifolds NDnet from `mse` (walls and arcs encoded as simplices). No new point cloud is written. The “NDnet as points” caption just reflects how it was rendered in ParaView (showing the NDnet vertices with a point representation); the underlying file is still the full mesh with connectivity and scalar fields.
 
-</details>
+:::
 
-<details>
-<summary>04:44:55Z [codex] — `019b6346-13f2-7942-bb99-f8ec67bb9da7` (2 msgs)</summary>
+::: {.callout-note collapse="true" title="04:44:55Z [codex] — `019b6346-13f2-7942-bb99-f8ec67bb9da7` (2 msgs)"}
 
 #### 04:44:55Z — user
 
@@ -7618,7 +7598,7 @@ NDnet files are DisPerSE’s native binary “network” containers. They are no
 
 You generally don’t read NDnet directly; use `netconv` to export it (e.g., VTU) if you want to inspect the contents.
 
-</details>
+:::
 
 ## 2025-12-29
 
@@ -7627,8 +7607,7 @@ Sessions: `2`  Messages: `3`
 ### Summary (keywords)
 Top keywords: `manifolds`, `file`, `scripts`, `mse`, `ndnet`, `analyze_snapshot`, `parser`, `add_argument`, `help`, `docs`, `label_basin_assignment`, `need`
 
-<details>
-<summary>01:07:40Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (1 msgs)</summary>
+::: {.callout-note collapse="true" title="01:07:40Z [codex] — `019b44be-6d4c-7123-b97b-0fdba28224ce` (1 msgs)"}
 
 #### 01:07:40Z — user
 
@@ -7664,10 +7643,9 @@ Top keywords: `manifolds`, `file`, `scripts`, `mse`, `ndnet`, `analyze_snapshot`
 ###### My request for Codex:
 so i want to find what topological structure each point/particle belongs to (whether a wall or a filament) and chatgpt said that I need to enable vertex as mimum which it seems to be enabled in the code so why can't i view this data in the NDnet file (DO NOT CHANGE THE SCRIPT)
 
-</details>
+:::
 
-<details>
-<summary>01:07:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (2 msgs)</summary>
+::: {.callout-note collapse="true" title="01:07:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (2 msgs)"}
 
 #### 01:07:54Z — user
 
@@ -7711,7 +7689,7 @@ so i want to find what topological structure each point/particle belongs to (whe
 
 Next steps: rerun with `--mse-vertex-as-minima` if you need minima as vertices, then convert/view the manifolds; for particle labels, run the basin-label helper or a segmentation workflow.
 
-</details>
+:::
 
 ## 2025-12-30
 
@@ -7720,8 +7698,7 @@ Sessions: `1`  Messages: `12`
 ### Summary (keywords)
 Top keywords: `analyze_snapshot_user_guide`, `delaunay`, `analyze_snapshot`, `docs`, `ndnet`, `vertices`, `points`, `scripts`, `particle`, `file`, `dtfe`, `critical`
 
-<details>
-<summary>21:34:50Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)</summary>
+::: {.callout-note collapse="true" title="21:34:50Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)"}
 
 #### 21:34:50Z — user
 
@@ -7900,7 +7877,7 @@ In thsese latter NDnet files why do the coordinates i.e. manifold surface vertic
 - Skeleton nodes/segments: Similarly, filaments are arcs of the Morse–Smale complex connecting critical points (e.g., saddle to maximum). DisPerSE traces gradient integral lines through the Delaunay cells and stores the polyline geometry (nodes along the traced line) plus connectivity. Those nodes are sampled along the arc, not at particle locations.
 - Why different coordinates: The continuous DTFE field’s critical structure lives in the interior of tetrahedra/along edges, not just at vertices, so the computed manifolds/skeletons are embedded wherever the gradient flow and critical points occur in the continuous interpolation, yielding coordinates that differ from the original particle positions.
 
-</details>
+:::
 
 ## 2025-12-31
 
@@ -7909,8 +7886,7 @@ Sessions: `1`  Messages: `50`
 ### Summary (keywords)
 Top keywords: `batch_slice_project`, `scripts`, `file`, `applications`, `paraview-6`, `app`, `contents`, `paraview`, `label_basin_assignment`, `pvpython`, `slab`, `line`
 
-<details>
-<summary>00:24:14Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (50 msgs)</summary>
+::: {.callout-note collapse="true" title="00:24:14Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (50 msgs)"}
 
 #### 00:24:14Z — user
 
@@ -8986,7 +8962,7 @@ Try this quick sanity run to confirm geometry survives the slab:
 
 If the counts are still tiny after step 1, the clip bounds are missing the data; adjust `z0`/`thick` to span where your structures are (e.g., center the slab around the middle of the bbox or disable clipping by setting `thick` larger than the domain), rerun, and reopen.
 
-</details>
+:::
 
 ## 2026-01-01
 
@@ -8995,8 +8971,7 @@ Sessions: `1`  Messages: `208`
 ### Summary (keywords)
 Top keywords: `scripts`, `qmd`, `batch_clip`, `docs`, `file`, `batch_slice_project`, `analyze_snapshot`, `outputs`, `batch_clip_user_guide`, `analyze_snapshot_user_guide`, `disperse`, `walls`
 
-<details>
-<summary>00:03:39Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (208 msgs)</summary>
+::: {.callout-note collapse="true" title="00:03:39Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (208 msgs)"}
 
 #### 00:03:39Z — user
 
@@ -13004,7 +12979,7 @@ For terminal usage, nothing new needs to go into the guides, but here’s the cl
 
 If you add ParaView’s bin to PATH via the conda activate hook, you can omit the full path and just call `pvpython …`.
 
-</details>
+:::
 
 ## 2026-01-02
 
@@ -13013,8 +12988,7 @@ Sessions: `1`  Messages: `84`
 ### Summary (keywords)
 Top keywords: `qmd`, `scripts`, `ndnet`, `outputs`, `snap_010_cropped_test`, `batch_crop_and_clip`, `docs`, `disperse`, `batch_clip`, `ids`, `points`, `batch_clip_user_guide`
 
-<details>
-<summary>01:05:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (84 msgs)</summary>
+::: {.callout-note collapse="true" title="01:05:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (84 msgs)"}
 
 #### 01:05:53Z — user
 
@@ -14303,7 +14277,7 @@ Two options:
 
 After installing VTK, rerun; you should see nonzero ID counts and a filled CSV. The script now warns if VTK is unavailable.
 
-</details>
+:::
 
 ## 2026-01-03
 
@@ -14312,8 +14286,7 @@ Sessions: `1`  Messages: `152`
 ### Summary (keywords)
 Top keywords: `outputs`, `delaunay`, `snap_010_cropped_test`, `ndnet`, `vtu`, `filaments`, `walls`, `disperse`, `vtp`, `file`, `vtk`, `ids`
 
-<details>
-<summary>00:15:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (152 msgs)</summary>
+::: {.callout-note collapse="true" title="00:15:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (152 msgs)"}
 
 #### 00:15:53Z — user
 
@@ -16371,7 +16344,7 @@ ok it is looking a lot better but I feel like its still lacking a lot of detail 
 
 Expanded Stage 1 and 2 in `docs/TOPOLOGY_ANALYSIS_USER_GUIDE.qmd` with clearer purpose, step-by-step “how it works,” concise inputs, outputs, and why each stage matters. This should better connect the process to the goals.
 
-</details>
+:::
 
 ## 2026-01-04
 
@@ -16380,8 +16353,7 @@ Sessions: `1`  Messages: `162`
 ### Summary (keywords)
 Top keywords: `outputs`, `quijote_batches`, `file`, `vtu`, `s000`, `crop_x500-1000_y500-1000_z900-1000`, `disperse`, `delaunay`, `test`, `ndskl`, `fules`, `ndnet`
 
-<details>
-<summary>00:04:17Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (162 msgs)</summary>
+::: {.callout-note collapse="true" title="00:04:17Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (162 msgs)"}
 
 #### 00:04:17Z — user
 
@@ -17955,7 +17927,7 @@ I replaced the globbing in `batch_crop_and_clip.py` with deterministic filename 
 
 This should prevent picking rebased `_S000` files and keep naming consistent without relying on glob patterns.
 
-</details>
+:::
 
 ## 2026-01-05
 
@@ -17964,8 +17936,7 @@ Sessions: `1`  Messages: `30`
 ### Summary (keywords)
 Top keywords: `crop_x500-1000_y500-1000_z0-100`, `outputs`, `quijote_batches`, `ndnet`, `tag`, `vtu`, `filaments`, `run`, `walls`, `tags`, `manifolds`, `per`
 
-<details>
-<summary>00:06:21Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (30 msgs)</summary>
+::: {.callout-note collapse="true" title="00:06:21Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (30 msgs)"}
 
 #### 00:06:21Z — user
 
@@ -18188,7 +18159,7 @@ What do you mean by filament surface/thickness? How should i imagine/picture/vis
 
 Think of a filament as a tube. The **arc** is the thin curve running along the tube’s centerline (the spine). The **2a manifold** is the 2D surface that wraps around that spine—like the skin of the tube—capturing where the field descends toward the 1-saddle along two dimensions. Visualizing 2a manifolds shows you the filament’s cross-sectional footprint and how far it extends off the spine; visualizing arcs shows only the central line.
 
-</details>
+:::
 
 ## 2026-01-07
 
@@ -18197,8 +18168,7 @@ Sessions: `1`  Messages: `4`
 ### Summary (keywords)
 Top keywords: `quarto`, `render`, `flowchart`, `qmd`, `mermaid`, `error`, `workflow`, `syntax`, `document`, `data`, `docs`, `workflow_flowchart`
 
-<details>
-<summary>17:09:18Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (4 msgs)</summary>
+::: {.callout-note collapse="true" title="17:09:18Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (4 msgs)"}
 
 #### 17:09:18Z — user
 
@@ -18240,7 +18210,7 @@ flowchart TD
 
 Make sure there’s a blank line before the ```mermaid``` fence. If you still see a syntax error after that, please share the exact error text so I can fix the snippet accordingly. You’ll need Quarto installed locally (`brew install quarto`) to render.
 
-</details>
+:::
 
 ## 2026-01-11
 
@@ -18249,8 +18219,7 @@ Sessions: `1`  Messages: `79`
 ### Summary (keywords)
 Top keywords: `outputs`, `quijote_batches`, `crop_x500-1000_y500-1000_z0-100`, `disperse`, `paraview`, `range`, `spin_render`, `applications`, `paraview-6`, `app`, `contents`, `mp4`
 
-<details>
-<summary>16:45:19Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (79 msgs)</summary>
+::: {.callout-note collapse="true" title="16:45:19Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (79 msgs)"}
 
 #### 16:45:19Z — user
 
@@ -19462,7 +19431,7 @@ It follows the same structure as the other guides and covers:
 
 If you want it linked from any index/readme or added to `OTHER_TOOLS_USER_GUIDE.qmd`, say the word.
 
-</details>
+:::
 
 ## 2026-01-15
 
@@ -19471,8 +19440,7 @@ Sessions: `1`  Messages: `12`
 ### Summary (keywords)
 Top keywords: `git`, `name`, `old`, `force`, `push`, `bash`, `email`, `remote`, `new`, `github`, `mailmap`, `log`
 
-<details>
-<summary>07:43:22Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)</summary>
+::: {.callout-note collapse="true" title="07:43:22Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)"}
 
 #### 07:43:22Z — user
 
@@ -19712,7 +19680,7 @@ git log --format='%cn <%ce>' | sort -u
 
 Paste those if needed and I’ll adjust the callbacks.
 
-</details>
+:::
 
 ## 2026-01-18
 
@@ -19721,8 +19689,7 @@ Sessions: `1`  Messages: `27`
 ### Summary (keywords)
 Top keywords: `file`, `hdf5`, `parts`, `snapdir_000`, `script`, `snapshot`, `folder`, `input`, `bash`, `snap_000`, `parttype1`, `files`
 
-<details>
-<summary>04:45:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (27 msgs)</summary>
+::: {.callout-note collapse="true" title="04:45:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (27 msgs)"}
 
 #### 04:45:54Z — user
 
@@ -20181,7 +20148,7 @@ Yes. The script still accepts a **single HDF5 snapshot file** exactly as before.
 
 The only change is that it now also accepts **a folder** or **the first part file** for split snapshots. If you pass a normal single-file snapshot, it behaves the same as before.
 
-</details>
+:::
 
 ## 2026-01-19
 
@@ -20190,8 +20157,7 @@ Sessions: `1`  Messages: `50`
 ### Summary (keywords)
 Top keywords: `outputs`, `done`, `crop_x0-500_y0-500_z0-100`, `crop_x500-1000_y500-1000_z900-1000`, `quijote_batches_000`, `quijote_batches_000_test`, `file`, `ndnet`, `vtu`, `network`, `disperse`, `saddle`
 
-<details>
-<summary>03:50:17Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (50 msgs)</summary>
+::: {.callout-note collapse="true" title="03:50:17Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (50 msgs)"}
 
 #### 03:50:17Z — user
 
@@ -22128,7 +22094,7 @@ If Z bounds are near 0–100, a slab at 900 will be empty.
 
 Want me to add a warning that prints the bounds and slab range before clipping so it’s obvious when this happens?
 
-</details>
+:::
 
 ## 2026-01-20
 
@@ -22137,8 +22103,7 @@ Sessions: `1`  Messages: `73`
 ### Summary (keywords)
 Top keywords: `crop_x500-1000_y500-1000_z900-1000`, `outputs`, `quijote_batches_000_test_2fil`, `done`, `scripts`, `file`, `ndnet`, `cell`, `vtu`, `want`, `network`, `saddle`
 
-<details>
-<summary>00:04:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (73 msgs)</summary>
+::: {.callout-note collapse="true" title="00:04:53Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (73 msgs)"}
 
 #### 00:04:53Z — user
 
@@ -23487,7 +23452,7 @@ Outputs:
 
 If you want a different histogram bin count or to skip PNGs, add `--bins N` or `--no-plots`.
 
-</details>
+:::
 
 ## 2026-01-21
 
@@ -23496,8 +23461,7 @@ Sessions: `1`  Messages: `28`
 ### Summary (keywords)
 Top keywords: `polars`, `aggregate_topology_points`, `scripts`, `walls`, `streaming`, `disperse`, `docs`, `engine`, `filaments`, `python`, `exact`, `quantiles`
 
-<details>
-<summary>03:10:23Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (28 msgs)</summary>
+::: {.callout-note collapse="true" title="03:10:23Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (28 msgs)"}
 
 #### 03:10:23Z — user
 
@@ -23830,7 +23794,7 @@ Results:
 
 Note: the per‑crop counts above are **Delaunay vertex counts**, which can be slightly higher than the raw particle count in the crop because DisPerSE adds guard/boundary points. If you want the *exact* number of original particles inside each crop box, I can run a streaming count directly from the HDF5 coordinates (slower but exact).
 
-</details>
+:::
 
 ## 2026-01-22
 
@@ -23839,8 +23803,7 @@ Sessions: `1`  Messages: `18`
 ### Summary (keywords)
 Top keywords: `invalid`, `vist`, `x155f3e7a0`, `next`, `dropping`, `dts`, `pts`, `outputs`, `libx264`, `ffmpeg`, `quijote_batches_000_slabs`, `movies`
 
-<details>
-<summary>05:47:05Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (18 msgs)</summary>
+::: {.callout-note collapse="true" title="05:47:05Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (18 msgs)"}
 
 #### 05:47:05Z — user
 
@@ -24551,7 +24514,7 @@ If you want ~1 second per slab:
 
 Re-run after bumping `--frame-hold` or lowering `--fps`. If it still plays too fast, I can add a `--seconds-per-frame` option to make it explicit.
 
-</details>
+:::
 
 ## 2026-01-24
 
@@ -24560,8 +24523,7 @@ Sessions: `1`  Messages: `6`
 ### Summary (keywords)
 Top keywords: `added`, `scripts`, `docs`, `qmd`, `slab`, `outputs`, `filament`, `chat`, `vtk`, `stats`, `naming`, `new`
 
-<details>
-<summary>07:02:36Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (6 msgs)</summary>
+::: {.callout-note collapse="true" title="07:02:36Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (6 msgs)"}
 
 #### 07:02:36Z — user
 
@@ -24729,7 +24691,7 @@ Here’s the big‑picture summary in 5 points:
 5) **Documentation updated to match the new workflow**  
    User guides and project methods were revised or added to explain inputs, outputs, options, naming conventions, and the new analysis/visualization steps.
 
-</details>
+:::
 
 ## 2026-01-25
 
@@ -24738,8 +24700,7 @@ Sessions: `1`  Messages: `36`
 ### Summary (keywords)
 Top keywords: `filament`, `mp4`, `grid`, `delaunay`, `stage`, `outputs`, `mass`, `scalar`, `output`, `density`, `file`, `field`
 
-<details>
-<summary>05:01:47Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)</summary>
+::: {.callout-note collapse="true" title="05:01:47Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)"}
 
 #### 05:01:47Z — user
 
@@ -25063,7 +25024,7 @@ Now incorporate or link the workflow flowchart into the readme.
 
 Added a dedicated **Workflow Flowchart** section in `docs/readme.md` that links to `WORKFLOW_FLOWCHART.html`.
 
-</details>
+:::
 
 ## 2026-02-20
 
@@ -25072,8 +25033,7 @@ Sessions: `1`  Messages: `15`
 ### Summary (keywords)
 Top keywords: `name`, `cat`, `args`, `low`, `high`, `float`, `edges`, `plt`, `row`, `quijote_batches_000_noslab`, `aggregate_topology_points`, `count`
 
-<details>
-<summary>07:50:08Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (15 msgs)</summary>
+::: {.callout-note collapse="true" title="07:50:08Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (15 msgs)"}
 
 #### 07:50:08Z — user
 
@@ -25471,7 +25431,7 @@ python scripts/aggregate_topology_points.py \
 
 Note: `--hist-percentile-range` is now ignored for x‑axis bounds (since you asked for full support). If you want it to instead control the x‑axis again, I can add a flag like `--hist-full-support` and make the behavior explicit.
 
-</details>
+:::
 
 ## 2026-02-21
 
@@ -25480,8 +25440,7 @@ Sessions: `1`  Messages: `78`
 ### Summary (keywords)
 Top keywords: `table`, `category`, `plot`, `disperse`, `re-run`, `axis`, `violin`, `done`, `fules`, `script`, `max`, `line`
 
-<details>
-<summary>06:03:48Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (78 msgs)</summary>
+::: {.callout-note collapse="true" title="06:03:48Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (78 msgs)"}
 
 #### 06:03:48Z — user
 
@@ -25997,7 +25956,7 @@ Done. The violin + box plots now use **`field_value`** (same data, same layout, 
 
 Re-run the script with the same command.
 
-</details>
+:::
 
 ## 2026-02-22
 
@@ -26006,8 +25965,7 @@ Sessions: `1`  Messages: `117`
 ### Summary (keywords)
 Top keywords: `plot`, `scripts`, `box`, `histogram`, `category`, `bins`, `quijote_batches_000_noslab`, `disperse`, `violin`, `outputs`, `default`, `per`
 
-<details>
-<summary>00:04:18Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (117 msgs)</summary>
+::: {.callout-note collapse="true" title="00:04:18Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (117 msgs)"}
 
 #### 00:04:18Z — user
 
@@ -27197,7 +27155,7 @@ Please rerun the same command — the overlay should snap cleanly now.
 
 If you still see a shift, I can add an explicit `--png-align-debug` flag to print bounds and computed shifts.
 
-</details>
+:::
 
 ## 2026-02-23
 
@@ -27206,8 +27164,7 @@ Sessions: `1`  Messages: `12`
 ### Summary (keywords)
 Top keywords: `filaments`, `default`, `filament`, `composite`, `pngs`, `arc`, `manifolds`, `use`, `make`, `set`, `opacity`, `violin`
 
-<details>
-<summary>06:45:09Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)</summary>
+::: {.callout-note collapse="true" title="06:45:09Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)"}
 
 #### 06:45:09Z — user
 
@@ -27338,7 +27295,7 @@ What changed:
 
 Re-run your `aggregate_topology_points.py` command and the updated PNGs will be transparent.
 
-</details>
+:::
 
 ## 2026-02-24
 
@@ -27347,8 +27304,7 @@ Sessions: `1`  Messages: `17`
 ### Summary (keywords)
 Top keywords: `disperse`, `quijote_batches_000_noslab`, `fules`, `table`, `aggregate_topology_points`, `scripts`, `line`, `outputs`, `file`, `users`, `documents`, `combined`
 
-<details>
-<summary>20:25:33Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (17 msgs)</summary>
+::: {.callout-note collapse="true" title="20:25:33Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (17 msgs)"}
 
 #### 20:25:33Z — user
 
@@ -27725,7 +27681,7 @@ python scripts/aggregate_topology_points.py \
 
 If anything else fails, paste the traceback.
 
-</details>
+:::
 
 ## 2026-02-25
 
@@ -27734,8 +27690,7 @@ Sessions: `1`  Messages: `36`
 ### Summary (keywords)
 Top keywords: `scalar`, `quijote_batches_000_noslab`, `stats`, `disperse`, `outputs`, `aggregate_topology_points`, `violin`, `plot`, `scripts`, `histogram`, `composition`, `trim`
 
-<details>
-<summary>05:11:31Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)</summary>
+::: {.callout-note collapse="true" title="05:11:31Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)"}
 
 #### 05:11:31Z — user
 
@@ -28210,7 +28165,7 @@ The current **histogram‑based trim** is the low‑cost alternative.
 
 If you want exact trimming for a *single scalar* (e.g., `log_field_value`) that’s cheaper and more realistic, but exact **per‑scalar** trimming for all scalars is slow.
 
-</details>
+:::
 
 ## 2026-02-27
 
@@ -28219,8 +28174,7 @@ Sessions: `1`  Messages: `56`
 ### Summary (keywords)
 Top keywords: `loop`, `outputs`, `want`, `spin_render`, `loops`, `slow`, `frames`, `fps`, `background`, `inferno`, `use`, `output`
 
-<details>
-<summary>01:24:10Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (56 msgs)</summary>
+::: {.callout-note collapse="true" title="01:24:10Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (56 msgs)"}
 
 #### 01:24:10Z — user
 
@@ -29157,7 +29111,7 @@ Updated `docs/SPIN_RENDER_USER_GUIDE.qmd` with your exact multi‑loop example a
 
 If you want the HTML version regenerated too, tell me your preferred build command.
 
-</details>
+:::
 
 ## 2026-03-01
 
@@ -29166,8 +29120,7 @@ Sessions: `1`  Messages: `12`
 ### Summary (keywords)
 Top keywords: `zoom`, `surface`, `zoom-start`, `zoom-peak`, `camera`, `peak`, `points`, `radius`, `closer`, `spin_render`, `representation`, `radius-scale`
 
-<details>
-<summary>07:09:47Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)</summary>
+::: {.callout-note collapse="true" title="07:09:47Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (12 msgs)"}
 
 #### 07:09:47Z — user
 
@@ -29273,7 +29226,7 @@ It doesn’t change speed; it just moves the slow elevation/zoom wave left or ri
 
 Use it to place the big “push‑in” or low‑elevation moment at a specific part of the loop.
 
-</details>
+:::
 
 ## 2026-03-04
 
@@ -29282,8 +29235,7 @@ Sessions: `1`  Messages: `16`
 ### Summary (keywords)
 Top keywords: `cluster`, `manifolds`, `cell`, `vtu`, `ids`, `clusters`, `scripts`, `tag`, `run`, `want`, `file`, `disperse`
 
-<details>
-<summary>05:43:29Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (16 msgs)</summary>
+::: {.callout-note collapse="true" title="05:43:29Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (16 msgs)"}
 
 #### 05:43:29Z — user
 
@@ -29757,7 +29709,7 @@ If you want **Option A**, that’s simpler.
 
 Either way, J3a will then produce non‑zero cluster stats.
 
-</details>
+:::
 
 ## 2026-03-05
 
@@ -29766,8 +29718,7 @@ Sessions: `1`  Messages: `2`
 ### Summary (keywords)
 Top keywords: `crop_x500-1000_y0-500_z0-100`, `outputs`, `quijote_batches_000_slabs_w_clusters`, `done`, `ndnet`, `saddle`, `file`, `network`, `arcs`, `computing`, `vtu`, `faces`
 
-<details>
-<summary>17:15:24Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (2 msgs)</summary>
+::: {.callout-note collapse="true" title="17:15:24Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (2 msgs)"}
 
 #### 17:15:24Z — user
 
@@ -30466,7 +30417,7 @@ Do you want me to:
 
 If yes, I’ll proceed.
 
-</details>
+:::
 
 ## 2026-03-06
 
@@ -30475,8 +30426,7 @@ Sessions: `1`  Messages: `38`
 ### Summary (keywords)
 Top keywords: `crop_x500-1000_y0-500_z0-100`, `outputs`, `quijote_batches_000_slabs_w_clusters`, `done`, `file`, `saddle`, `ndnet`, `arcs`, `network`, `vtu`, `disperse`, `computing`
 
-<details>
-<summary>02:57:35Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (38 msgs)</summary>
+::: {.callout-note collapse="true" title="02:57:35Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (38 msgs)"}
 
 #### 02:57:35Z — user
 
@@ -32792,7 +32742,7 @@ update the documentation in the docs folder with the recent changes. also add ex
    ```
 2. If you prefer I regenerate the HTML for you, say the word and I’ll run it here.
 
-</details>
+:::
 
 ## 2026-03-10
 
@@ -32801,8 +32751,7 @@ Sessions: `1`  Messages: `46`
 ### Summary (keywords)
 Top keywords: `vtu`, `cluster`, `clusters`, `manifolds`, `tag`, `points`, `vtp`, `docs`, `want`, `critical`, `file`, `filament`
 
-<details>
-<summary>04:32:22Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (46 msgs)</summary>
+::: {.callout-note collapse="true" title="04:32:22Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (46 msgs)"}
 
 #### 04:32:22Z — user
 
@@ -33428,7 +33377,7 @@ So your slab folder will now contain:
 
 If you want a different point size or want to make it configurable, say the word.
 
-</details>
+:::
 
 ## 2026-03-12
 
@@ -33437,8 +33386,7 @@ Sessions: `1`  Messages: `37`
 ### Summary (keywords)
 Top keywords: `crop_x500-1000_y0-500_z0-100`, `outputs`, `quijote_batches_000_slabs_w_clusters`, `done`, `file`, `ndnet`, `vtu`, `saddle`, `vtp`, `network`, `arcs`, `info`
 
-<details>
-<summary>00:56:57Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (37 msgs)</summary>
+::: {.callout-note collapse="true" title="00:56:57Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (37 msgs)"}
 
 #### 00:56:57Z — user
 
@@ -34390,7 +34338,7 @@ If you want to make this switchable at runtime, use:
 ```
 (defaults to on).
 
-</details>
+:::
 
 ## 2026-03-13
 
@@ -34399,8 +34347,7 @@ Sessions: `1`  Messages: `4`
 ### Summary (keywords)
 Top keywords: `layers`, `shifted`, `walls`, `alignment`, `side`, `aligned`, `bounds`, `composite`, `overlay`, `density`, `still`, `see`
 
-<details>
-<summary>01:04:31Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (4 msgs)</summary>
+::: {.callout-note collapse="true" title="01:04:31Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (4 msgs)"}
 
 #### 01:04:31Z — user
 
@@ -34432,7 +34379,7 @@ This should keep layers aligned when needed, without dragging walls to the side.
 
 Please rerun your command. If it’s still off, I can add a debug print of the bounds and offsets used per layer so we can see exactly which layer is being shifted and by how much.
 
-</details>
+:::
 
 ## 2026-03-14
 
@@ -34441,8 +34388,7 @@ Sessions: `1`  Messages: `16`
 ### Summary (keywords)
 Top keywords: `plots`, `outputs`, `engine`, `want`, `categories`, `quijote_batches_000_w_clusters`, `scripts`, `aggregate_topology_points`, `per`, `memory`, `docs`, `aggregate`
 
-<details>
-<summary>03:45:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (16 msgs)</summary>
+::: {.callout-note collapse="true" title="03:45:54Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (16 msgs)"}
 
 #### 03:45:54Z — user
 
@@ -34668,7 +34614,7 @@ So the downside is **less precise distribution shapes** and quantiles. If you on
 
 If you want streaming but with higher precision, we can increase the reservoir sample size (at some memory cost).
 
-</details>
+:::
 
 ## 2026-03-15
 
@@ -34677,8 +34623,7 @@ Sessions: `1`  Messages: `53`
 ### Summary (keywords)
 Top keywords: `quijote_batches_000_w_clusters`, `outputs`, `disperse`, `scripts`, `aggregate_topology_points`, `plots`, `polars`, `violin`, `plot`, `fules`, `combined`, `python`
 
-<details>
-<summary>01:18:11Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (53 msgs)</summary>
+::: {.callout-note collapse="true" title="01:18:11Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (53 msgs)"}
 
 #### 01:18:11Z — user
 
@@ -35365,7 +35310,7 @@ Done. Count is now the last row in both violin and box plot tables.
 
 Re-run your aggregate command to regenerate the plots.
 
-</details>
+:::
 
 ## 2026-03-16
 
@@ -35374,8 +35319,7 @@ Sessions: `1`  Messages: `36`
 ### Summary (keywords)
 Top keywords: `vtu`, `delaunay`, `points`, `point`, `table`, `want`, `box`, `file`, `s000`, `violin`, `plots`, `plot`
 
-<details>
-<summary>00:36:32Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)</summary>
+::: {.callout-note collapse="true" title="00:36:32Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (36 msgs)"}
 
 #### 00:36:32Z — user
 
@@ -35713,7 +35657,7 @@ So if their sizes differ:
 
 If you want them to match exactly, the simplest is to delete old `*_delaunay*.vtu` files for the crop and re-run once. That guarantees both are from the same settings.
 
-</details>
+:::
 
 ## 2026-03-17
 
@@ -35722,8 +35666,7 @@ Sessions: `1`  Messages: `10`
 ### Summary (keywords)
 Top keywords: `point`, `size`, `points`, `values`, `density`, `scripts`, `spin_render`, `line`, `width`, `plot`, `want`, `iqr`
 
-<details>
-<summary>01:58:37Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (10 msgs)</summary>
+::: {.callout-note collapse="true" title="01:58:37Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (10 msgs)"}
 
 #### 01:58:37Z — user
 
@@ -35833,7 +35776,7 @@ No other behavior changed.
 
 If you want the script to support `Surface With Edges` explicitly (so line width is visible while keeping surface shading), I can add a `--representation surface_with_edges` option.
 
-</details>
+:::
 
 ## 2026-03-18
 
@@ -35842,8 +35785,7 @@ Sessions: `1`  Messages: `81`
 ### Summary (keywords)
 Top keywords: `field_value`, `want`, `outputs`, `is_wall`, `csv`, `log_field_value`, `disperse`, `is_cluster`, `categories`, `file`, `stats`, `log`
 
-<details>
-<summary>00:09:49Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (81 msgs)</summary>
+::: {.callout-note collapse="true" title="00:09:49Z [codex] — `019b67a5-bfb8-7bc2-9dab-29d5821a6342` (81 msgs)"}
 
 #### 00:09:49Z — user
 
@@ -37068,7 +37010,7 @@ If you want the tessellation (and volumes) to stay in kpc/h, run:
 
 (Keep `--input-unit kpc/h` unless your snapshot coordinates are already in Mpc/h.)
 
-</details>
+:::
 
 ## 2026-03-22
 
@@ -37077,8 +37019,7 @@ Sessions: `1`  Messages: `477`
 ### Summary (keywords)
 Top keywords: `read`, `run_polars`, `let`, `edit`, `categories`, `run_stream`, `grep`, `inline`, `three`, `block`, `filaments`, `lazy`
 
-<details>
-<summary>00:49:28Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (477 msgs)</summary>
+::: {.callout-note collapse="true" title="00:49:28Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (477 msgs)"}
 
 #### 00:49:28Z — user
 
@@ -38556,7 +38497,7 @@ Just one label to change — `COMPOSITION_COMPONENTS` has `"Filmans"` on line 24
 
 Done — just that one label changed from `"Filmans"` to `"Filaments"` in the composition bar chart. Everything else (CSV rows, histograms, category keys) stays as `filmans`.
 
-</details>
+:::
 
 ## 2026-03-23
 
@@ -38565,8 +38506,7 @@ Sessions: `1`  Messages: `101`
 ### Summary (keywords)
 Top keywords: `chart`, `sum`, `read`, `clusters`, `would`, `categories`, `filmans_not_clusters`, `bar`, `fix`, `values`, `category`, `total`
 
-<details>
-<summary>00:27:15Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (101 msgs)</summary>
+::: {.callout-note collapse="true" title="00:27:15Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (101 msgs)"}
 
 #### 00:27:15Z — user
 
@@ -38909,7 +38849,7 @@ instead could you just give another decimal value on the bar chart for the perce
 
 Done — both bar charts now display percentages to 2 decimal places (e.g. `34.85%` instead of `34.9%`). At that precision, rounding errors would only show up at the 0.01% level, which is negligible.
 
-</details>
+:::
 
 ## 2026-03-25
 
@@ -38918,8 +38858,7 @@ Sessions: `1`  Messages: `5`
 ### Summary (keywords)
 Top keywords: `test`, `distribution`, `whether`, `effect`, `given`, `data`, `tests`, `could`, `significance`, `categories`, `field_value`, `overlap`
 
-<details>
-<summary>01:59:42Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (5 msgs)</summary>
+::: {.callout-note collapse="true" title="01:59:42Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (5 msgs)"}
 
 #### 01:59:42Z — user
 
@@ -38966,7 +38905,7 @@ what are the hex codes for the diffferent colors used in the charts?
 | Walls | `#c73e4c` | Red |
 | Unassigned | `#5d126e` | Purple |
 
-</details>
+:::
 
 ## 2026-04-03
 
@@ -38975,8 +38914,7 @@ Sessions: `1`  Messages: `164`
 ### Summary (keywords)
 Top keywords: `edit`, `import`, `scripts`, `read`, `fix`, `step`, `type`, `optional`, `script`, `removed`, `bar`, `list`
 
-<details>
-<summary>22:42:41Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (164 msgs)</summary>
+::: {.callout-note collapse="true" title="22:42:41Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (164 msgs)"}
 
 #### 22:42:41Z — user
 
@@ -39493,7 +39431,7 @@ A few categories of things worth addressing, in rough order of value:
 
 Items 3 and 6 are the ones I'd prioritize — the `png_background` issue looks like a silent data integrity bug, and the `frange` drift would only manifest on runs with many slabs over a large volume.
 
-</details>
+:::
 
 ## 2026-04-04
 
@@ -39502,8 +39440,7 @@ Sessions: `1`  Messages: `198`
 ### Summary (keywords)
 Top keywords: `import`, `read`, `edit`, `except`, `scripts`, `path`, `float`, `try`, `tests`, `grep`, `analyze_snapshot`, `list`
 
-<details>
-<summary>00:35:15Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (198 msgs)</summary>
+::: {.callout-note collapse="true" title="00:35:15Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (198 msgs)"}
 
 #### 00:35:15Z — user
 
@@ -40131,7 +40068,7 @@ One thing worth noting: the bar chart computes `total` as the sum of just those 
 
 So yes, what's displayed matches your intent exactly.
 
-</details>
+:::
 
 ## 2026-04-05
 
@@ -40140,8 +40077,7 @@ Sessions: `1`  Messages: `271`
 ### Summary (keywords)
 Top keywords: `outputs`, `vtu`, `read`, `crop_x0-500_y0-500_z900-1000`, `edit`, `bash`, `redshift_evolution`, `crop_x0-500_y0-500_z900-1000_delaunay_s000`, `scripts`, `mass`, `particle`, `points`
 
-<details>
-<summary>02:00:02Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (271 msgs)</summary>
+::: {.callout-note collapse="true" title="02:00:02Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (271 msgs)"}
 
 #### 02:00:02Z — user
 
@@ -41364,7 +41300,7 @@ pvpython scripts/redshift_evolution.py \
     --output-prefix evolution_slideshow
 ```
 
-</details>
+:::
 
 ## 2026-04-07
 
@@ -41373,8 +41309,7 @@ Sessions: `1`  Messages: `42`
 ### Summary (keywords)
 Top keywords: `claude`, `sessions`, `code`, `codex`, `bash`, `files`, `session`, `user`, `added`, `updated`, `hook`, `postcompact`
 
-<details>
-<summary>07:24:53Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (42 msgs)</summary>
+::: {.callout-note collapse="true" title="07:24:53Z [claude-code] — `7766f39a-484a-4eed-973d-dc5bc26f7175` (42 msgs)"}
 
 #### 07:24:53Z — user
 
@@ -41673,5 +41608,5 @@ The sessions/claude copy is stale — it was copied at 21:27 (when compaction fi
 
 Let me re-run the sync manually now:
 
-</details>
+:::
 
