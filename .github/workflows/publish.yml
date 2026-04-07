@@ -17,6 +17,8 @@ jobs:
       - name: Initialize gh-pages branch if missing
         run: |
           if ! git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            git config user.email "quarto-github-actions-publish@example.com"
+            git config user.name "GitHub Actions"
             git checkout --orphan gh-pages
             git rm -rf . --quiet
             git commit --allow-empty -m "Initialize gh-pages branch"
