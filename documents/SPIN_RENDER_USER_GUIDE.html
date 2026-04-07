@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>spin_render.py User Guide – DisPerSE Cosmic Web Pipeline</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3bb95fcf13a991dba0133ab2e30b42a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Workflow</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-workflow">    
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_RUNBOOK.html">
+ <span class="dropdown-text">Workflow Runbook</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_FLOWCHART.html">
+ <span class="dropdown-text">Workflow Flowchart</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Guides</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-guides">    
+        <li>
+    <a class="dropdown-item" href="../documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">
+ <span class="dropdown-text">Analyze Snapshot</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/ND_TOPO_STATS_USER_GUIDE.html">
+ <span class="dropdown-text">ND Topo Stats</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Crop + Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">
+ <span class="dropdown-text">Aggregate Topology Points</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/SPIN_RENDER_USER_GUIDE.html">
+ <span class="dropdown-text">Spin Render</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/STITCH_SLAB_PNGS_USER_GUIDE.html">
+ <span class="dropdown-text">Stitch Slab PNGs</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/OTHER_TOOLS_USER_GUIDE.html">
+ <span class="dropdown-text">Other Tools</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#spin_render.py-user-guide" id="toc-spin_render.py-user-guide" class="nav-link active" data-scroll-target="#spin_render.py-user-guide"><code>spin_render.py</code> User Guide</a>
+  <ul class="collapse">
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
+  <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
+  <li><a href="#key-options" id="toc-key-options" class="nav-link" data-scroll-target="#key-options">Key options</a></li>
+  <li><a href="#animated-elevation-zoom" id="toc-animated-elevation-zoom" class="nav-link" data-scroll-target="#animated-elevation-zoom">Animated elevation + zoom</a></li>
+  <li><a href="#multi-loop-variation-seamless" id="toc-multi-loop-variation-seamless" class="nav-link" data-scroll-target="#multi-loop-variation-seamless">Multi-loop variation (seamless)</a></li>
+  <li><a href="#outputs" id="toc-outputs" class="nav-link" data-scroll-target="#outputs">Outputs</a></li>
+  <li><a href="#stitch-frames-to-mp4" id="toc-stitch-frames-to-mp4" class="nav-link" data-scroll-target="#stitch-frames-to-mp4">Stitch frames to MP4</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#example-multi-loop-smooth-modulation" id="toc-example-multi-loop-smooth-modulation" class="nav-link" data-scroll-target="#example-multi-loop-smooth-modulation">Example (multi-loop, smooth modulation)</a></li>
+  <li><a href="#more-examples-for-science-fair" id="toc-more-examples-for-science-fair" class="nav-link" data-scroll-target="#more-examples-for-science-fair">More Examples (for science fair)</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
+  </ul></li>
+  <li><a href="#redshift_evolution.py-user-guide" id="toc-redshift_evolution.py-user-guide" class="nav-link" data-scroll-target="#redshift_evolution.py-user-guide"><code>redshift_evolution.py</code> User Guide</a>
+  <ul class="collapse">
+  <li><a href="#what-it-does-1" id="toc-what-it-does-1" class="nav-link" data-scroll-target="#what-it-does-1">What it does</a></li>
+  <li><a href="#rendering-modes" id="toc-rendering-modes" class="nav-link" data-scroll-target="#rendering-modes">Rendering modes</a></li>
+  <li><a href="#requirements-1" id="toc-requirements-1" class="nav-link" data-scroll-target="#requirements-1">Requirements</a></li>
+  <li><a href="#cli-1" id="toc-cli-1" class="nav-link" data-scroll-target="#cli-1">CLI</a></li>
+  <li><a href="#key-options-1" id="toc-key-options-1" class="nav-link" data-scroll-target="#key-options-1">Key options</a></li>
+  <li><a href="#example-5-quijote-redshift-snapshots-one-crop" id="toc-example-5-quijote-redshift-snapshots-one-crop" class="nav-link" data-scroll-target="#example-5-quijote-redshift-snapshots-one-crop">Example (5 Quijote redshift snapshots, one crop)</a></li>
+  <li><a href="#slideshow-example" id="toc-slideshow-example" class="nav-link" data-scroll-target="#slideshow-example">Slideshow example</a></li>
+  <li><a href="#slideshow-example-10mpc-slab" id="toc-slideshow-example-10mpc-slab" class="nav-link" data-scroll-target="#slideshow-example-10mpc-slab">Slideshow example (10Mpc slab)</a></li>
+  <li><a href="#notes-1" id="toc-notes-1" class="nav-link" data-scroll-target="#notes-1">Notes</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><code>spin_render.py</code> User Guide</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="spin_render.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="spin_render.py-user-guide"><code>spin_render.py</code> User Guide</h2>
+<p>Use <code>scripts/spin_render.py</code> to render a rotating camera animation of a VTK dataset and write a PNG sequence suitable for stitching into a movie.</p>
+<section id="what-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<ul>
+<li>Loads a VTU/VTP/VTI/VTR dataset and orbits the camera around its bounds.</li>
+<li>Colors by a chosen point-data scalar (default <code>log_field_value</code>) using a ParaView colormap preset (default <code>Fast</code>).</li>
+<li>Writes numbered PNG frames that can be stitched into an MP4 with <code>ffmpeg</code>.</li>
+<li>Optionally animates elevation and zoom during the rotation.</li>
+</ul>
+</section>
+<section id="requirements" class="level3">
+<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<ul>
+<li>ParaView <code>pvpython</code> (e.g., <code>/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</code>).</li>
+<li>A readable VTK file (VTU/VTP/VTI/VTR).</li>
+<li><code>ffmpeg</code> (optional, for MP4 stitching).</li>
+</ul>
+<p>To keep <code>pvpython</code> on PATH whenever you activate the conda environment:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d"</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d/paraview_path.sh"</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">export _PV_OLD_PATH="$PATH"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d/paraview_path.sh"</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH="$_PV_OLD_PATH"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cli" class="level3">
+<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> <span class="op">&lt;</span>INPUT_VTK<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="op">&lt;</span>OUTPUT_PATH<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  [--resolution WIDTH HEIGHT] <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [--background white<span class="kw">|</span><span class="ex">black]</span> <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [--frames N] <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  [--elev DEG] <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [--zoom Z] <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  [--radius-scale R] <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  [--fps FPS] <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  [--scalar NAME] <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  [--range-min MIN <span class="at">--range-max</span> MAX] <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  [--percentile-range PLOW PHIGH] <span class="dt">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  [--colormap PRESET] <span class="dt">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">animate</span><span class="pp">-</span><span class="ss">elev</span><span class="pp">-</span><span class="ss">zoom</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  [--loops N] <span class="dt">\</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  [--slow-elev-amp DEG] <span class="dt">\</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  [--slow-zoom-amp Z] <span class="dt">\</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  [--slow-phase RAD] <span class="dt">\</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  [--azimuth-offset DEG] <span class="dt">\</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  [--representation surface<span class="kw">|</span><span class="ex">points]</span> <span class="dt">\</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  [--point-size N] <span class="dt">\</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="key-options" class="level3">
+<h3 class="anchored" data-anchor-id="key-options">Key options</h3>
+<ul>
+<li><code>--input</code> – VTK file to render.</li>
+<li><code>--output</code> – Output path used as the PNG prefix; the script writes <code>&lt;OUTPUT_BASE&gt;_0000.png</code>, <code>&lt;OUTPUT_BASE&gt;_0001.png</code>, …</li>
+<li>If <code>--output</code> ends with <code>.mp4</code>, the script also stitches the PNGs into that movie using <code>ffmpeg</code>.</li>
+<li><code>--resolution</code> – Output resolution in pixels (e.g., <code>1920 1080</code>).</li>
+<li><code>--background</code> – Background color (<code>white</code> or <code>black</code>).</li>
+<li><code>--frames</code> – Number of frames (default 180).</li>
+<li><code>--elev</code> – Camera elevation in degrees for the orbit (default 20).</li>
+<li><code>--zoom</code> – Zoom factor baked into the orbit radius (default 1.2).</li>
+<li><code>--radius-scale</code> – Orbit radius scale as a fraction of dataset extent.</li>
+<li><code>--fps</code> – FPS for MP4 stitching (default 30).</li>
+<li><code>--scalar</code> – Point-data array to color by (default <code>log_field_value</code>).</li>
+<li><code>--range-min/--range-max</code> – Fixed color range. If omitted, auto-range is used.</li>
+<li><code>--percentile-range</code> – Clamp the colormap to the given percentiles (e.g., <code>1 99</code>). Mutually exclusive with fixed range.</li>
+<li><code>--colormap</code> – ParaView preset name (default <code>Fast</code>).</li>
+<li><code>--overwrite</code> – Overwrite the MP4 if it already exists.</li>
+<li><code>--animate-elev-zoom</code> – Enables smooth sinusoidal elevation and zoom modulation.</li>
+<li><code>--loops</code> – Number of full rotations.</li>
+<li><code>--slow-elev-amp/--slow-zoom-amp</code> – Slow modulation amplitude across the full movie.</li>
+<li><code>--slow-phase</code> – Phase offset (radians) for slow modulation.</li>
+<li><code>--azimuth-offset</code> – Starting azimuth offset in degrees.</li>
+<li><code>--representation</code> – Render as <code>surface</code> or <code>points</code>.</li>
+<li><code>--point-size</code> – Point size when <code>--representation points</code> is used.</li>
+</ul>
+</section>
+<section id="animated-elevation-zoom" class="level3">
+<h3 class="anchored" data-anchor-id="animated-elevation-zoom">Animated elevation + zoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> <span class="op">&lt;</span>INPUT_VTK<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="op">&lt;</span>OUTPUT_PATH<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 180 <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span> 20 <span class="at">--elev-peak</span> 60 <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.6 <span class="at">--zoom-peak</span> 2.0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This animates elevation and zoom smoothly (sinusoidal) while the camera continues to rotate.</p>
+</section>
+<section id="multi-loop-variation-seamless" class="level3">
+<h3 class="anchored" data-anchor-id="multi-loop-variation-seamless">Multi-loop variation (seamless)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> <span class="op">&lt;</span>INPUT_VTK<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> <span class="op">&lt;</span>OUTPUT_PATH<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 450 <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 3 <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Slow modulation produces different loops while returning to the starting position at the end for seamless playback.</p>
+</section>
+<section id="outputs" class="level3">
+<h3 class="anchored" data-anchor-id="outputs">Outputs</h3>
+<ul>
+<li><code>&lt;OUTPUT_BASE&gt;_0000.png</code> … <code>&lt;OUTPUT_BASE&gt;_####.png</code> – PNG frames of the rotation.</li>
+</ul>
+</section>
+<section id="stitch-frames-to-mp4" class="level3">
+<h3 class="anchored" data-anchor-id="stitch-frames-to-mp4">Stitch frames to MP4</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-framerate</span> 30 <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-i</span> <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>_%04d.png <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-pix_fmt</span> yuv420p <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>OUTPUT_BASE<span class="op">&gt;</span>.mp4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="example" class="level3">
+<h3 class="anchored" data-anchor-id="example">Example</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/spin.mp4 <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 180 <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="example-multi-loop-smooth-modulation" class="level3">
+<h3 class="anchored" data-anchor-id="example-multi-loop-smooth-modulation">Example (multi-loop, smooth modulation)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/combined_for_video.vtu <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/combined_for_video_spin.mp4 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 1800 <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fps</span> 30 <span class="dt">\</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 3 <span class="dt">\</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--azimuth-offset</span><span class="op">=</span>-120 <span class="dt">\</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span><span class="op">=</span>-40 <span class="dt">\</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-peak</span> 80 <span class="dt">\</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.8 <span class="dt">\</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-peak</span> 2.0 <span class="dt">\</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">--radius-scale</span> 0.6 <span class="dt">\</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6 <span class="dt">\</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--overwrite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="more-examples-for-science-fair" class="level3">
+<h3 class="anchored" data-anchor-id="more-examples-for-science-fair">More Examples (for science fair)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/movie_loop/combined_components.vtu <span class="dt">\</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/movie_loop/combined_components_spin.mp4 <span class="dt">\</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="dt">\</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black <span class="dt">\</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 1800 <span class="dt">\</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fps</span> 30 <span class="dt">\</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 3 <span class="dt">\</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--azimuth-offset</span><span class="op">=</span>-120 <span class="dt">\</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span><span class="op">=</span>-40 <span class="dt">\</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-peak</span> 80 <span class="dt">\</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.8 <span class="dt">\</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-peak</span> 2.0 <span class="dt">\</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">--radius-scale</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--point-size</span> 4 <span class="dt">\</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--line-width</span> 2 <span class="dt">\</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--overwrite</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render_layers.py <span class="dt">\</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/four_layers <span class="dt">\</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/movie_loop/four_layers_spin.mp4  <span class="dt">\</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="dt">\</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black <span class="dt">\</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 1800 <span class="dt">\</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fps</span> 30 <span class="dt">\</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 5 <span class="dt">\</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">--azimuth-offset</span><span class="op">=</span>-120 <span class="dt">\</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span><span class="op">=</span>-40 <span class="dt">\</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-peak</span> 80 <span class="dt">\</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.8 <span class="dt">\</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-peak</span> 2.0 <span class="dt">\</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">--radius-scale</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">--point-size</span> 4 <span class="dt">\</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">--line-width</span> 2 <span class="dt">\</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">--overwrite</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/movie_loop/particle_cube.vtu <span class="dt">\</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/movie_loop/particle_cube.mp4 <span class="dt">\</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="dt">\</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="dt">\</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">--background</span> black <span class="dt">\</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 1800 <span class="dt">\</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fps</span> 30 <span class="dt">\</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="dt">\</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>  <span class="at">--loops</span> 1 <span class="dt">\</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>  <span class="at">--azimuth-offset</span><span class="op">=</span>-120 <span class="dt">\</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-start</span><span class="op">=</span>-40 <span class="dt">\</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">--elev-peak</span> 80 <span class="dt">\</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-start</span> 0.8 <span class="dt">\</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">--zoom-peak</span> 2.0 <span class="dt">\</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>  <span class="at">--radius-scale</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-elev-amp</span> 20 <span class="dt">\</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-zoom-amp</span> 0.5 <span class="dt">\</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slow-phase</span> 0.6 <span class="dt">\</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>  <span class="at">--representation</span> points <span class="dt">\</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>  <span class="at">--point-size</span> 2.5 <span class="dt">\</span></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>  <span class="at">--overwrite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="notes" class="level3">
+<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<ul>
+<li>Coloring uses <strong>point-data</strong> arrays. If your scalar is only in cell data, convert to point data before rendering.</li>
+<li>If colors look washed out, try a tighter range with <code>--range-min/--range-max</code>.</li>
+<li>If you’re re-running with different settings, change the output prefix or remove old <code>*_####.png</code> frames first.</li>
+<li>Default colormap is <code>Fast</code>; use <code>--colormap "Inferno (matplotlib)"</code> to match the rest of the pipeline.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="redshift_evolution.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="redshift_evolution.py-user-guide"><code>redshift_evolution.py</code> User Guide</h2>
+<p>Use <code>scripts/redshift_evolution.py</code> to generate a smooth movie showing the evolution of the cosmic web across redshift snapshots. Given one Delaunay VTU per redshift, the script linearly interpolates point positions and scalar values between consecutive snapshots and assembles a PNG sequence and MP4.</p>
+<p>Must be run via <code>pvpython</code>.</p>
+<section id="what-it-does-1" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does-1">What it does</h3>
+<ul>
+<li>Reads one Delaunay VTU per snapshot (earliest universe first).</li>
+<li>Optionally aligns particle ordering across snapshots using chained nearest-neighbour matching (via <code>scipy.spatial.cKDTree</code>), so interpolation traces the same physical particle rather than position-index correspondence.</li>
+<li>Interpolates both coordinates and scalar values linearly between consecutive snapshots.</li>
+<li>Renders each frame as a point cloud coloured by <code>log_field_value</code> (Inferno colormap, range −3 to 2 by default).</li>
+<li>Shows a redshift label (e.g.&nbsp;<code>z=3</code>) in the lower-left corner of each frame.</li>
+<li>Writes numbered PNGs and stitches them into an MP4 via <code>ffmpeg</code>.</li>
+</ul>
+</section>
+<section id="rendering-modes" class="level3">
+<h3 class="anchored" data-anchor-id="rendering-modes">Rendering modes</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mode</th>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Interpolation</td>
+<td><em>(default)</em></td>
+<td>Smoothly interpolates positions and scalars between snapshots. Requires <code>scipy</code>.</td>
+</tr>
+<tr class="even">
+<td>Cross-fade</td>
+<td><em>(automatic fallback)</em></td>
+<td>Opacity blending when point counts differ after alignment.</td>
+</tr>
+<tr class="odd">
+<td>Slideshow</td>
+<td><code>--slideshow</code></td>
+<td>No interpolation — holds each snapshot for <code>--frames-hold</code> frames then cuts. Skips alignment entirely.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="requirements-1" class="level3">
+<h3 class="anchored" data-anchor-id="requirements-1">Requirements</h3>
+<ul>
+<li><code>pvpython</code> (ParaView’s Python interpreter).</li>
+<li><code>scipy</code> (for proximity alignment; ships with recent ParaView builds).</li>
+<li><code>ffmpeg</code> (optional, for MP4 assembly).</li>
+</ul>
+</section>
+<section id="cli-1" class="level3">
+<h3 class="anchored" data-anchor-id="cli-1">CLI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/redshift_evolution.py <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--inputs</span> SNAP_000.vtu SNAP_001.vtu ... <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=2"</span> <span class="st">"z=1"</span> <span class="st">"z=0.5"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  [--scalar log_field_value] <span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  [--range-min <span class="at">-3.0</span> <span class="at">--range-max</span> 2.0] <span class="dt">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  [--colormap <span class="st">"Inferno (matplotlib)"</span>] <span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  [--frames-per-transition 30] <span class="dt">\</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  [--frames-hold 10] <span class="dt">\</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  [--point-size 2.0] <span class="dt">\</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  [--resolution 1920 1080] <span class="dt">\</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  [--background black<span class="kw">|</span><span class="ex">white]</span> <span class="dt">\</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  [--fps 30] <span class="dt">\</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  [--label-position X Y] <span class="dt">\</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  [--label-font-size 28] <span class="dt">\</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">align</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">slideshow</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">mp4</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="key-options-1" class="level3">
+<h3 class="anchored" data-anchor-id="key-options-1">Key options</h3>
+<ul>
+<li><code>--inputs</code> — VTU files in time order (earliest redshift first, i.e.&nbsp;<code>000</code> → <code>004</code>).</li>
+<li><code>--labels</code> — Redshift label per snapshot, shown in the lower-left corner. Must match <code>--inputs</code> count.</li>
+<li><code>--frames-per-transition</code> — Interpolated frames between each pair (default 30).</li>
+<li><code>--frames-hold</code> — Frames to pause on each snapshot (default 10).</li>
+<li><code>--scalar</code> — Point-data array to colour by (default <code>log_field_value</code>). Use <code>none</code> for solid colour.</li>
+<li><code>--range-min/--range-max</code> — Fixed colour range (default −3 / 2).</li>
+<li><code>--percentile-range</code> — Derive colour range from percentiles across all snapshots (overrides fixed range).</li>
+<li><code>--colormap</code> — ParaView preset name (default <code>Inferno (matplotlib)</code>).</li>
+<li><code>--no-align</code> — Skip proximity alignment; assume all files share the same point ordering.</li>
+<li><code>--slideshow</code> — Cut directly between snapshots with no interpolation or alignment.</li>
+<li><code>--no-mp4</code> — Keep PNGs only, skip ffmpeg.</li>
+</ul>
+</section>
+<section id="example-5-quijote-redshift-snapshots-one-crop" class="level3">
+<h3 class="anchored" data-anchor-id="example-5-quijote-redshift-snapshots-one-crop">Example (5 Quijote redshift snapshots, one crop)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/redshift_evolution.py <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--inputs</span> <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_000_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_001_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_002_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_003_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_004_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=2"</span> <span class="st">"z=1"</span> <span class="st">"z=0.5"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--range-min</span> <span class="at">-3.0</span> <span class="at">--range-max</span> 2.0 <span class="dt">\</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--frames-per-transition</span> 30 <span class="dt">\</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--frames-hold</span> 10 <span class="dt">\</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-dir</span> outputs/evolution <span class="dt">\</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-prefix</span> evolution</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="slideshow-example" class="level3">
+<h3 class="anchored" data-anchor-id="slideshow-example">Slideshow example</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/redshift_evolution.py <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--inputs</span> <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_000_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_001_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_002_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_003_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        outputs/quijote_batches_004_w_clusters_points/crop_x0-500_y0-500_z900-1000/crop_x0-500_y0-500_z900-1000_delaunay_S000.vtu <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=2"</span> <span class="st">"z=1"</span> <span class="st">"z=0.5"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--range-min</span> <span class="at">-3.0</span> <span class="at">--range-max</span> 1.0 <span class="dt">\</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--slideshow</span> <span class="dt">\</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--slideshow-duration</span> 2.0 <span class="dt">\</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-dir</span> outputs/evolution_slideshow_100 <span class="dt">\</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-prefix</span> evolution_slideshow_100</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="slideshow-example-10mpc-slab" class="level3">
+<h3 class="anchored" data-anchor-id="slideshow-example-10mpc-slab">Slideshow example (10Mpc slab)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/redshift_evolution.py <span class="dt">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--inputs</span> <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>        outputs/evolution_slideshow_10/particle_simulation_0.vtu <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        outputs/evolution_slideshow_10/particle_simulation_1.vtu <span class="dt">\</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        outputs/evolution_slideshow_10/particle_simulation_2.vtu <span class="dt">\</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        outputs/evolution_slideshow_10/particle_simulation_3.vtu <span class="dt">\</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        outputs/evolution_slideshow_10/particle_simulation_4.vtu <span class="dt">\</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=2"</span> <span class="st">"z=1"</span> <span class="st">"z=0.5"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--range-min</span> <span class="at">-3.0</span> <span class="at">--range-max</span> 1.0 <span class="dt">\</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--slideshow</span> <span class="dt">\</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--slideshow-duration</span> 2.0 <span class="dt">\</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-dir</span> outputs/evolution_slideshow_10 <span class="dt">\</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-prefix</span> evolution_slideshow_10</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="notes-1" class="level3">
+<h3 class="anchored" data-anchor-id="notes-1">Notes</h3>
+<ul>
+<li>The Delaunay VTU files produced by <code>analyze_snapshot.py</code> contain <code>log_field_value</code> (DTFE log-density) and a <code>true_index</code> array — these are the recommended input files.</li>
+<li>Proximity alignment uses chained nearest-neighbour matching (snapshot <em>i</em> matched to snapshot <em>i−1</em>), so small per-step displacements accumulate correctly across many redshifts. This requires <code>scipy</code>; if unavailable the script falls back to positional ordering with a warning.</li>
+<li>Total frame count = <code>(N−1) × (frames_hold + frames_per_transition) + frames_hold</code> for interpolation mode, or N frames (one per snapshot) for slideshow mode.</li>
+<li>Label position is given in normalized viewport coordinates (<code>--label-position X Y</code>); default is <code>0.45 0.05</code> (center-bottom). Requires ParaView 6.0+; position is ignored on older builds.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/efuleky27\.github\.io\/disperse\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

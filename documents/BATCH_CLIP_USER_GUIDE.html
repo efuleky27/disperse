@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>batch_clip.py User Guide – DisPerSE Cosmic Web Pipeline</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3bb95fcf13a991dba0133ab2e30b42a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Workflow</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-workflow">    
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_RUNBOOK.html">
+ <span class="dropdown-text">Workflow Runbook</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_FLOWCHART.html">
+ <span class="dropdown-text">Workflow Flowchart</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Guides</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-guides">    
+        <li>
+    <a class="dropdown-item" href="../documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">
+ <span class="dropdown-text">Analyze Snapshot</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/ND_TOPO_STATS_USER_GUIDE.html">
+ <span class="dropdown-text">ND Topo Stats</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Crop + Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">
+ <span class="dropdown-text">Aggregate Topology Points</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/SPIN_RENDER_USER_GUIDE.html">
+ <span class="dropdown-text">Spin Render</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/STITCH_SLAB_PNGS_USER_GUIDE.html">
+ <span class="dropdown-text">Stitch Slab PNGs</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/OTHER_TOOLS_USER_GUIDE.html">
+ <span class="dropdown-text">Other Tools</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#batch_clip.py-user-guide" id="toc-batch_clip.py-user-guide" class="nav-link active" data-scroll-target="#batch_clip.py-user-guide"><code>batch_clip.py</code> User Guide</a>
+  <ul class="collapse">
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
+  <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
+  <li><a href="#outputs-all-in---output-dir" id="toc-outputs-all-in---output-dir" class="nav-link" data-scroll-target="#outputs-all-in---output-dir">Outputs (all in <code>--output-dir</code>)</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><code>batch_clip.py</code> User Guide</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="batch_clip.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="batch_clip.py-user-guide"><code>batch_clip.py</code> User Guide</h2>
+<p>Use <code>scripts/batch_clip.py</code> to clip DisPerSE outputs to a slab, export clipped 3D data, and produce flattened 2D views plus a Z-averaged density map for ParaView or downstream tools.</p>
+<section id="what-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<ul>
+<li>Clips walls (manifolds), filaments, optional filament/cluster manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.</li>
+<li>Exports both the clipped 3D datasets and flattened 2D versions (walls/filaments/density scaled onto a plane, averaged over the slab depth - vti files).</li>
+<li>Keeps topology tags as point data (<code>topology_type</code>) for easy coloring.</li>
+</ul>
+</section>
+<section id="requirements" class="level3">
+<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<ul>
+<li>ParaView pvpython (e.g., <code>/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</code>).</li>
+<li>Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, optional cluster manifolds <strong>VTU or VTP</strong> (critical-point clusters are VTP), Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).</li>
+</ul>
+<p>To keep <code>pvpython</code> on PATH whenever you activate the conda environment:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d"</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/activate.d/paraview_path.sh"</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">export _PV_OLD_PATH="$PATH"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/Applications/ParaView-6.0.1.app/Contents/bin:$PATH"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$CONDA_PREFIX</span><span class="st">/etc/conda/deactivate.d/paraview_path.sh"</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH="$_PV_OLD_PATH"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cli" class="level3">
+<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> <span class="op">&lt;</span>INPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> <span class="op">&lt;</span>walls.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> <span class="op">&lt;</span>filaments.vtp<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [--filament-manifolds <span class="op">&lt;</span>filament_manifolds.vtu<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [--cluster-manifolds <span class="op">&lt;</span>clusters.vtu<span class="kw">|</span><span class="ex">.vtp</span><span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> <span class="op">&lt;</span>delaunay.vtu<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> {x<span class="kw">|</span><span class="ex">y</span><span class="kw">|</span><span class="ex">z}</span> <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-origin</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-thickness</span> <span class="op">&lt;</span>VALUE<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  [--resample-dims NX NY NZ] <span class="dt">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  [--scalar-name log_field_value] <span class="dt">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">save</span><span class="pp">-</span><span class="ss">pngs</span><span class="pp">]</span> <span class="dt">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  [--png-resolution WIDTH HEIGHT] <span class="dt">\</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  [--png-dpi 600] <span class="dt">\</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  [--png-colormap <span class="st">"Inferno (matplotlib)"</span>] <span class="dt">\</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  [--png-log-range <span class="at">-3</span> 1] <span class="dt">\</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  [--png-background white] <span class="dt">\</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  [--png-transparent<span class="kw">|</span><span class="ex">--no-png-transparent]</span> <span class="dt">\</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  [--png-align-composite<span class="kw">|</span><span class="ex">--no-png-align-composite]</span> <span class="dt">\</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  [--png-hide-orientation-axes<span class="kw">|</span><span class="ex">--no-png-hide-orientation-axes]</span> <span class="dt">\</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  [--png-lighting<span class="kw">|</span><span class="ex">--no-png-lighting]</span> <span class="dt">\</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  [--composite-filaments-source arcs<span class="kw">|</span><span class="ex">manifolds]</span> <span class="dt">\</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  [--png-percentile-range PLOW PHIGH]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>--walls/--filaments/--delaunay</code> are required; <code>--filament-manifolds</code> and <code>--cluster-manifolds</code> are optional. Relative paths are joined to <code>--input-dir</code>.</li>
+<li>Output extensions for each structure follow the input type: VTP inputs produce VTP outputs, VTU inputs produce VTU outputs.</li>
+<li><code>--output-dir</code> is required. Files are named with the prefix you supply.</li>
+<li><code>--slab-axis</code>, <code>--slab-origin</code>, <code>--slab-thickness</code> define the clip.</li>
+<li><code>--resample-dims</code> controls the regular grid used before clipping and averaging density (default 512 512 64).</li>
+<li><code>--scalar-name</code> chooses which point scalar to average for density (default <code>log_field_value</code>).</li>
+<li><code>--png-percentile-range</code> clamps PNG coloring to the given percentile range (e.g., <code>1 99</code>) for scalar renders (ignored if <code>--png-log-range</code> is set for <code>log_field_value</code>).</li>
+<li><code>--save-pngs</code> renders PNG snapshots of each output (3D and 2D) plus a composite overlay (density + walls + filaments). <code>--png-resolution WIDTH HEIGHT</code> sets base image size (default 1600×1200); <code>--png-dpi</code> scales it (default 600). <code>--composite-opacity</code> controls wall/filament overlay opacity in the composite (default 0.6).</li>
+<li><code>--png-colormap</code> chooses the ParaView preset for <code>log_field_value</code> (default Inferno). <code>--png-log-range</code> fixes the LUT range for <code>log_field_value</code> (default -3 to +1).</li>
+<li><code>--png-background</code> sets the render background (white or black). Note: the slab PNGs are currently rendered with a black background by default; use <code>--png-transparent</code> to hide the background. <code>--png-hide-orientation-axes</code> hides the axes gizmo (default on). <code>--png-lighting</code> toggles surface lighting (default on).</li>
+<li><code>--png-align-composite</code> aligns overlay bounds to the density bounds for composite PNGs. Disable with <code>--no-png-align-composite</code> if overlays already share a common coordinate frame.</li>
+<li><code>--composite-filaments-source</code> selects whether the composite overlay uses filament manifolds or arc filaments (default: manifolds).</li>
+<li>Expect input filenames to follow the simplified stems from <code>analyze_snapshot.py</code>, e.g., <code>*_manifolds_&lt;tag&gt;_S###.vtu</code>, <code>*_filament_manifolds_&lt;tag&gt;_S###.vtu</code>, <code>*_cluster_critpoints_&lt;tag&gt;_S000.vtp</code>, <code>*_arcs_&lt;arc&gt;_S###.vtp</code>, <code>*_delaunay.vtu</code>.</li>
+</ul>
+</section>
+<section id="outputs-all-in---output-dir" class="level3">
+<h3 class="anchored" data-anchor-id="outputs-all-in---output-dir">Outputs (all in <code>--output-dir</code>)</h3>
+<ul>
+<li><code>&lt;PREFIX&gt;_walls_3d.vtu</code> – clipped 3D walls (point-data <code>topology_type=1</code>).</li>
+<li><code>&lt;PREFIX&gt;_filaments_3d.vtp</code> – clipped 3D filaments (<code>topology_type=2</code>).</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds_3d.vtu</code> – clipped 3D filament manifolds (<code>topology_type=3</code>, if provided).</li>
+<li><code>&lt;PREFIX&gt;_clusters_3d.vtp</code> – clipped 3D cluster critical points (<code>topology_type=4</code>, if provided).</li>
+<li><code>&lt;PREFIX&gt;_walls.vtu</code> – walls flattened to the slab plane.</li>
+<li><code>&lt;PREFIX&gt;_filaments.vtp</code> – filaments flattened to the slab plane.</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds.vtu</code> – filament manifolds flattened to the slab plane (if provided).</li>
+<li><code>&lt;PREFIX&gt;_clusters.vtp</code> – cluster critical points flattened to the slab plane (if provided).</li>
+<li><code>&lt;PREFIX&gt;_density_3d.vtu</code> – clipped density slab (unstructured).</li>
+<li><code>&lt;PREFIX&gt;_density.vtu</code> – flattened density slab.</li>
+<li><code>&lt;PREFIX&gt;_density_3d.vti</code> – resampled slab (structured) for clean volume/slice rendering.</li>
+<li><code>&lt;PREFIX&gt;_density_avg.vti</code> – density averaged over slab depth.</li>
+<li><code>&lt;PREFIX&gt;_walls_filaments.vtm</code> – multiblock of the flattened walls + filaments.</li>
+<li><code>&lt;PREFIX&gt;_walls_filaments_...vtm</code> – multiblock including optional filament/cluster manifolds (suffixes are appended for each extra layer).</li>
+<li><code>&lt;PREFIX&gt;_summary_stats.csv</code> – per-array scalar stats (count, sum, mean, median, quartiles, min/max, std, bounding-box size/volume) for all readable VTU/VTP inputs/outputs.</li>
+<li>PNGs (when <code>--save-pngs</code> is used):
+<ul>
+<li><code>&lt;PREFIX&gt;_walls_3d.png</code>, <code>&lt;PREFIX&gt;_filaments_3d.png</code>, <code>&lt;PREFIX&gt;_filament_manifolds_3d.png</code> – 3D surfaces colored by <code>log_field_value</code>.</li>
+<li><code>&lt;PREFIX&gt;_walls_topology.png</code>, <code>&lt;PREFIX&gt;_walls_logfield.png</code> – 2D walls colored by <code>topology_type</code> / <code>log_field_value</code> (topology renders use white for the overlay).</li>
+<li><code>&lt;PREFIX&gt;_filaments_topology.png</code>, <code>&lt;PREFIX&gt;_filaments_logfield.png</code> – 2D filaments colored by <code>topology_type</code> / <code>log_field_value</code> (topology renders use white for the overlay).</li>
+<li><code>&lt;PREFIX&gt;_filament_manifolds_topology.png</code>, <code>&lt;PREFIX&gt;_filament_manifolds_logfield.png</code> – 2D filament manifolds colored by <code>topology_type</code> / <code>log_field_value</code> (topology renders use white for the overlay).</li>
+<li><code>&lt;PREFIX&gt;_clusters_topology.png</code>, <code>&lt;PREFIX&gt;_clusters_logfield.png</code> – 2D cluster points colored by <code>topology_type</code> / <code>log_field_value</code> (topology renders use white for the overlay).</li>
+<li><code>&lt;PREFIX&gt;_density_3d.png</code> – slice of the 3D density slab colored by <code>log_field_value</code>.</li>
+<li><code>&lt;PREFIX&gt;_density.png</code> – 2D flattened density colored by <code>log_field_value</code>.</li>
+<li><code>&lt;PREFIX&gt;_composite_density_walls_filaments.png</code> – composite: density base, walls light green, filaments red; overlay opacity controlled by <code>--composite-opacity</code>.</li>
+<li><code>&lt;PREFIX&gt;_composite_density_walls_filaments_*.png</code> – composite that also includes filament/cluster manifolds (suffixes appended when provided).</li>
+</ul></li>
+</ul>
+</section>
+<section id="example" class="level3">
+<h3 class="anchored" data-anchor-id="example">Example</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">PV_NO_MPI</span><span class="op">=</span>1 <span class="ex">/Applications/ParaView-6.0.1.app/Contents/bin/pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_cropped <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_arcs_U_S020.vtp <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filament-manifolds</span> snap_010_filament_manifolds_JE2a_S020.vtu <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--cluster-manifolds</span> snap_010_cluster_critpoints_JE0a_S000.vtp <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay.vtu <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_cropped/auto2d <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="notes" class="level3">
+<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<ul>
+<li>Use point-data arrays for coloring (<code>topology_type</code>, density scalars).</li>
+<li>If ParaView on macOS complains about MPI init, prefix the command with <code>PV_NO_MPI=1</code>.</li>
+<li>To view in ParaView, open the outputs, click Apply, switch to 2D (XY) view, and Reset Camera. Color walls/filaments by <code>topology_type</code>; color density by <code>scalar_name</code>.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/efuleky27\.github\.io\/disperse\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

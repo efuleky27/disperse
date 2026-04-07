@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>analyze_snapshot.py User Guide – DisPerSE Cosmic Web Pipeline</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3bb95fcf13a991dba0133ab2e30b42a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Workflow</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-workflow">    
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_RUNBOOK.html">
+ <span class="dropdown-text">Workflow Runbook</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/WORKFLOW_FLOWCHART.html">
+ <span class="dropdown-text">Workflow Flowchart</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Guides</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-guides">    
+        <li>
+    <a class="dropdown-item" href="../documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">
+ <span class="dropdown-text">Analyze Snapshot</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/ND_TOPO_STATS_USER_GUIDE.html">
+ <span class="dropdown-text">ND Topo Stats</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">
+ <span class="dropdown-text">Batch Crop + Clip</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">
+ <span class="dropdown-text">Aggregate Topology Points</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/SPIN_RENDER_USER_GUIDE.html">
+ <span class="dropdown-text">Spin Render</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/STITCH_SLAB_PNGS_USER_GUIDE.html">
+ <span class="dropdown-text">Stitch Slab PNGs</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../documents/OTHER_TOOLS_USER_GUIDE.html">
+ <span class="dropdown-text">Other Tools</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#analyze_snapshot.py-user-guide" id="toc-analyze_snapshot.py-user-guide" class="nav-link active" data-scroll-target="#analyze_snapshot.py-user-guide"><code>analyze_snapshot.py</code> User Guide</a>
+  <ul class="collapse">
+  <li><a href="#basic-inputs" id="toc-basic-inputs" class="nav-link" data-scroll-target="#basic-inputs">Basic Inputs</a></li>
+  <li><a href="#sampling-controls" id="toc-sampling-controls" class="nav-link" data-scroll-target="#sampling-controls">Sampling Controls</a></li>
+  <li><a href="#units" id="toc-units" class="nav-link" data-scroll-target="#units">Units</a></li>
+  <li><a href="#delaunay-stage" id="toc-delaunay-stage" class="nav-link" data-scroll-target="#delaunay-stage">Delaunay Stage</a></li>
+  <li><a href="#morsesmale-manifolds" id="toc-morsesmale-manifolds" class="nav-link" data-scroll-target="#morsesmale-manifolds">Morse–Smale / Manifolds</a></li>
+  <li><a href="#conversion-output-formats" id="toc-conversion-output-formats" class="nav-link" data-scroll-target="#conversion-output-formats">Conversion / Output Formats</a></li>
+  <li><a href="#workflow-control" id="toc-workflow-control" class="nav-link" data-scroll-target="#workflow-control">Workflow Control</a></li>
+  </ul></li>
+  <li><a href="#typical-runs" id="toc-typical-runs" class="nav-link" data-scroll-target="#typical-runs">Typical Runs</a>
+  <ul class="collapse">
+  <li><a href="#full-snapshot-pipeline" id="toc-full-snapshot-pipeline" class="nav-link" data-scroll-target="#full-snapshot-pipeline">Full Snapshot Pipeline</a></li>
+  <li><a href="#cropped-sub-volume" id="toc-cropped-sub-volume" class="nav-link" data-scroll-target="#cropped-sub-volume">Cropped Sub-volume</a></li>
+  <li><a href="#conversion-only-reuse-existing-ndnets" id="toc-conversion-only-reuse-existing-ndnets" class="nav-link" data-scroll-target="#conversion-only-reuse-existing-ndnets">Conversion-only (reuse existing NDnets)</a></li>
+  </ul></li>
+  <li><a href="#workflow-summary" id="toc-workflow-summary" class="nav-link" data-scroll-target="#workflow-summary">Workflow Summary</a>
+  <ul class="collapse">
+  <li><a href="#naming-conventions-vtkndnetndskl" id="toc-naming-conventions-vtkndnetndskl" class="nav-link" data-scroll-target="#naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><code>analyze_snapshot.py</code> User Guide</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="analyze_snapshot.py-user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="analyze_snapshot.py-user-guide"><code>analyze_snapshot.py</code> User Guide</h2>
+<p>This script automates a full DisPerSE workflow for Gadget/Quijote snapshots. It:</p>
+<ol type="1">
+<li><strong>Builds an NDfield catalog</strong> (optionally cropped/decimated).</li>
+<li><strong>Runs <code>delaunay_3D</code></strong> to reconstruct the Delaunay tessellation (with optional block decomposition).</li>
+<li><strong>Runs <code>mse</code></strong> to compute the Morse–Smale complex and dump manifolds/filaments.</li>
+<li><strong>Converts DisPerSE outputs</strong> to VTK-family formats (VTU/VTP/etc.) via <code>netconv</code>/<code>skelconv</code>.</li>
+<li>For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.</li>
+</ol>
+<p>Below is a description of every argument and the overall workflow.</p>
+<hr>
+<section id="basic-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="basic-inputs">Basic Inputs</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 43%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--input PATH</code></td>
+<td>HDF5 snapshot (Quijote-style). Defaults to <code>data/snap_010.hdf5</code>.</td>
+</tr>
+<tr class="even">
+<td><code>--output-dir DIR</code></td>
+<td>Folder for all generated artifacts. Created automatically.</td>
+</tr>
+<tr class="odd">
+<td><code>--output-prefix NAME</code></td>
+<td>Basename for files inside <code>output-dir</code>. Default based on input file name.</td>
+</tr>
+<tr class="even">
+<td><code>--parttype NAME</code></td>
+<td>Particle group to use (default <code>PartType1</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>--coords-input PATH</code></td>
+<td>Skip snapshot reading and reuse an existing NDfield (<code>ANDFIELD COORDS</code>).</td>
+</tr>
+<tr class="even">
+<td><code>--network-input PATH</code></td>
+<td>Reuse an existing Delaunay NDnet (skip <code>delaunay_3D</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>--manifolds-input PATH</code></td>
+<td>Reuse an existing manifolds NDnet (skip <code>mse</code>).</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sampling-controls" class="level3">
+<h3 class="anchored" data-anchor-id="sampling-controls">Sampling Controls</h3>
+<ul>
+<li><code>--target-count N</code> — approximate number of particles to keep. The script derives a stride.</li>
+<li><code>--stride N</code> — keep every Nth particle (overrides <code>--target-count</code>).</li>
+<li><code>--chunk-size N</code> — number of particles streamed per read (default 2M).</li>
+<li><code>--crop-box xmin ymin zmin xmax ymax zmax</code> — restricts the analysis to a rectangular sub-volume in the snapshot’s input units (<code>kpc/h</code> by default).</li>
+</ul>
+</section>
+<section id="units" class="level3">
+<h3 class="anchored" data-anchor-id="units">Units</h3>
+<ul>
+<li><code>--input-unit {kpc/h,mpc/h}</code> — units used by <code>--input</code>.</li>
+<li><code>--output-unit {kpc/h,mpc/h}</code> — units stored in downstream NDfields/VTK files.</li>
+</ul>
+</section>
+<section id="delaunay-stage" class="level3">
+<h3 class="anchored" data-anchor-id="delaunay-stage">Delaunay Stage</h3>
+<ul>
+<li><code>--periodic</code> — enforce periodic boundary conditions (crops are rebased to the origin internally; VTK outputs are shifted back). (THIS GENERATES ARTIFACTS, USE –delaunay-btype INSTEAD).</li>
+<li><code>--delaunay-blocks NCHUNKS NTHREADS</code> — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered <code>_G.NDnet</code>. (DON’T USE, THROWS ERROR).</li>
+<li><code>--delaunay-btype {mirror,periodic,smooth,void}</code> — Delaunay boundary extrapolation.</li>
+<li><code>--export-delaunay</code> — convert the raw Delaunay NDnet via <code>netconv</code>.
+<ul>
+<li><code>--delaunay-format ...</code> — output format for the above (defaults to VTU).</li>
+<li><code>--delaunay-smooth N</code> — smoothing iterations passed to <code>netconv</code>.</li>
+</ul></li>
+</ul>
+</section>
+<section id="morsesmale-manifolds" class="level3">
+<h3 class="anchored" data-anchor-id="morsesmale-manifolds">Morse–Smale / Manifolds</h3>
+<ul>
+<li><code>--mse-nsig s1 [s2 ...]</code> — persistence thresholds in sigma units (default <code>3.5</code>).</li>
+<li><code>--persistence-cut c1 [c2 ...]</code> — absolute persistence thresholds (override <code>--mse-nsig</code>).</li>
+<li><code>--mse-threads N</code> — OpenMP threads for <code>mse</code>.</li>
+<li><code>--mse-vertex-as-minima</code> — forward <code>-vertexAsMinima</code>.</li>
+<li><code>--dump-manifolds SPEC</code> — descriptor for <code>mse -dumpManifolds</code> (default <code>JD1d</code>).</li>
+<li><code>--dump-filament-manifolds TAG</code> — optional second manifolds tag (e.g., <code>JE2a</code>) to dump filament manifolds; runs <code>mse</code> a second time.</li>
+<li><code>--dump-clusters TAG</code> — export cluster critical points (maxima) using the given tag (e.g., <code>JE3a</code>).
+<ul>
+<li>The pipeline exports <strong>cluster critical points</strong> from the skeleton as a VTP/VTU point set. This is the primary cluster representation used downstream because DisPerSE’s 3‑manifold exports are volumetric and often empty.</li>
+<li>Cluster <code>log_field_value</code> is computed as <code>ln(field_value)</code> for consistency with the other structures.</li>
+</ul></li>
+<li><code>--dump-cluster-manifolds TAG</code> — deprecated alias for <code>--dump-clusters</code> (kept for backward compatibility).</li>
+<li><code>--dump-arcs CUID</code> — one or more <code>-dumpArcs</code> descriptors (e.g., <code>U</code>, <code>CUD</code>). Repeatable.
+<ul>
+<li>Note: DisPerSE concatenates multiple manifold tags into one output (e.g., <code>JE1a2a</code>). Use <code>--dump-filament-manifolds</code> for one extra tag, or run separate passes if you need more.</li>
+</ul></li>
+</ul>
+</section>
+<section id="conversion-output-formats" class="level3">
+<h3 class="anchored" data-anchor-id="conversion-output-formats">Conversion / Output Formats</h3>
+<ul>
+<li><code>--netconv-format ...</code> — how to convert manifolds (VTU/PLY/NDnet/etc.).</li>
+<li><code>--netconv-smooth N</code> — smoothing iterations for <code>netconv</code>.</li>
+<li><code>--skip-netconv</code> — leave manifolds in NDnet form.</li>
+<li><code>--skel-input TAG=PATH</code> — provide external NDskl files for conversion.</li>
+<li><code>--skelconv-format ...</code> — skeleton conversion output (default VTP).</li>
+<li><code>--skelconv-smooth N</code> — smoothing iterations for <code>skelconv</code>.</li>
+<li><code>--skip-skelconv</code> — skip skeleton conversion.</li>
+</ul>
+</section>
+<section id="workflow-control" class="level3">
+<h3 class="anchored" data-anchor-id="workflow-control">Workflow Control</h3>
+<ul>
+<li><code>--stop-after {ndfield,delaunay,mse}</code> — halt after the named stage.</li>
+<li><code>--keep-ndfield</code> — keep (rather than delete) the intermediate <code>coords_stride*.AND</code>.</li>
+<li><code>--disperse-bin-dir DIR</code> — directory containing DisPerSE binaries (<code>delaunay_3D</code>, <code>mse</code>, <code>netconv</code>, <code>skelconv</code>).</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="typical-runs" class="level2">
+<h2 class="anchored" data-anchor-id="typical-runs">Typical Runs</h2>
+<section id="full-snapshot-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="full-snapshot-pipeline">Full Snapshot Pipeline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_thinned <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 2_000_000 <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-btype</span> periodic <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-clusters</span> JE3a <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cropped-sub-volume" class="level3">
+<h3 class="anchored" data-anchor-id="cropped-sub-volume">Cropped Sub-volume</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500000 500000 100000 <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-btype</span> periodic <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 3.0 <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="conversion-only-reuse-existing-ndnets" class="level3">
+<h3 class="anchored" data-anchor-id="conversion-only-reuse-existing-ndnets">Conversion-only (reuse existing NDnets)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010 <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifolds-input</span> outputs/snap_010/snap_010_manifolds_JD1d.NDnet <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skel-input</span> U=outputs/snap_010/snap_010.U.NDskl <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-format</span> vtu <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-format</span> vtp <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 5</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="workflow-summary" class="level2">
+<h2 class="anchored" data-anchor-id="workflow-summary">Workflow Summary</h2>
+<ol type="1">
+<li><p><strong>NDfield Creation</strong><br>
+The script reads the snapshot (or uses <code>--coords-input</code>), applies optional cropping and decimation, and writes an <code>ANDFIELD COORDS</code> file. <code>--stop-after ndfield</code> lets you inspect this stage alone.</p></li>
+<li><p><strong>Delaunay Tessellation</strong><br>
+Runs <code>delaunay_3D</code> on the NDfield to produce an NDnet (<code>*.NDnet</code> or <code>*_G.NDnet</code> with block mode). Pass <code>--stop-after delaunay</code> to examine the tessellation.</p></li>
+<li><p><strong>Morse–Smale Analysis</strong><br>
+Runs <code>mse</code> on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with <code>--manifolds-input</code> or <code>--stop-after mse</code>.</p></li>
+</ol>
+<section id="naming-conventions-vtkndnetndskl" class="level3">
+<h3 class="anchored" data-anchor-id="naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</h3>
+<ul>
+<li>Delaunay: <code>&lt;prefix&gt;_delaunay_S###.vtu</code> (or <code>_S000</code> for unsmoothed conversions).</li>
+<li>Manifolds (walls): <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;_S###.vtu</code> (NDnet: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
+<li>Filament manifolds (optional): <code>&lt;prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;_S###.vtu</code> (NDnet from <code>mse</code>: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
+<li>Cluster critical points (recommended): <code>&lt;prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp</code> and <code>.vtu</code>.</li>
+<li>Skeletons: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;_S###.vtp</code> (NDskl: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;.NDskl</code>). A matching <code>.vtu</code> is also written for convenience.</li>
+<li>Persistence tags (<code>sX</code>) precede the role/tag; smoothing (<code>S###</code>) is appended by converters. DisPerSE tools sometimes emit <code>.S###</code>, but outputs are normalized to <code>_S###</code> during the pipeline.</li>
+</ul>
+<ol start="4" type="1">
+<li><p><strong>Conversion</strong><br>
+Converts manifolds (via <code>netconv</code>) and skeletons (via <code>skelconv</code>) into VTK family formats for visualization.</p></li>
+<li><p><strong>Summary &amp; Cleanup</strong><br>
+The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDnet, manifolds, converted meshes). Use <code>--keep-ndfield</code> to retain the coordinate catalog; otherwise it’s deleted automatically.</p></li>
+<li><p><strong>Validation</strong><br>
+Crop boxes are sanity-checked, projection parameters are normalized, and any reuse paths are expanded up front so errors surface early.</p></li>
+</ol>
+<p>With these options, users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/efuleky27\.github\.io\/disperse\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
