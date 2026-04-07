@@ -485,6 +485,17 @@ def render_master_by_day(all_messages):
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     lines.append(f"Generated: `{generated}`")
     lines.append("")
+    lines.append(
+        '<div style="margin:0.5em 0 1.5em;">'
+        '<button class="btn btn-sm btn-outline-secondary me-2" '
+        'onclick="document.querySelectorAll(\'.callout-body-container\').forEach('
+        'el => bootstrap.Collapse.getOrCreateInstance(el).show())">Expand all</button>'
+        '<button class="btn btn-sm btn-outline-secondary" '
+        'onclick="document.querySelectorAll(\'.callout-body-container\').forEach('
+        'el => bootstrap.Collapse.getOrCreateInstance(el).hide())">Collapse all</button>'
+        '</div>'
+    )
+    lines.append("")
 
     day_sessions = {}
     day_order = []
