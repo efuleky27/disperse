@@ -243,7 +243,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Use <code>scripts/batch_crop_and_clip.py</code> to automate two steps across many subvolumes: 1) Run <code>analyze_snapshot.py</code> on non-overlapping crop boxes of a snapshot. 2) For each crop, run <code>batch_clip.py</code> across multiple slab origins inside that crop.</p>
+<p>Use <code>scripts/batch_crop_and_clip.py</code> to automate two steps across many subvolumes:</p>
+<ol type="1">
+<li>Run <code>analyze_snapshot.py</code> on non-overlapping crop boxes of a snapshot.</li>
+<li>For each crop, run <code>batch_clip.py</code> across multiple slab origins inside that crop.</li>
+</ol>
 <p>Outputs are organized per-crop and per-slab so results do not overwrite.</p>
 <section id="what-it-does" class="level2">
 <h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
