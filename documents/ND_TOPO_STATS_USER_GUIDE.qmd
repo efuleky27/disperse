@@ -41,6 +41,7 @@ python scripts/ndtopo_stats.py \
   [--per-point-csv <per_point.csv>] \
   [--verbose]
 ```
+
 - `--write-vtk` converts NDnet/NDskl to unsmoothed VTU/VTP before reading; skips conversion if the target files already exist (including `_S000` or `.S000` variants).
 - `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, `--filament-manifolds-id-field`, and `--cluster-manifolds-id-field` choose which point-data array defines IDs. For cluster critical points, `true_index` is provided via nearest‑neighbor mapping to the Delaunay mesh.
 - `--*-cell-mode zero` keeps only `.0` cell IDs (0-cells) when `cell` is used; `all` uses `int(cell)` for every point.

@@ -57,6 +57,7 @@ pvpython scripts/batch_clip.py \
   [--composite-filaments-source arcs|manifolds] \
   [--png-percentile-range PLOW PHIGH]
 ```
+
 - `--walls/--filaments/--delaunay` are required; `--filament-manifolds` and `--cluster-manifolds` are optional. Relative paths are joined to `--input-dir`.
 - Output extensions for each structure follow the input type: VTP inputs produce VTP outputs, VTU inputs produce VTU outputs.
 - `--output-dir` is required. Files are named with the prefix you supply.

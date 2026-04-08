@@ -61,6 +61,7 @@ python scripts/batch_crop_and_clip.py \
   [--analyze-script path/to/analyze_snapshot.py] \
   [--clip-script path/to/batch_clip.py]
 ```
+
 - Crop sizes/ranges and slab params use the same units as `--input-unit` (default kpc/h). Outputs and slab origins passed to `batch_clip.py` are converted to `--output-unit` (default mpc/h).
 - `--slab-step` sets spacing between slab origins; `--slab-thickness` sets the clip depth for each slab.
 - `--resample-dims` sets the grid for density resampling inside `batch_clip.py` (default 500 500 100).
