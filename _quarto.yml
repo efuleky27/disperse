@@ -4,7 +4,7 @@ project:
     - index.qmd
     - documents/*.qmd
     - documents/readme.md
-    - sessions/export/MASTER_BY_DAY.md
+    - sessions/export/MASTER_BY_DAY.qmd
 
 website:
   title: "Disentangling the Cosmic Web"
@@ -40,7 +40,7 @@ website:
           - href: documents/OTHER_TOOLS_USER_GUIDE.qmd
             text: Other Tools
     right:
-      - href: sessions/export/MASTER_BY_DAY.md
+      - href: sessions/export/MASTER_BY_DAY.qmd
         text: AI Log
       - href: https://github.com/efuleky27/disperse
         text: GitHub

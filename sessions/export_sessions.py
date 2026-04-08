@@ -7,10 +7,7 @@ Scans:
 
 Writes to sessions/export/:
   - One .md per session
-  - INDEX.md
-  - MASTER.md
-  - MASTER_BY_DAY.md
-  - MASTER_BY_DAY.html
+  - MASTER_BY_DAY.qmd
 """
 import html
 import json
@@ -481,12 +478,17 @@ def extract_keywords(messages, limit=10):
 
 
 def render_master_by_day(all_messages):
-    lines = ["# AI Log", ""]
-    lines.append("A chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code.")
-    lines.append("")
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
-    lines.append(f"Generated: `{generated}`")
-    lines.append("")
+    lines = [
+        "---",
+        'title: "AI Log"',
+        "---",
+        "",
+        "A chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code. Use the magnifying glass in the navigation bar to search the full log.",
+        "",
+        f"Generated: `{generated}`",
+        "",
+    ]
 
     day_sessions = {}
     day_order = []
@@ -820,11 +822,8 @@ def main():
     with open(os.path.join(EXPORT_DIR, "MASTER.md"), "w", encoding="utf-8") as f:
         f.write(render_master(entries, all_messages))
 
-    with open(os.path.join(EXPORT_DIR, "MASTER_BY_DAY.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(EXPORT_DIR, "MASTER_BY_DAY.qmd"), "w", encoding="utf-8") as f:
         f.write(render_master_by_day(all_messages))
-
-    with open(os.path.join(EXPORT_DIR, "MASTER_BY_DAY.html"), "w", encoding="utf-8") as f:
-        f.write(render_master_by_day_html(all_messages))
 
     print(f"Wrote {len(entries)} sessions to {os.path.relpath(EXPORT_DIR, ROOT)}/")
     codex_count = sum(1 for e in entries if e.get("ai_tool") == "codex")
