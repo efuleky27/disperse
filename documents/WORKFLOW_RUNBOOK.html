@@ -355,7 +355,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Outputs (per crop)</strong> - Native (rebased coords): <code>&lt;prefix&gt;.NDnet</code>, <code>&lt;prefix&gt;_s*.NDskl</code>. - VTK (shifted to global): <code>&lt;prefix&gt;_delaunay_S###.vtu</code>, <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>&lt;prefix&gt;_arcs_&lt;ARC&gt;_S###.vtp</code> (plus <code>.vtu</code>), optional <code>&lt;prefix&gt;_filament_manifolds_&lt;TAG&gt;_S###.vtu</code>, and <code>&lt;prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp/.vtu</code>. - <code>&lt;prefix&gt;_summary_stats.csv</code> (VTK scalar stats).</p>
+<p><strong>Outputs (per crop)</strong></p>
+<ul>
+<li>Native (rebased coords): <code>&lt;prefix&gt;.NDnet</code>, <code>&lt;prefix&gt;_s*.NDskl</code>.</li>
+<li>VTK (shifted to global): <code>&lt;prefix&gt;_delaunay_S###.vtu</code>, <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>&lt;prefix&gt;_arcs_&lt;ARC&gt;_S###.vtp</code> (plus <code>.vtu</code>), optional <code>&lt;prefix&gt;_filament_manifolds_&lt;TAG&gt;_S###.vtu</code>, and <code>&lt;prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp/.vtu</code>.</li>
+<li><code>&lt;prefix&gt;_summary_stats.csv</code> (VTK scalar stats).</li>
+</ul>
 <p><strong>Why it matters</strong> Reduces the dataset to a safe size, builds the DTFE density that MSE needs, applies persistence filtering for meaningful walls/filaments, and delivers globally aligned VTKs for the next stages without periodic tiling artifacts in cropped runs.</p>
 <hr>
 </section>
@@ -373,7 +378,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 <li><p><em>Category aggregation</em> — Split Delaunay vertices into: <code>walls</code>, <code>filaments</code>, <code>walls_not_filaments</code>, <code>filaments_not_walls</code>, <code>shared_walls_filaments</code>, <code>unassigned</code>, plus filament-manifold variants (<code>filament_manifolds</code>, <code>shared_walls_filament_manifolds</code>, etc.) and cluster variants (<code>clusters</code>, <code>clusters_not_filaments</code>, <code>shared_walls_clusters</code>, <code>shared_walls_filaments_clusters</code>, etc.) when those inputs are provided. Aggregate <code>--scalar-fields</code> (default: <code>mass</code>, <code>field_value</code>, <code>log_field_value</code>) over each category.</p></li>
 </ol>
-<p><strong>Key flags</strong> - <code>--write-vtk</code> — convert NDnet/NDskl to unsmoothed VTU/VTP if needed - <code>--delaunay-id-field true_index</code>, <code>--walls-id-field true_index</code>, <code>--filaments-id-field cell</code> - <code>--delaunay-cell-mode all|zero</code>, <code>--walls-cell-mode all|zero</code>, <code>--filaments-cell-mode all|zero</code> - <code>--scalar-fields mass field_value log_field_value</code> - <code>--per-point-csv PATH</code> — write one row per Delaunay vertex with boolean membership flags (required for Stage 5 aggregation) - <code>--netconv-bin/--skelconv-bin</code> if conversion binaries are not on PATH</p>
+<p><strong>Key flags</strong></p>
+<ul>
+<li><code>--write-vtk</code> — convert NDnet/NDskl to unsmoothed VTU/VTP if needed</li>
+<li><code>--delaunay-id-field true_index</code>, <code>--walls-id-field true_index</code>, <code>--filaments-id-field cell</code></li>
+<li><code>--delaunay-cell-mode all|zero</code>, <code>--walls-cell-mode all|zero</code>, <code>--filaments-cell-mode all|zero</code></li>
+<li><code>--scalar-fields mass field_value log_field_value</code></li>
+<li><code>--per-point-csv PATH</code> — write one row per Delaunay vertex with boolean membership flags (required for Stage 5 aggregation)</li>
+<li><code>--netconv-bin/--skelconv-bin</code> if conversion binaries are not on PATH</li>
+</ul>
 <p><strong>Example (per crop):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="at">--verbose</span> <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay_S000.vtu <span class="dt">\</span></span>
@@ -385,7 +398,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/topology_stats.csv <span class="dt">\</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--per-point-csv</span> outputs/snap_010_subbox/topology_points.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Outputs</strong> - <code>&lt;prefix&gt;_topology_stats.csv</code> — counts and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> per category. - <code>&lt;prefix&gt;_topology_points.csv</code> (optional, <code>--per-point-csv</code>) — one row per Delaunay vertex with boolean membership flags and scalar values. Required input for Stage 5.</p>
+<p><strong>Outputs</strong></p>
+<ul>
+<li><code>&lt;prefix&gt;_topology_stats.csv</code> — counts and <code>&lt;scalar&gt;_sum</code>/<code>&lt;scalar&gt;_mean</code> per category.</li>
+<li><code>&lt;prefix&gt;_topology_points.csv</code> (optional, <code>--per-point-csv</code>) — one row per Delaunay vertex with boolean membership flags and scalar values. Required input for Stage 5.</li>
+</ul>
 <p><strong>Why it matters</strong> Shows how much mass/field value sits in overlapping vs unique topology membership, using the authoritative Delaunay values rather than interpolated manifold/skeleton scalars. Filament counts can exceed matched mass because many filament samples are interpolated along arcs and have no Delaunay node — this is expected.</p>
 <hr>
 </section>
@@ -420,7 +437,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Use <code>--no-png-transparent</code> if you want the background color to be visible in PNGs.</li>
 <li><code>--png-align-composite</code> (default) aligns composite overlays to density bounds; disable with <code>--no-png-align-composite</code> if overlays already share the same coordinate frame.</li>
 </ul>
-<p><strong>Outputs (per slab)</strong> - 3D clips: <code>_walls_3d.vtu</code>, <code>_filaments_3d.vtp</code>, <code>_density_3d.vtu/.vti</code> - 2D flats/averages: <code>_walls.vtu</code>, <code>_filaments.vtp</code>, <code>_walls_filaments.vtm</code>, <code>_density.vtu</code>, <code>_density_avg.vti</code> - <code>_summary_stats.csv</code> - PNGs if <code>--save-pngs</code></p>
+<p><strong>Outputs (per slab)</strong></p>
+<ul>
+<li>3D clips: <code>_walls_3d.vtu</code>, <code>_filaments_3d.vtp</code>, <code>_density_3d.vtu/.vti</code></li>
+<li>2D flats/averages: <code>_walls.vtu</code>, <code>_filaments.vtp</code>, <code>_walls_filaments.vtm</code>, <code>_density.vtu</code>, <code>_density_avg.vti</code></li>
+<li><code>_summary_stats.csv</code></li>
+<li>PNGs if <code>--save-pngs</code></li>
+</ul>
 <p><strong>Why it matters</strong> Provides ready-to-view 2D/3D slices aligned to a slab, and flattened 2D layers that make overlaps/absence between density, walls, and filaments easy to see at a glance.</p>
 <hr>
 </section>
@@ -434,7 +457,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p><em>Per-crop: stats</em> — Run <code>ndtopo_stats.py</code> to write <code>&lt;crop_prefix&gt;_topology_stats.csv</code>. If <code>--write-per-point-csv</code> is set, also writes <code>&lt;crop_prefix&gt;_topology_points.csv</code> for Stage 5 aggregation.</p></li>
 <li><p><em>Per-slab: clip</em> — March slab origins by <code>--slab-step</code> / <code>--slab-thickness</code>; call <code>batch_clip.py</code> with <code>--resample-dims</code> and <code>--scalar-name</code> to produce 3D/2D clips and PNGs. Use <code>--skip-slabs</code> to run analysis + stats only.</p></li>
 </ol>
-<p><strong>Inputs/tiling</strong> - <code>--snapshot</code>: full HDF5 snapshot. - <code>--crop-size DX DY DZ</code>: tile size in <code>--input-unit</code> (default kpc/h). - <code>--x-range/--y-range/--z-range</code>: overall region to tile; partial edge tiles are skipped. - Units follow <code>--input-unit</code> (default kpc/h); converted to <code>--output-unit</code> for slab origins (default mpc/h).</p>
+<p><strong>Inputs/tiling</strong></p>
+<ul>
+<li><code>--snapshot</code>: full HDF5 snapshot.</li>
+<li><code>--crop-size DX DY DZ</code>: tile size in <code>--input-unit</code> (default kpc/h).</li>
+<li><code>--x-range/--y-range/--z-range</code>: overall region to tile; partial edge tiles are skipped.</li>
+<li>Units follow <code>--input-unit</code> (default kpc/h); converted to <code>--output-unit</code> for slab origins (default mpc/h).</li>
+</ul>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
@@ -466,7 +495,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       &lt;prefix&gt;_summary_stats.csv
       PNGs if --save-pngs</code></pre>
 <p><strong>Why it matters</strong> Automates running the full pipeline over many tiles and slabs, organizing outputs cleanly per crop/slab and delivering both visuals and stats for downstream analysis.</p>
-<p><strong>Tips</strong> - Ensure <code>pvpython</code> is on PATH for slab clipping; ensure <code>vtkmodules</code> is available for VTK shifts/stats. - If a crop contains no particles, it is skipped. - Filament mass &lt; count is expected when many filament <code>cell</code> IDs don’t match Delaunay <code>true_index</code>.</p>
+<p><strong>Tips</strong></p>
+<ul>
+<li>Ensure <code>pvpython</code> is on PATH for slab clipping; ensure <code>vtkmodules</code> is available for VTK shifts/stats.</li>
+<li>If a crop contains no particles, it is skipped.</li>
+<li>Filament mass &lt; count is expected when many filament <code>cell</code> IDs don’t match Delaunay <code>true_index</code>.</li>
+</ul>
 <hr>
 </section>
 <section id="stage-5-aggregate_topology_points.py-cross-crop-aggregation" class="level2">
@@ -493,7 +527,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-percentile-range</span> .1 99.9 <span class="dt">\</span></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-fontscale</span> 1.2 <span class="dt">\</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 300</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Outputs</strong> - <code>&lt;prefix&gt;_topology_stats.csv</code> — aggregated stats across all crops. - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv/.png</code> — per-category histograms (with count and median line). - <code>&lt;prefix&gt;_filman_walls_composition.png</code> — composition barchart (clusters / filaments / walls / unassigned). - <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> and <code>_box.png</code> — distribution plots.</p>
+<p><strong>Outputs</strong></p>
+<ul>
+<li><code>&lt;prefix&gt;_topology_stats.csv</code> — aggregated stats across all crops.</li>
+<li><code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv/.png</code> — per-category histograms (with count and median line).</li>
+<li><code>&lt;prefix&gt;_filman_walls_composition.png</code> — composition barchart (clusters / filaments / walls / unassigned).</li>
+<li><code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> and <code>_box.png</code> — distribution plots.</li>
+</ul>
 <p><strong>Why it matters</strong> Gives a global view of how mass and density are distributed across cosmic-web categories for the full simulated volume, not just individual crops.</p>
 <hr>
 </section>

@@ -388,7 +388,20 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <h2 class="anchored" data-anchor-id="stage-1-topology-extraction-analyze_snapshot.py">Stage 1: Topology Extraction (<code>analyze_snapshot.py</code>)</h2>
 <p>Streams particle coordinates from an HDF5 snapshot, optionally crops and decimates, builds a Delaunay tessellation (DTFE density), runs the Morse–Smale complex to identify walls/filaments/clusters, and exports VTK files.</p>
 <p>For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.</p>
-<p><strong>Key flags:</strong> - <code>--input</code>: HDF5 snapshot path - <code>--crop-box xmin ymin zmin xmax ymax zmax</code>: restrict to a sub-volume (in <code>--input-unit</code>, default kpc/h) - <code>--stride N</code> / <code>--target-count N</code>: particle decimation - <code>--delaunay-btype periodic</code>: recommended over <code>--periodic</code> (avoids artifacts) - <code>--mse-nsig</code>: persistence threshold in sigma units (higher = fewer, more significant features) - <code>--dump-manifolds JE1a</code>: wall manifolds - <code>--dump-filament-manifolds JE2a</code>: optional filament-bounding manifolds - <code>--dump-clusters JE3a</code>: cluster critical points (maxima) - <code>--dump-arcs U</code>: filament arcs (1D skeleton) - <code>--netconv-smooth 20 --skelconv-smooth 20</code>: smoothing passes on export - <code>--export-delaunay</code>: also export the Delaunay tessellation as VTU</p>
+<p><strong>Key flags:</strong></p>
+<ul>
+<li><code>--input</code>: HDF5 snapshot path</li>
+<li><code>--crop-box xmin ymin zmin xmax ymax zmax</code>: restrict to a sub-volume (in <code>--input-unit</code>, default kpc/h)</li>
+<li><code>--stride N</code> / <code>--target-count N</code>: particle decimation</li>
+<li><code>--delaunay-btype periodic</code>: recommended over <code>--periodic</code> (avoids artifacts)</li>
+<li><code>--mse-nsig</code>: persistence threshold in sigma units (higher = fewer, more significant features)</li>
+<li><code>--dump-manifolds JE1a</code>: wall manifolds</li>
+<li><code>--dump-filament-manifolds JE2a</code>: optional filament-bounding manifolds</li>
+<li><code>--dump-clusters JE3a</code>: cluster critical points (maxima)</li>
+<li><code>--dump-arcs U</code>: filament arcs (1D skeleton)</li>
+<li><code>--netconv-smooth 20 --skelconv-smooth 20</code>: smoothing passes on export</li>
+<li><code>--export-delaunay</code>: also export the Delaunay tessellation as VTU</li>
+</ul>
 <p><strong>Example (cropped, periodic):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
@@ -412,7 +425,12 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <section id="stage-2-topology-overlap-stats-ndtopo_stats.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-2-topology-overlap-stats-ndtopo_stats.py">Stage 2: Topology Overlap Stats (<code>ndtopo_stats.py</code>)</h2>
 <p>Matches Delaunay vertex IDs to walls/filaments/clusters and computes how many points fall in each category (walls, filaments, both, clusters, unassigned, etc.), aggregating Delaunay scalars (mass, field_value, log_field_value) per category.</p>
-<p><strong>Key flags:</strong> - <code>--delaunay-vtk</code>, <code>--walls-vtk</code>, <code>--filaments-vtk</code>: VTK inputs (or <code>--*-ndnet</code> / <code>--*-ndskl</code> with <code>--write-vtk</code>) - <code>--filament-manifolds-vtk</code>, <code>--cluster-manifolds-vtk</code>: optional additional inputs - <code>--per-point-csv PATH</code>: write one row per Delaunay vertex with boolean membership flags — needed for downstream aggregation</p>
+<p><strong>Key flags:</strong></p>
+<ul>
+<li><code>--delaunay-vtk</code>, <code>--walls-vtk</code>, <code>--filaments-vtk</code>: VTK inputs (or <code>--*-ndnet</code> / <code>--*-ndskl</code> with <code>--write-vtk</code>)</li>
+<li><code>--filament-manifolds-vtk</code>, <code>--cluster-manifolds-vtk</code>: optional additional inputs</li>
+<li><code>--per-point-csv PATH</code>: write one row per Delaunay vertex with boolean membership flags — needed for downstream aggregation</li>
+</ul>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay_S000.vtu <span class="dt">\</span></span>
@@ -430,7 +448,15 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <section id="stage-3-slab-clip-and-2d-rendering-batch_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-3-slab-clip-and-2d-rendering-batch_clip.py">Stage 3: Slab Clip and 2D Rendering (<code>batch_clip.py</code>)</h2>
 <p>Clips walls, filaments, and density to a thin slab along a chosen axis, flattens to 2D, averages density across the slab, and renders composite PNGs. Must be run via <code>pvpython</code>.</p>
-<p><strong>Key flags:</strong> - <code>--walls</code>, <code>--filaments</code>, <code>--delaunay</code>: VTK inputs (relative to <code>--input-dir</code>) - <code>--slab-axis z --slab-origin 0 --slab-thickness 10</code>: slab position (in output units, mpc/h) - <code>--resample-dims 512 512 64</code>: resampling grid - <code>--save-pngs</code>: render PNG outputs - <code>--png-colormap "Inferno (matplotlib)"</code>: colormap preset - <code>--composite-filaments-source manifolds</code>: use filament manifolds for composite renders</p>
+<p><strong>Key flags:</strong></p>
+<ul>
+<li><code>--walls</code>, <code>--filaments</code>, <code>--delaunay</code>: VTK inputs (relative to <code>--input-dir</code>)</li>
+<li><code>--slab-axis z --slab-origin 0 --slab-thickness 10</code>: slab position (in output units, mpc/h)</li>
+<li><code>--resample-dims 512 512 64</code>: resampling grid</li>
+<li><code>--save-pngs</code>: render PNG outputs</li>
+<li><code>--png-colormap "Inferno (matplotlib)"</code>: colormap preset</li>
+<li><code>--composite-filaments-source manifolds</code>: use filament manifolds for composite renders</li>
+</ul>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
@@ -451,7 +477,16 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <section id="stage-4-batch-tiling-batch_crop_and_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-4-batch-tiling-batch_crop_and_clip.py">Stage 4: Batch Tiling (<code>batch_crop_and_clip.py</code>)</h2>
 <p>Orchestrates Stages 1–3 across a tiled grid of non-overlapping crop boxes, running <code>analyze_snapshot.py</code> → <code>ndtopo_stats.py</code> → <code>batch_clip.py</code> for each crop and slab. This is the main entry point for large-volume analysis.</p>
-<p><strong>Key flags:</strong> - <code>--snapshot</code>, <code>--output-root</code>: input snapshot and output root - <code>--crop-size DX DY DZ</code>: tile dimensions (in <code>--input-unit</code>, default kpc/h) - <code>--x-range</code>, <code>--y-range</code>, <code>--z-range</code>: volume to tile - <code>--mse-nsig</code>, <code>--dump-manifolds</code>, <code>--dump-arcs</code>, etc.: forwarded to <code>analyze_snapshot.py</code> - <code>--slab-step</code>, <code>--slab-thickness</code>: slab spacing within each crop - <code>--write-per-point-csv</code>: write <code>topology_points.csv</code> per crop (needed for aggregation) - <code>--skip-slabs</code>: run analysis + stats only, skip slab clipping</p>
+<p><strong>Key flags:</strong></p>
+<ul>
+<li><code>--snapshot</code>, <code>--output-root</code>: input snapshot and output root</li>
+<li><code>--crop-size DX DY DZ</code>: tile dimensions (in <code>--input-unit</code>, default kpc/h)</li>
+<li><code>--x-range</code>, <code>--y-range</code>, <code>--z-range</code>: volume to tile</li>
+<li><code>--mse-nsig</code>, <code>--dump-manifolds</code>, <code>--dump-arcs</code>, etc.: forwarded to <code>analyze_snapshot.py</code></li>
+<li><code>--slab-step</code>, <code>--slab-thickness</code>: slab spacing within each crop</li>
+<li><code>--write-per-point-csv</code>: write <code>topology_points.csv</code> per crop (needed for aggregation)</li>
+<li><code>--skip-slabs</code>: run analysis + stats only, skip slab clipping</li>
+</ul>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
@@ -485,7 +520,15 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <section id="stage-5-cross-crop-aggregation-aggregate_topology_points.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-5-cross-crop-aggregation-aggregate_topology_points.py">Stage 5: Cross-Crop Aggregation (<code>aggregate_topology_points.py</code>)</h2>
 <p>Combines all <code>*_topology_points.csv</code> files across crops into global statistics, per-category histograms, and composition/violin/box plots for four primary categories: <strong>Clusters</strong>, <strong>Filaments</strong> (filament manifolds not clusters), <strong>Walls</strong> (walls only), and <strong>Unassigned</strong>.</p>
-<p><strong>Key flags:</strong> - <code>--root</code>: root directory to scan for <code>*_topology_points.csv</code> - <code>--output-dir</code>, <code>--output-prefix</code>: output location - <code>--engine polars</code>: fast path (default); <code>--polars-chunks N</code> for large datasets - <code>--hist-bin-mode global</code>: shared bins across categories (better for comparison) - <code>--log10-field-value</code>: convert field_value to log10 before aggregating - <code>--plot-dpi</code>, <code>--plot-fontscale</code>: control figure quality</p>
+<p><strong>Key flags:</strong></p>
+<ul>
+<li><code>--root</code>: root directory to scan for <code>*_topology_points.csv</code></li>
+<li><code>--output-dir</code>, <code>--output-prefix</code>: output location</li>
+<li><code>--engine polars</code>: fast path (default); <code>--polars-chunks N</code> for large datasets</li>
+<li><code>--hist-bin-mode global</code>: shared bins across categories (better for comparison)</li>
+<li><code>--log10-field-value</code>: convert field_value to log10 before aggregating</li>
+<li><code>--plot-dpi</code>, <code>--plot-fontscale</code>: control figure quality</li>
+</ul>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches <span class="dt">\</span></span>
