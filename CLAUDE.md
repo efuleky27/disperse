@@ -11,14 +11,17 @@ Automates the full pipeline for identifying and analyzing the cosmic web (walls,
 ```
 HDF5 Snapshot
   └─ analyze_snapshot.py          → NDnet, NDskl, manifold/skeleton VTU/VTP files
-      └─ ndtopo_stats.py          → topology_stats.csv, topology_points.csv (per crop)
-          └─ batch_clip.py        → slab VTUs, 2D VTIs, PNG renders (via pvpython)
+      ├─ ndtopo_stats.py          → topology_stats.csv, topology_points.csv (per crop)
+      └─ batch_clip.py            → slab VTUs, 2D VTIs, PNG renders (via pvpython)
               └─ stitch_slab_pngs.py → MP4 movies
+
+batch_crop_and_clip.py            → orchestrates the above across a tiled grid of crops
+                                     (per crop: analyze → ndtopo_stats → batch_clip per slab)
 
 aggregate_topology_points.py      → combined statistics across all crops
 ```
 
-`batch_crop_and_clip.py` orchestrates the first three steps across a tiled grid of crops.
+`ndtopo_stats.py` and `batch_clip.py` are independent parallel steps after `analyze_snapshot.py` — neither depends on the other.
 
 ---
 
@@ -147,6 +150,27 @@ conda create -n disperse -c conda-forge python=3.11 \
 ```
 
 All scripts that open Quijote HDF5 files must import `hdf5plugin` before `h5py` to register the Blosc filter. Scripts do this automatically via an `.hdf5_plugins/` directory setup.
+
+---
+
+## Repository Layout
+
+```
+disperse/
+  scripts/          Python and pvpython scripts (the full pipeline)
+  documents/        Quarto documentation source files (user guides, runbook, flowchart)
+  data/             Input snapshots (not version-controlled)
+  outputs/          Pipeline run artifacts (not version-controlled)
+  sessions/
+    codex/          Codex session JSONL files
+    claude/         Claude Code session JSONL files
+    export/         Rendered session exports (MASTER_BY_DAY.md, INDEX.md, etc.)
+  index.qmd         Website landing page (Quarto)
+  _quarto.yml       Quarto website config (published to GitHub Pages)
+  README.md         GitHub repo landing page
+```
+
+Website: <https://efuleky27.github.io/disperse/> — auto-published from `main` via GitHub Actions (`publish.yml`). Source in `documents/` and `index.qmd`; rendered to `gh-pages` branch.
 
 ---
 

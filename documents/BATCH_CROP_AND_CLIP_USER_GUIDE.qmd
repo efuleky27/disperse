@@ -117,7 +117,7 @@ python scripts/batch_crop_and_clip.py \
   --scalar-name log_field_value
 ```
 
-### More Examples (for science fair)
+### More Examples
 ```bash
 python scripts/batch_crop_and_clip.py \
       --snapshot data/snapdir_000 \

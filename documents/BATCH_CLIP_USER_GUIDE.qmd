@@ -100,7 +100,7 @@ pvpython scripts/batch_clip.py \
   - `<PREFIX>_composite_density_walls_filaments.png` – composite: density base, walls light green, filaments red; overlay opacity controlled by `--composite-opacity`.
   - `<PREFIX>_composite_density_walls_filaments_*.png` – composite that also includes filament/cluster manifolds (suffixes appended when provided).
 
-### Example
+### Examples
 ```bash
 PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_cropped \

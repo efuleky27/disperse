@@ -1,5 +1,5 @@
 ---
-title: "DisPerSE Cosmic Web Pipeline"
+title: "Disentangling the Cosmic Web"
 ---
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
@@ -495,7 +495,7 @@ disperse/
   data/             Input snapshots and density grids (not version-controlled)
   outputs/          Pipeline run artifacts (not version-controlled)
   sessions/         AI conversation history
-    2025/           Codex sessions (JSONL)
+    codex/          Codex sessions (JSONL)
     claude/         Claude Code sessions (JSONL)
     export/         Rendered session exports (INDEX.md, MASTER.md, HTML)
 ```

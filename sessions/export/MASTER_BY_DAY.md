@@ -1,8 +1,6 @@
 # AI Sessions Timeline
 
-Generated: `2026-04-07 19:06:42Z`
-
-<div style="margin:0.5em 0 1.5em;"><button class="btn btn-sm btn-outline-secondary me-2" onclick="document.querySelectorAll('.callout-body-container').forEach(el => bootstrap.Collapse.getOrCreateInstance(el).show())">Expand all</button><button class="btn btn-sm btn-outline-secondary" onclick="document.querySelectorAll('.callout-body-container').forEach(el => bootstrap.Collapse.getOrCreateInstance(el).hide())">Collapse all</button></div>
+Generated: `2026-04-08 02:57:51Z`
 
 ## 2025-11-11
 

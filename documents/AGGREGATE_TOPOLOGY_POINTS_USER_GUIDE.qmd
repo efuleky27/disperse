@@ -147,7 +147,7 @@ python scripts/compare_simulations.py \
 - `--output-dir` — Where to write the figure (default: current directory).
 - `--output-prefix` — Filename prefix for the output PNG.
 
-### Example
+### Examples
 ```bash
 python scripts/compare_simulations.py \
   --folder-a outputs/quijote_batches_000_w_clusters_points \
@@ -165,7 +165,8 @@ python scripts/compare_simulations.py \
 
 ---
 
-### More Examples (for science fair)
+### More Examples
+Redshift 3:
 ```bash
 python scripts/aggregate_topology_points.py \
   --root outputs/quijote_batches_000_w_clusters \
@@ -182,7 +183,7 @@ python scripts/aggregate_topology_points.py \
   --plot-dpi 600
 ```
 
-### More Examples (for science fair)
+Redshift 0:
 ```bash
 python scripts/aggregate_topology_points.py \
   --root outputs/quijote_batches_004_w_clusters_points \

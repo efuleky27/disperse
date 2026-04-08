@@ -7,7 +7,7 @@ project:
     - sessions/export/MASTER_BY_DAY.md
 
 website:
-  title: "DisPerSE Cosmic Web Pipeline"
+  title: "Disentangling the Cosmic Web"
   description: "Automated topology analysis of the cosmic web using DisPerSE"
   repo-url: https://github.com/efuleky27/disperse
   repo-actions: [issue]
@@ -42,6 +42,9 @@ website:
     right:
       - href: sessions/export/MASTER_BY_DAY.md
         text: AI Sessions
+      - href: https://github.com/efuleky27/disperse
+        text: GitHub
+        icon: github
 
 format:
   html:
