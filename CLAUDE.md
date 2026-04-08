@@ -182,6 +182,14 @@ Website: <https://efuleky27.github.io/disperse/> — auto-published from `main` 
 - Docs in `/documents/` describe intended behavior but may lag behind script changes — the scripts are the source of truth
 - Do not assume docs and scripts are consistent with each other
 
+### Documentation authoring conventions (Quarto/Pandoc)
+- Each user guide should have: `## What it does`, `## Requirements`, `## CLI`, `## Examples`, `## Notes` (in that order where applicable).
+- `compare_simulations.py` is documented inside `AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.qmd`, not a separate file.
+- **Blank lines around lists are required by Pandoc:**
+  - A blank line must precede a list when it follows paragraph text (otherwise the list is treated as a paragraph continuation).
+  - A blank line must follow a list when paragraph text comes next (otherwise the paragraph is absorbed into the last list item).
+  - Headers and code fences after a list do not require a blank line, but it doesn't hurt.
+
 ---
 
 ## Output Directory Structure
