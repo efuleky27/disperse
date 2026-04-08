@@ -51,7 +51,7 @@ python scripts/aggregate_topology_points.py \
 - `python`: exact but slow on large files.
 
 ### Output
-In `--output-dir` with `--output-prefix`:
+In `--output-dir` with `--output-prefix`:  
 - `<prefix>_topology_stats.csv`
 - `<prefix>_<category>_<scalar>_hist.csv`
 - `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)
