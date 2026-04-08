@@ -309,8 +309,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="output" class="level3">
 <h3 class="anchored" data-anchor-id="output">Output</h3>
 <p>In <code>--output-dir</code> with <code>--output-prefix</code>:<br>
-- <code>&lt;prefix&gt;_topology_stats.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code> - <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set) - <code>&lt;prefix&gt;_filman_walls_composition.png</code> (composition barchart for the four focus categories) - <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> (violin plot for the four focus categories) - <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_box.png</code> (box plot for the four focus categories)</p>
-<p>Categories follow <code>ndtopo_stats.py</code>, including filament‑manifold and cluster variants when present. The violin/box/composition plots only include: - <code>clusters</code> - <code>filament_manifolds_not_clusters</code> - <code>walls_not_filament_manifolds_or_clusters</code> - <code>unassigned_walls_filament_manifolds_clusters</code> Histograms use per-category bins by default (<code>--hist-bin-mode per-category</code>) or shared bins per scalar (<code>--hist-bin-mode global</code>). The default histogram scalars are <code>field_value</code> and <code>log_field_value</code> (use <code>--hist-scalars</code> to override). Histogram PNGs include the particle count <code>n</code> and a red dashed median line; histogram CSVs include <code>total_count</code>. Violin plots use raw values if <code>--plots-from-raw</code> is set; otherwise they sample from histogram bins. Box plots are rendered from the aggregated <code>*_topology_stats.csv</code> by default.</p>
+- <code>&lt;prefix&gt;_topology_stats.csv</code><br>
+- <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code><br>
+- <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set)<br>
+- <code>&lt;prefix&gt;_filman_walls_composition.png</code> (composition barchart for the four focus categories)<br>
+- <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> (violin plot for the four focus categories)<br>
+- <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_box.png</code> (box plot for the four focus categories)</p>
+<p>Categories follow <code>ndtopo_stats.py</code>, including filament‑manifold and cluster variants when present. The violin/box/composition plots only include:<br>
+- <code>clusters</code><br>
+- <code>filament_manifolds_not_clusters</code><br>
+- <code>walls_not_filament_manifolds_or_clusters</code><br>
+- <code>unassigned_walls_filament_manifolds_clusters</code><br>
+Histograms use per-category bins by default (<code>--hist-bin-mode per-category</code>) or shared bins per scalar (<code>--hist-bin-mode global</code>). The default histogram scalars are <code>field_value</code> and <code>log_field_value</code> (use <code>--hist-scalars</code> to override). Histogram PNGs include the particle count <code>n</code> and a red dashed median line; histogram CSVs include <code>total_count</code>. Violin plots use raw values if <code>--plots-from-raw</code> is set; otherwise they sample from histogram bins. Box plots are rendered from the aggregated <code>*_topology_stats.csv</code> by default.</p>
 </section>
 <section id="examples" class="level3">
 <h3 class="anchored" data-anchor-id="examples">Examples</h3>
