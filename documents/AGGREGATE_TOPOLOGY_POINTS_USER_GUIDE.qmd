@@ -52,19 +52,19 @@ python scripts/aggregate_topology_points.py \
 
 ### Output
 In `--output-dir` with `--output-prefix`:  
-- `<prefix>_topology_stats.csv`
-- `<prefix>_<category>_<scalar>_hist.csv`
-- `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)
-- `<prefix>_filman_walls_composition.png` (composition barchart for the four focus categories)
-- `<prefix>_filman_walls_<scalar>_violin.png` (violin plot for the four focus categories)
-- `<prefix>_filman_walls_<scalar>_box.png` (box plot for the four focus categories)
+- `<prefix>_topology_stats.csv`  
+- `<prefix>_<category>_<scalar>_hist.csv`  
+- `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)  
+- `<prefix>_filman_walls_composition.png` (composition barchart for the four focus categories)  
+- `<prefix>_filman_walls_<scalar>_violin.png` (violin plot for the four focus categories)  
+- `<prefix>_filman_walls_<scalar>_box.png` (box plot for the four focus categories)  
 
 Categories follow `ndtopo_stats.py`, including filament‑manifold and cluster variants when present.
-The violin/box/composition plots only include:
-- `clusters`
-- `filament_manifolds_not_clusters`
-- `walls_not_filament_manifolds_or_clusters`
-- `unassigned_walls_filament_manifolds_clusters`
+The violin/box/composition plots only include:  
+- `clusters`  
+- `filament_manifolds_not_clusters`  
+- `walls_not_filament_manifolds_or_clusters`  
+- `unassigned_walls_filament_manifolds_clusters`  
 Histograms use per-category bins by default (`--hist-bin-mode per-category`) or shared bins per scalar (`--hist-bin-mode global`).
 The default histogram scalars are `field_value` and `log_field_value` (use `--hist-scalars` to override).
 Histogram PNGs include the particle count `n` and a red dashed median line; histogram CSVs include `total_count`.
