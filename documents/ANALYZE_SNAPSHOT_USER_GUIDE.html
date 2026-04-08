@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>analyze_snapshot.py User Guide – DisPerSE Cosmic Web Pipeline</title>
+<title>analyze_snapshot.py User Guide – Disentangling the Cosmic Web</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    <span class="navbar-title">Disentangling the Cosmic Web</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -190,6 +190,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../sessions/export/MASTER_BY_DAY.html"> 
 <span class="menu-text">AI Sessions</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/efuleky27/disperse"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text">GitHub</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -208,23 +213,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#analyze_snapshot.py-user-guide" id="toc-analyze_snapshot.py-user-guide" class="nav-link active" data-scroll-target="#analyze_snapshot.py-user-guide"><code>analyze_snapshot.py</code> User Guide</a>
   <ul class="collapse">
-  <li><a href="#basic-inputs" id="toc-basic-inputs" class="nav-link" data-scroll-target="#basic-inputs">Basic Inputs</a></li>
-  <li><a href="#sampling-controls" id="toc-sampling-controls" class="nav-link" data-scroll-target="#sampling-controls">Sampling Controls</a></li>
-  <li><a href="#units" id="toc-units" class="nav-link" data-scroll-target="#units">Units</a></li>
-  <li><a href="#delaunay-stage" id="toc-delaunay-stage" class="nav-link" data-scroll-target="#delaunay-stage">Delaunay Stage</a></li>
-  <li><a href="#morsesmale-manifolds" id="toc-morsesmale-manifolds" class="nav-link" data-scroll-target="#morsesmale-manifolds">Morse–Smale / Manifolds</a></li>
-  <li><a href="#conversion-output-formats" id="toc-conversion-output-formats" class="nav-link" data-scroll-target="#conversion-output-formats">Conversion / Output Formats</a></li>
-  <li><a href="#workflow-control" id="toc-workflow-control" class="nav-link" data-scroll-target="#workflow-control">Workflow Control</a></li>
-  </ul></li>
-  <li><a href="#typical-runs" id="toc-typical-runs" class="nav-link" data-scroll-target="#typical-runs">Typical Runs</a>
-  <ul class="collapse">
-  <li><a href="#full-snapshot-pipeline" id="toc-full-snapshot-pipeline" class="nav-link" data-scroll-target="#full-snapshot-pipeline">Full Snapshot Pipeline</a></li>
-  <li><a href="#cropped-sub-volume" id="toc-cropped-sub-volume" class="nav-link" data-scroll-target="#cropped-sub-volume">Cropped Sub-volume</a></li>
-  <li><a href="#conversion-only-reuse-existing-ndnets" id="toc-conversion-only-reuse-existing-ndnets" class="nav-link" data-scroll-target="#conversion-only-reuse-existing-ndnets">Conversion-only (reuse existing NDnets)</a></li>
-  </ul></li>
-  <li><a href="#workflow-summary" id="toc-workflow-summary" class="nav-link" data-scroll-target="#workflow-summary">Workflow Summary</a>
-  <ul class="collapse">
-  <li><a href="#naming-conventions-vtkndnetndskl" id="toc-naming-conventions-vtkndnetndskl" class="nav-link" data-scroll-target="#naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</a></li>
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
+  <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -253,7 +246,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="analyze_snapshot.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="analyze_snapshot.py-user-guide"><code>analyze_snapshot.py</code> User Guide</h2>
-<p>This script automates a full DisPerSE workflow for Gadget/Quijote snapshots. It:</p>
+<p>Use <code>scripts/analyze_snapshot.py</code> to run the full DisPerSE topology extraction pipeline on a Gadget/Quijote HDF5 snapshot.</p>
+<section id="what-it-does" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
 <ol type="1">
 <li><strong>Builds an NDfield catalog</strong> (optionally cropped/decimated).</li>
 <li><strong>Runs <code>delaunay_3D</code></strong> to reconstruct the Delaunay tessellation (with optional block decomposition).</li>
@@ -261,10 +256,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Converts DisPerSE outputs</strong> to VTK-family formats (VTU/VTP/etc.) via <code>netconv</code>/<code>skelconv</code>.</li>
 <li>For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.</li>
 </ol>
-<p>Below is a description of every argument and the overall workflow.</p>
-<hr>
-<section id="basic-inputs" class="level3">
-<h3 class="anchored" data-anchor-id="basic-inputs">Basic Inputs</h3>
+</section>
+<section id="requirements" class="level3">
+<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<ul>
+<li>Python environment with <code>h5py</code>, <code>hdf5plugin</code>, <code>numpy</code> (conda env <code>disperse</code>).</li>
+<li>DisPerSE binaries (<code>delaunay_3D</code>, <code>mse</code>, <code>netconv</code>, <code>skelconv</code>) on PATH, or pointed to via <code>--disperse-bin-dir</code>.</li>
+</ul>
+</section>
+<section id="cli" class="level3">
+<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<section id="basic-inputs" class="level4">
+<h4 class="anchored" data-anchor-id="basic-inputs">Basic Inputs</h4>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 43%">
@@ -308,8 +311,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="sampling-controls" class="level3">
-<h3 class="anchored" data-anchor-id="sampling-controls">Sampling Controls</h3>
+<section id="sampling-controls" class="level4">
+<h4 class="anchored" data-anchor-id="sampling-controls">Sampling Controls</h4>
 <ul>
 <li><code>--target-count N</code> — approximate number of particles to keep. The script derives a stride.</li>
 <li><code>--stride N</code> — keep every Nth particle (overrides <code>--target-count</code>).</li>
@@ -317,15 +320,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>--crop-box xmin ymin zmin xmax ymax zmax</code> — restricts the analysis to a rectangular sub-volume in the snapshot’s input units (<code>kpc/h</code> by default).</li>
 </ul>
 </section>
-<section id="units" class="level3">
-<h3 class="anchored" data-anchor-id="units">Units</h3>
+<section id="units" class="level4">
+<h4 class="anchored" data-anchor-id="units">Units</h4>
 <ul>
 <li><code>--input-unit {kpc/h,mpc/h}</code> — units used by <code>--input</code>.</li>
 <li><code>--output-unit {kpc/h,mpc/h}</code> — units stored in downstream NDfields/VTK files.</li>
 </ul>
 </section>
-<section id="delaunay-stage" class="level3">
-<h3 class="anchored" data-anchor-id="delaunay-stage">Delaunay Stage</h3>
+<section id="delaunay-stage" class="level4">
+<h4 class="anchored" data-anchor-id="delaunay-stage">Delaunay Stage</h4>
 <ul>
 <li><code>--periodic</code> — enforce periodic boundary conditions (crops are rebased to the origin internally; VTK outputs are shifted back). (THIS GENERATES ARTIFACTS, USE –delaunay-btype INSTEAD).</li>
 <li><code>--delaunay-blocks NCHUNKS NTHREADS</code> — activate DisPerSE’s block decomposition to reduce memory; the script automatically switches to the gathered <code>_G.NDnet</code>. (DON’T USE, THROWS ERROR).</li>
@@ -337,8 +340,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 </ul>
 </section>
-<section id="morsesmale-manifolds" class="level3">
-<h3 class="anchored" data-anchor-id="morsesmale-manifolds">Morse–Smale / Manifolds</h3>
+<section id="morsesmale-manifolds" class="level4">
+<h4 class="anchored" data-anchor-id="morsesmale-manifolds">Morse–Smale / Manifolds</h4>
 <ul>
 <li><code>--mse-nsig s1 [s2 ...]</code> — persistence thresholds in sigma units (default <code>3.5</code>).</li>
 <li><code>--persistence-cut c1 [c2 ...]</code> — absolute persistence thresholds (override <code>--mse-nsig</code>).</li>
@@ -358,8 +361,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 </ul>
 </section>
-<section id="conversion-output-formats" class="level3">
-<h3 class="anchored" data-anchor-id="conversion-output-formats">Conversion / Output Formats</h3>
+<section id="conversion-output-formats" class="level4">
+<h4 class="anchored" data-anchor-id="conversion-output-formats">Conversion / Output Formats</h4>
 <ul>
 <li><code>--netconv-format ...</code> — how to convert manifolds (VTU/PLY/NDnet/etc.).</li>
 <li><code>--netconv-smooth N</code> — smoothing iterations for <code>netconv</code>.</li>
@@ -370,8 +373,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>--skip-skelconv</code> — skip skeleton conversion.</li>
 </ul>
 </section>
-<section id="workflow-control" class="level3">
-<h3 class="anchored" data-anchor-id="workflow-control">Workflow Control</h3>
+<section id="workflow-control" class="level4">
+<h4 class="anchored" data-anchor-id="workflow-control">Workflow Control</h4>
 <ul>
 <li><code>--stop-after {ndfield,delaunay,mse}</code> — halt after the named stage.</li>
 <li><code>--keep-ndfield</code> — keep (rather than delete) the intermediate <code>coords_stride*.AND</code>.</li>
@@ -380,10 +383,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
-<section id="typical-runs" class="level2">
-<h2 class="anchored" data-anchor-id="typical-runs">Typical Runs</h2>
-<section id="full-snapshot-pipeline" class="level3">
-<h3 class="anchored" data-anchor-id="full-snapshot-pipeline">Full Snapshot Pipeline</h3>
+<section id="examples" class="level3">
+<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<section id="full-snapshot-pipeline" class="level4">
+<h4 class="anchored" data-anchor-id="full-snapshot-pipeline">Full Snapshot Pipeline</h4>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_thinned <span class="dt">\</span></span>
@@ -398,8 +401,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="cropped-sub-volume" class="level3">
-<h3 class="anchored" data-anchor-id="cropped-sub-volume">Cropped Sub-volume</h3>
+<section id="cropped-sub-volume" class="level4">
+<h4 class="anchored" data-anchor-id="cropped-sub-volume">Cropped Sub-volume</h4>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
@@ -413,8 +416,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="conversion-only-reuse-existing-ndnets" class="level3">
-<h3 class="anchored" data-anchor-id="conversion-only-reuse-existing-ndnets">Conversion-only (reuse existing NDnets)</h3>
+<section id="conversion-only-reuse-existing-ndnets" class="level4">
+<h4 class="anchored" data-anchor-id="conversion-only-reuse-existing-ndnets">Conversion-only (reuse existing NDnets)</h4>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010 <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--manifolds-input</span> outputs/snap_010/snap_010_manifolds_JD1d.NDnet <span class="dt">\</span></span>
@@ -425,37 +428,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
-<section id="workflow-summary" class="level2">
-<h2 class="anchored" data-anchor-id="workflow-summary">Workflow Summary</h2>
-<ol type="1">
-<li><p><strong>NDfield Creation</strong><br>
-The script reads the snapshot (or uses <code>--coords-input</code>), applies optional cropping and decimation, and writes an <code>ANDFIELD COORDS</code> file. <code>--stop-after ndfield</code> lets you inspect this stage alone.</p></li>
-<li><p><strong>Delaunay Tessellation</strong><br>
-Runs <code>delaunay_3D</code> on the NDfield to produce an NDnet (<code>*.NDnet</code> or <code>*_G.NDnet</code> with block mode). Pass <code>--stop-after delaunay</code> to examine the tessellation.</p></li>
-<li><p><strong>Morse–Smale Analysis</strong><br>
-Runs <code>mse</code> on the NDnet, applying persistence thresholds and dumping manifolds/filaments. You can reuse or skip this stage with <code>--manifolds-input</code> or <code>--stop-after mse</code>.</p></li>
-</ol>
-<section id="naming-conventions-vtkndnetndskl" class="level3">
-<h3 class="anchored" data-anchor-id="naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</h3>
+<section id="notes" class="level3">
+<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<section id="naming-conventions-vtkndnetndskl" class="level4">
+<h4 class="anchored" data-anchor-id="naming-conventions-vtkndnetndskl">Naming conventions (VTK/NDnet/NDskl)</h4>
 <ul>
 <li>Delaunay: <code>&lt;prefix&gt;_delaunay_S###.vtu</code> (or <code>_S000</code> for unsmoothed conversions).</li>
 <li>Manifolds (walls): <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;_S###.vtu</code> (NDnet: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
-<li>Filament manifolds (optional): <code>&lt;prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;_S###.vtu</code> (NDnet from <code>mse</code>: <code>&lt;prefix&gt;_sX_manifolds_&lt;TAG&gt;.NDnet</code>).</li>
+<li>Filament manifolds (optional): <code>&lt;prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;_S###.vtu</code>.</li>
 <li>Cluster critical points (recommended): <code>&lt;prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp</code> and <code>.vtu</code>.</li>
 <li>Skeletons: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;_S###.vtp</code> (NDskl: <code>&lt;prefix&gt;_sX_arcs_&lt;TAG&gt;.NDskl</code>). A matching <code>.vtu</code> is also written for convenience.</li>
-<li>Persistence tags (<code>sX</code>) precede the role/tag; smoothing (<code>S###</code>) is appended by converters. DisPerSE tools sometimes emit <code>.S###</code>, but outputs are normalized to <code>_S###</code> during the pipeline.</li>
+<li>Persistence tags (<code>sX</code>) precede the role/tag; smoothing (<code>S###</code>) is appended by converters.</li>
 </ul>
-<ol start="4" type="1">
-<li><p><strong>Conversion</strong><br>
-Converts manifolds (via <code>netconv</code>) and skeletons (via <code>skelconv</code>) into VTK family formats for visualization.</p></li>
-<li><p><strong>Summary &amp; Cleanup</strong><br>
-The script prints a recap of all produced files (snapshot, NDfield, Delaunay NDnet, manifolds, converted meshes). Use <code>--keep-ndfield</code> to retain the coordinate catalog; otherwise it’s deleted automatically.</p></li>
-<li><p><strong>Validation</strong><br>
-Crop boxes are sanity-checked, projection parameters are normalized, and any reuse paths are expanded up front so errors surface early.</p></li>
+</section>
+<section id="pipeline-stages" class="level4">
+<h4 class="anchored" data-anchor-id="pipeline-stages">Pipeline stages</h4>
+<ol type="1">
+<li><strong>NDfield Creation</strong> — reads the snapshot (or uses <code>--coords-input</code>), applies optional cropping and decimation, writes an <code>ANDFIELD COORDS</code> file. <code>--stop-after ndfield</code> lets you inspect this stage alone.</li>
+<li><strong>Delaunay Tessellation</strong> — runs <code>delaunay_3D</code> on the NDfield to produce an NDnet. Pass <code>--stop-after delaunay</code> to examine the tessellation.</li>
+<li><strong>Morse–Smale Analysis</strong> — runs <code>mse</code> on the NDnet, applying persistence thresholds and dumping manifolds/filaments. Reuse with <code>--manifolds-input</code> or stop with <code>--stop-after mse</code>.</li>
+<li><strong>Conversion</strong> — converts manifolds (via <code>netconv</code>) and skeletons (via <code>skelconv</code>) into VTK formats for visualization.</li>
+<li><strong>Summary &amp; Cleanup</strong> — prints a recap of all produced files. Use <code>--keep-ndfield</code> to retain the coordinate catalog; otherwise it is deleted automatically.</li>
 </ol>
-<p>With these options, users can start from raw snapshots, run DisPerSE end to end, and visualize the cosmic web in ParaView.</p>
 
 
+</section>
 </section>
 </section>
 

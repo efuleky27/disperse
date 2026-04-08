@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Readme – DisPerSE Cosmic Web Pipeline</title>
+<title>Readme – Disentangling the Cosmic Web</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    <span class="navbar-title">Disentangling the Cosmic Web</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -190,6 +190,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../sessions/export/MASTER_BY_DAY.html"> 
 <span class="menu-text">AI Sessions</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/efuleky27/disperse"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text">GitHub</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -206,7 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#disperse-cosmic-web-pipeline" id="toc-disperse-cosmic-web-pipeline" class="nav-link active" data-scroll-target="#disperse-cosmic-web-pipeline">DisPerSE Cosmic Web Pipeline</a></li>
+  <li><a href="#disentangling-the-cosmic-web" id="toc-disentangling-the-cosmic-web" class="nav-link active" data-scroll-target="#disentangling-the-cosmic-web">Disentangling the Cosmic Web</a></li>
   <li><a href="#documentation-index" id="toc-documentation-index" class="nav-link" data-scroll-target="#documentation-index">Documentation Index</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a>
   <ul class="collapse">
@@ -269,8 +274,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="disperse-cosmic-web-pipeline" class="level2">
-<h2 class="anchored" data-anchor-id="disperse-cosmic-web-pipeline">DisPerSE Cosmic Web Pipeline</h2>
+<section id="disentangling-the-cosmic-web" class="level2">
+<h2 class="anchored" data-anchor-id="disentangling-the-cosmic-web">Disentangling the Cosmic Web</h2>
 <p>This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using <a href="https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html">DisPerSE</a>. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.</p>
 <hr>
 </section>
@@ -712,7 +717,7 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
   data/             Input snapshots and density grids (not version-controlled)
   outputs/          Pipeline run artifacts (not version-controlled)
   sessions/         AI conversation history
-    2025/           Codex sessions (JSONL)
+    codex/          Codex sessions (JSONL)
     claude/         Claude Code sessions (JSONL)
     export/         Rendered session exports (INDEX.md, MASTER.md, HTML)</code></pre>
 <p>Session exports are auto-updated whenever the Claude Code context window is compacted (via a PostCompact hook in <code>.claude/settings.json</code>). To sync manually:</p>

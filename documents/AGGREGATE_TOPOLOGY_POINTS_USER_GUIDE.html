@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>aggregate_topology_points.py User Guide – DisPerSE Cosmic Web Pipeline</title>
+<title>aggregate_topology_points.py User Guide – Disentangling the Cosmic Web</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -117,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">DisPerSE Cosmic Web Pipeline</span>
+    <span class="navbar-title">Disentangling the Cosmic Web</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -190,6 +190,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../sessions/export/MASTER_BY_DAY.html"> 
 <span class="menu-text">AI Sessions</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/efuleky27/disperse"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text">GitHub</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -221,10 +226,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#requirements-1" id="toc-requirements-1" class="nav-link" data-scroll-target="#requirements-1">Requirements</a></li>
   <li><a href="#cli-1" id="toc-cli-1" class="nav-link" data-scroll-target="#cli-1">CLI</a></li>
   <li><a href="#key-options" id="toc-key-options" class="nav-link" data-scroll-target="#key-options">Key options</a></li>
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1">Examples</a></li>
   <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
-  <li><a href="#more-examples-for-science-fair" id="toc-more-examples-for-science-fair" class="nav-link" data-scroll-target="#more-examples-for-science-fair">More Examples (for science fair)</a></li>
-  <li><a href="#more-examples-for-science-fair-1" id="toc-more-examples-for-science-fair-1" class="nav-link" data-scroll-target="#more-examples-for-science-fair-1">More Examples (for science fair)</a></li>
+  <li><a href="#more-examples" id="toc-more-examples" class="nav-link" data-scroll-target="#more-examples">More Examples</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -380,8 +384,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>--output-prefix</code> — Filename prefix for the output PNG.</li>
 </ul>
 </section>
-<section id="example" class="level3">
-<h3 class="anchored" data-anchor-id="example">Example</h3>
+<section id="examples-1" class="level3">
+<h3 class="anchored" data-anchor-id="examples-1">Examples</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
@@ -399,8 +403,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <hr>
 </section>
-<section id="more-examples-for-science-fair" class="level3">
-<h3 class="anchored" data-anchor-id="more-examples-for-science-fair">More Examples (for science fair)</h3>
+<section id="more-examples" class="level3">
+<h3 class="anchored" data-anchor-id="more-examples">More Examples</h3>
+<p>Redshift 3:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_w_clusters <span class="dt">\</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_w_clusters/combined <span class="dt">\</span></span>
@@ -414,9 +419,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-percentile-range</span> .1 99.9 <span class="dt">\</span></span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-fontscale</span> 1.2 <span class="dt">\</span></span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 600</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="more-examples-for-science-fair-1" class="level3">
-<h3 class="anchored" data-anchor-id="more-examples-for-science-fair-1">More Examples (for science fair)</h3>
+<p>Redshift 0:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_004_w_clusters_points/combined <span class="dt">\</span></span>
