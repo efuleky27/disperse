@@ -6,8 +6,6 @@ title: "Readme"
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
----
-
 ## Documentation Index
 
 | Document | What it covers |
@@ -22,8 +20,6 @@ This project automates the full workflow for extracting, analyzing, and visualiz
 | [Spin Render](SPIN_RENDER_USER_GUIDE.html) | `spin_render.py` + `redshift_evolution.py` |
 | [Stitch Slab PNGs](STITCH_SLAB_PNGS_USER_GUIDE.html) | `stitch_slab_pngs.py` — assemble slab PNGs into MP4s |
 | [Other Tools](OTHER_TOOLS_USER_GUIDE.html) | `compute_density_field.py`, `export_grid_vti.py`, `export_snapshot_vtu.py` |
-
----
 
 ## Prerequisites
 
@@ -67,8 +63,6 @@ unset _PV_OLD_PATH
 EOF
 ```
 
----
-
 ## Pipeline Overview
 
 ```
@@ -87,8 +81,6 @@ compare_simulations.py            → side-by-side boxplots across two simulatio
 spin_render.py                    → rotating 3D animation of any VTK dataset
 redshift_evolution.py             → smooth movie evolving across redshift snapshots
 ```
-
----
 
 ## Stage 1: Topology Extraction (`analyze_snapshot.py`)
 
@@ -133,8 +125,6 @@ python scripts/analyze_snapshot.py \
 
 → Full reference: [Analyze Snapshot User Guide](ANALYZE_SNAPSHOT_USER_GUIDE.html)
 
----
-
 ## Stage 2: Topology Overlap Stats (`ndtopo_stats.py`)
 
 Matches Delaunay vertex IDs to walls/filaments/clusters and computes how many points fall in each category (walls, filaments, both, clusters, unassigned, etc.), aggregating Delaunay scalars (mass, field_value, log_field_value) per category.
@@ -160,8 +150,6 @@ python scripts/ndtopo_stats.py \
 ```
 
 → Full reference: [ND Topo Stats User Guide](ND_TOPO_STATS_USER_GUIDE.html)
-
----
 
 ## Stage 3: Slab Clip and 2D Rendering (`batch_clip.py`)
 
@@ -194,8 +182,6 @@ pvpython scripts/batch_clip.py \
 ```
 
 → Full reference: [Batch Clip User Guide](BATCH_CLIP_USER_GUIDE.html)
-
----
 
 ## Stage 4: Batch Tiling (`batch_crop_and_clip.py`)
 
@@ -246,8 +232,6 @@ outputs/quijote_batches/
 
 → Full reference: [Batch Crop and Clip User Guide](BATCH_CROP_AND_CLIP_USER_GUIDE.html)
 
----
-
 ## Stage 5: Cross-Crop Aggregation (`aggregate_topology_points.py`)
 
 Combines all `*_topology_points.csv` files across crops into global statistics, per-category histograms, and composition/violin/box plots for four primary categories: **Clusters**, **Filaments** (filament manifolds not clusters), **Walls** (walls only), and **Unassigned**.
@@ -281,8 +265,6 @@ python scripts/aggregate_topology_points.py \
 **Outputs:** aggregated `*_topology_stats.csv`, per-category histogram CSVs and PNGs, composition barchart, violin/box plots.
 
 → Full reference: [Aggregate Topology Points User Guide](AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html)
-
----
 
 ## Visualization Scripts
 
@@ -350,8 +332,6 @@ python scripts/stitch_slab_pngs.py \
 
 → Full reference: [Stitch Slab PNGs User Guide](STITCH_SLAB_PNGS_USER_GUIDE.html)
 
----
-
 ## Utility Tools
 
 ### `compute_density_field.py` — CIC density grid
@@ -389,8 +369,6 @@ python scripts/export_snapshot_vtu.py \
 
 → Full reference: [Other Tools User Guide](OTHER_TOOLS_USER_GUIDE.html)
 
----
-
 ## Data Access (Globus)
 
 ### Snapshot (Fiducial/0, all redshifts)
@@ -419,8 +397,6 @@ export SRC=e0eae0aa-5bca-11ea-9683-0e56c063f437
 globus transfer "$SRC:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5" "$DST:~/Downloads/df_m_CIC_z=0.00.hdf5" \
   --label "Quijote Density Field BSQ 0 z=0"
 ```
-
----
 
 ## Build DisPerSE from Source (macOS)
 
@@ -479,8 +455,6 @@ export PATH="/path/to/DisPerSE/build/src:$PATH"
 
 If you see `Undefined symbols ___gmpn_*`, the GMP/MPFR shim above fixes the link.
 
----
-
 ## Why DisPerSE?
 
 ParaView can visualize particles and density grids, but does no topology extraction. DisPerSE reconstructs the Delaunay tessellation and Morse–Smale complex, applying persistence filtering to keep only statistically significant walls and filaments while respecting periodic boundaries. The key knobs:
@@ -493,8 +467,6 @@ ParaView can visualize particles and density grids, but does no topology extract
 | Structure types | `--dump-manifolds` / `--dump-arcs` | Walls, filament manifolds, arcs |
 | Cluster export | `--dump-clusters` | Exports maxima as critical points |
 | Smoothing | `--netconv-smooth` / `--skelconv-smooth` | Smooths converted VTK geometry |
-
----
 
 ## Repository Layout
 
@@ -517,8 +489,6 @@ cp ~/.claude/projects/-Users-fules-Documents-disperse/*.jsonl sessions/claude/ &
   python3 sessions/export_sessions.py
 ```
 
----
-
 ## Technologies Used
 
 | Category | Tool |
@@ -532,8 +502,6 @@ cp ~/.claude/projects/-Users-fules-Documents-disperse/*.jsonl sessions/claude/ &
 | Documentation | Quarto (Markdown), Mermaid (flowcharts) |
 | Version control | Git, GitHub |
 | AI assistance | ChatGPT, Codex, Claude Code, GitHub Copilot |
-
----
 
 ## Key Links
 

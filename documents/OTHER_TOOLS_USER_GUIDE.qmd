@@ -6,8 +6,6 @@ title: "Other Tools User Guide"
 
 This script deposits particle data from a Gadget/Quijote snapshot onto a regular 3‑D grid using Cloud-In-Cell (CIC). The resulting density (and optional overdensity) fields are written to an HDF5 file that includes the original snapshot header plus metadata describing the grid.
 
----
-
 ### Command Overview
 
 | Argument | Description |
@@ -22,8 +20,6 @@ This script deposits particle data from a Gadget/Quijote snapshot onto a regular
 | `--store-contrast` | Also store overdensity `delta = rho / mean - 1`. |
 
 The script automatically reads box size and mass information from the snapshot header, computes CIC weights chunk-by-chunk, normalizes by the cell volume, and stores the mean density in the output header.
-
----
 
 ### Example Command
 
@@ -43,8 +39,6 @@ This produces `outputs/snap_010_density.hdf5` with:
 - `DensityField/density` dataset (float32, 256×256×256).
 - Optional `DensityField/delta` if `--store-contrast` is set.
 
----
-
 ### Workflow Summary
 
 1. **Mass/metadata lookup** — reads `Header` to obtain `BoxSize`, `MassTable`, etc. You can override mass with `--mass-override`.
@@ -53,8 +47,6 @@ This produces `outputs/snap_010_density.hdf5` with:
 4. **Output HDF5** — writes the grid(s), along with header metadata for future reference.
 
 This file can then be visualized directly (e.g., via `export_snapshot_vtu.py --density-field`) or used as input for other grid-based analyses.
-
----
 
 ## `export_grid_vti.py` (visualize the HDF5 grid)
 
@@ -80,7 +72,6 @@ python scripts/export_grid_vti.py \
 
 Open the resulting `.vti` in ParaView for volume rendering or slicing.
 
-
 ## `export_snapshot_vtu.py` User Guide
 
 This converter script produces ParaView-friendly VTK files from:
@@ -89,8 +80,6 @@ This converter script produces ParaView-friendly VTK files from:
 2. **Density-field HDF5 files** — when `--density-field` is set, reads a 3‑D grid dataset and writes a VTI (ImageData) volume.
 
 It supports chunked processing, optional inclusion of extra particle fields, and the same HDF5 plugin bootstrap used elsewhere.
-
----
 
 ### Command Overview
 
@@ -116,8 +105,6 @@ Enable with `--density-field`, which switches to VTI output.
 | `--grid-spacing DX DY DZ` | Override spacing; otherwise inferred from metadata. |
 | `--grid-origin OX OY OZ` | Override origin (defaults to 0 or metadata). |
 
----
-
 ### Example Commands
 
 #### Particles → VTU
@@ -141,8 +128,6 @@ python scripts/export_snapshot_vtu.py \
   --output outputs/snap_010_density.vti
 ```
 
----
-
 ### Workflow Summary
 
 * **Particle mode** streams coordinates (plus optional attributes) in manageable chunks, applies any requested stride/decimation, and writes appended-binary VTU data (Points + Polyvertex cells). This keeps memory usage low and file size reasonable.
@@ -150,7 +135,6 @@ python scripts/export_snapshot_vtu.py \
 * **Density-field mode** simply reads the 3‑D dataset, infers origin/spacing, and writes a uniform ImageData `.vti`, which ParaView can volume-render directly.
 
 Because the script uses appended binary, ParaView can load these files quickly. When exporting particles, the script ensures each particle becomes both a point and a vertex cell so you can use both glyph and cell-based coloring.
-
 
 ## Comparison of these tools:
 

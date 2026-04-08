@@ -245,8 +245,6 @@ pvpython scripts/spin_render.py \
 - If you’re re-running with different settings, change the output prefix or remove old `*_####.png` frames first.
 - Default colormap is `Fast`; use `--colormap "Inferno (matplotlib)"` to match the rest of the pipeline.
 
----
-
 ## `redshift_evolution.py` User Guide
 
 Use `scripts/redshift_evolution.py` to generate a smooth movie showing the evolution of the cosmic web across redshift snapshots.  Given one Delaunay VTU per redshift, the script linearly interpolates point positions and scalar values between consecutive snapshots and assembles a PNG sequence and MP4.

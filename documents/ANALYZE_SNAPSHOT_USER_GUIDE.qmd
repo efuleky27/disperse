@@ -82,8 +82,6 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 * `--keep-ndfield` — keep (rather than delete) the intermediate `coords_stride*.AND`.
 * `--disperse-bin-dir DIR` — directory containing DisPerSE binaries (`delaunay_3D`, `mse`, `netconv`, `skelconv`).
 
----
-
 ## Examples
 
 ### Full Snapshot Pipeline
@@ -132,8 +130,6 @@ python scripts/analyze_snapshot.py \
   --skelconv-format vtp \
   --skelconv-smooth 5
 ```
-
----
 
 ## Notes
 

@@ -116,8 +116,6 @@ python scripts/aggregate_topology_points.py \
   --hist-percentile-range 1 99
 ```
 
----
-
 ## `compare_simulations.py` User Guide
 
 Use `scripts/compare_simulations.py` to place two simulations' boxplots side-by-side for direct comparison.  It reads one `*_topology_stats.csv` per simulation (auto-discovered from a folder or its `combined/` subdirectory) and produces a multi-panel figure with one column-pair per category.
@@ -164,8 +162,6 @@ python scripts/compare_simulations.py \
 - The figure uses the same four-category colour scheme as `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
 - Simulation A boxes are lighter with a `////` hatch; simulation B boxes are solid and darker.
 - The x-axis shows only the coloured category label — no tick marks.
-
----
 
 ## More Examples
 Redshift 3:

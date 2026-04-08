@@ -26,8 +26,6 @@ Visualization scripts (standalone, not part of the batch pipeline):
 - `redshift_evolution.py` – smooth interpolated movie across redshift snapshots → MP4.
 - `compare_simulations.py` – side-by-side boxplots comparing two simulations' topology stats.
 
----
-
 ## Data and Tools
 
 - **Data**: Quijote snapshot (e.g., `data/snap_010.hdf5` or a multi-file folder such as `data/snapdir_000`), 1 Gpc/h box, `PartType1` dark matter coordinates.
@@ -38,8 +36,6 @@ Visualization scripts (standalone, not part of the batch pipeline):
 
 - **Dependencies**: `vtkmodules` (VTK I/O), `hdf5plugin` (Blosc filter for Quijote), `numpy`, `h5py`, `polars` (fast aggregation), `scipy` (proximity alignment in `redshift_evolution.py`).
 - **Units**: Snapshots in `kpc/h` by default; outputs typically in `mpc/h` (`--output-unit`). Cropped runs rebase coordinates to the crop origin for periodic tessellation, then shift VTK outputs back to global coordinates.
-
----
 
 ## Common Conventions
 
@@ -52,8 +48,6 @@ Visualization scripts (standalone, not part of the batch pipeline):
 - Cropped runs: NDfield coordinates are rebased to the crop origin; exported VTU/VTP are shifted back to global.
 - Use `--delaunay-btype periodic` rather than `--periodic` for crops; `--periodic` can introduce artifacts.
 
----
-
 ## Structure Identification
 
 - **Walls**: 2D manifolds from the Morse–Smale complex of the DTFE density field. These sheet-like separatrices partition flow basins and naturally trace cosmic walls.
@@ -61,8 +55,6 @@ Visualization scripts (standalone, not part of the batch pipeline):
 - **Filament manifolds**: Optional 2D manifolds that bound the filaments. Useful for overlap/composition analysis; exported separately via `--dump-filament-manifolds`.
 - **Clusters**: Density maxima (critical points, type=3). DisPerSE's 3‑manifold exports are volumetric and often empty after smoothing, so the pipeline exports maxima critical points via `--dump-clusters` and maps them to Delaunay IDs via nearest-neighbor assignment. Cluster `log_field_value` is computed as `ln(field_value)` to match other structures.
 - **Scalars**: All overlap/summary stats use Delaunay scalars, which avoids interpolation artifacts from manifold/skeleton geometry.
-
----
 
 ## Stage 1: `analyze_snapshot.py` (build and extract topology)
 
@@ -115,8 +107,6 @@ python scripts/analyze_snapshot.py \
 **Why it matters**
 Reduces the dataset to a safe size, builds the DTFE density that MSE needs, applies persistence filtering for meaningful walls/filaments, and delivers globally aligned VTKs for the next stages without periodic tiling artifacts in cropped runs.
 
----
-
 ## Stage 2: `ndtopo_stats.py` (overlap/mass attribution)
 
 **Purpose**
@@ -163,8 +153,6 @@ python scripts/ndtopo_stats.py --verbose \
 
 **Why it matters**
 Shows how much mass/field value sits in overlapping vs unique topology membership, using the authoritative Delaunay values rather than interpolated manifold/skeleton scalars. Filament counts can exceed matched mass because many filament samples are interpolated along arcs and have no Delaunay node — this is expected.
-
----
 
 ## Stage 3: `batch_clip.py` (slab clip + 2D/3D views)
 
@@ -215,8 +203,6 @@ Notes:
 
 **Why it matters**
 Provides ready-to-view 2D/3D slices aligned to a slab, and flattened 2D layers that make overlaps/absence between density, walls, and filaments easy to see at a glance.
-
----
 
 ## Stage 4: `batch_crop_and_clip.py` (batch crops + slabs)
 
@@ -285,8 +271,6 @@ Automates running the full pipeline over many tiles and slabs, organizing output
 - If a crop contains no particles, it is skipped.
 - Filament mass < count is expected when many filament `cell` IDs don't match Delaunay `true_index`.
 
----
-
 ## Stage 5: `aggregate_topology_points.py` (cross-crop aggregation)
 
 **Purpose**
@@ -328,8 +312,6 @@ python scripts/aggregate_topology_points.py \
 
 **Why it matters**
 Gives a global view of how mass and density are distributed across cosmic-web categories for the full simulated volume, not just individual crops.
-
----
 
 ## Visualization Scripts
 
@@ -393,8 +375,6 @@ python scripts/compare_simulations.py \
   --output-dir outputs/comparison --output-prefix compare_z3_vs_z0
 ```
 
----
-
 ## Data Analysis Outputs
 
 - **VTK files**: shifted walls/filaments/density (3D and flattened 2D), plus averaged density grids for slice/overlay inspection in ParaView.
@@ -405,8 +385,6 @@ python scripts/compare_simulations.py \
 - **Simulation comparison**: Side-by-side boxplots from `compare_simulations.py` for direct comparison across runs/redshifts.
 - **3D animations**: Rotating renders (`spin_render.py`) and redshift evolution movies (`redshift_evolution.py`).
 
----
-
 ## Troubleshooting / Gotchas
 
 - **VTK import errors**: Ensure `vtkmodules` is on `PYTHONPATH` (via conda environment hooks) and ParaView's Python is discoverable when using `pvpython`.
@@ -416,8 +394,6 @@ python scripts/compare_simulations.py \
 - **File naming**: Stems no longer duplicate format tokens; if older files remain, prefer the non-duplicated names for downstream steps.
 - **pvpython PATH**: Ensure `pvpython` is on PATH before running `batch_clip.py`, `spin_render.py`, or `redshift_evolution.py`. See the README for the conda activate.d hook approach.
 - **`--periodic` vs `--delaunay-btype periodic`**: Use `--delaunay-btype periodic` for cropped runs. `--periodic` can introduce tessellation artifacts.
-
----
 
 ## Technologies Used
 
