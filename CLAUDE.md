@@ -188,6 +188,7 @@ Website: <https://efuleky27.github.io/disperse/> — auto-published from `main` 
 - **Blank lines around lists are required by Pandoc:**
   - A blank line must precede a list when it follows paragraph text (otherwise the list is treated as a paragraph continuation).
   - A blank line must follow a list when paragraph text comes next (otherwise the paragraph is absorbed into the last list item).
+  - This applies to all list styles: `- item`, `* item`, `1. item`, and `1) item`.
   - Headers and code fences after a list do not require a blank line, but it doesn't hurt.
 
 ---

@@ -3,6 +3,7 @@ title: "`batch_crop_and_clip.py` User Guide"
 ---
 
 Use `scripts/batch_crop_and_clip.py` to automate two steps across many subvolumes:
+
 1) Run `analyze_snapshot.py` on non-overlapping crop boxes of a snapshot.
 2) For each crop, run `batch_clip.py` across multiple slab origins inside that crop.
 
