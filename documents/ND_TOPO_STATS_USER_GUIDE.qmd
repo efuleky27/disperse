@@ -56,9 +56,11 @@ python scripts/ndtopo_stats.py \
   - If filament manifolds are provided: `clusters_not_filament_manifolds`, `filament_manifolds_not_clusters`,
     `shared_filament_manifolds_clusters`, `shared_walls_filament_manifolds_clusters`,
     `shared_filaments_filament_manifolds_clusters`, `shared_walls_filaments_filament_manifolds_clusters`.
+
 - Optional per-point CSV (`--per-point-csv`) with one row per Delaunay ID and boolean membership flags:
   - Columns: `delaunay_id`, `is_wall`, `is_filament`, `is_filament_manifold`, `is_cluster`, plus the requested scalar columns.
   - Boolean flags preserve multi‑membership so downstream analyses can filter/aggregate by combination.
+
 - Optional topology-scalars CSV (`--topology-scalars-csv`) that uses **topology dataset scalars** instead of Delaunay scalars.
   - Adds a `scalar_source` column (`walls`, `filaments`, `filament_manifolds`, `clusters`) to indicate which topology dataset supplied the scalar values.
 

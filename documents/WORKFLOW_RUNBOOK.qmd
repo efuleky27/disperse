@@ -35,6 +35,7 @@ Visualization scripts (standalone, not part of the batch pipeline):
   - DisPerSE binaries: `delaunay_3D`, `mse`, `netconv`, `skelconv` (on `$PATH` or pointed to via `--disperse-bin-dir`).
   - ParaView `pvpython` (required for `batch_clip.py`, `spin_render.py`, and `redshift_evolution.py`).
   - Python scripts in `scripts/`: `analyze_snapshot.py`, `batch_clip.py`, `batch_crop_and_clip.py`, `ndtopo_stats.py`, `aggregate_topology_points.py`, `spin_render.py`, `redshift_evolution.py`, `compare_simulations.py`.
+
 - **Dependencies**: `vtkmodules` (VTK I/O), `hdf5plugin` (Blosc filter for Quijote), `numpy`, `h5py`, `polars` (fast aggregation), `scipy` (proximity alignment in `redshift_evolution.py`).
 - **Units**: Snapshots in `kpc/h` by default; outputs typically in `mpc/h` (`--output-unit`). Cropped runs rebase coordinates to the crop origin for periodic tessellation, then shift VTK outputs back to global coordinates.
 
@@ -47,6 +48,7 @@ Visualization scripts (standalone, not part of the batch pipeline):
   - Walls: `<prefix>_manifolds_<TAG>_S###.vtu`
   - Filaments: `<prefix>_arcs_<ARC>_S###.vtp` (a matching `.vtu` is also written)
   - Cluster critical points: `<prefix>_cluster_critpoints_<TAG>_S000.vtp` and `.vtu`
+
 - Cropped runs: NDfield coordinates are rebased to the crop origin; exported VTU/VTP are shifted back to global.
 - Use `--delaunay-btype periodic` rather than `--periodic` for crops; `--periodic` can introduce artifacts.
 
@@ -105,6 +107,7 @@ python scripts/analyze_snapshot.py \
 ```
 
 **Outputs (per crop)**
+
 - Native (rebased coords): `<prefix>.NDnet`, `<prefix>_s*.NDskl`.
 - VTK (shifted to global): `<prefix>_delaunay_S###.vtu`, `<prefix>_manifolds_<TAG>_S###.vtu`, `<prefix>_arcs_<ARC>_S###.vtp` (plus `.vtu`), optional `<prefix>_filament_manifolds_<TAG>_S###.vtu`, and `<prefix>_cluster_critpoints_<TAG>_S000.vtp/.vtu`.
 - `<prefix>_summary_stats.csv` (VTK scalar stats).
@@ -131,6 +134,7 @@ Compute how many Delaunay vertices belong to walls, filaments, clusters, overlap
 3. *Category aggregation* — Split Delaunay vertices into: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned`, plus filament-manifold variants (`filament_manifolds`, `shared_walls_filament_manifolds`, etc.) and cluster variants (`clusters`, `clusters_not_filaments`, `shared_walls_clusters`, `shared_walls_filaments_clusters`, etc.) when those inputs are provided. Aggregate `--scalar-fields` (default: `mass`, `field_value`, `log_field_value`) over each category.
 
 **Key flags**
+
 - `--write-vtk` — convert NDnet/NDskl to unsmoothed VTU/VTP if needed
 - `--delaunay-id-field true_index`, `--walls-id-field true_index`, `--filaments-id-field cell`
 - `--delaunay-cell-mode all|zero`, `--walls-cell-mode all|zero`, `--filaments-cell-mode all|zero`
@@ -153,6 +157,7 @@ python scripts/ndtopo_stats.py --verbose \
 ```
 
 **Outputs**
+
 - `<prefix>_topology_stats.csv` — counts and `<scalar>_sum`/`<scalar>_mean` per category.
 - `<prefix>_topology_points.csv` (optional, `--per-point-csv`) — one row per Delaunay vertex with boolean membership flags and scalar values. Required input for Stage 5.
 
@@ -202,6 +207,7 @@ Notes:
 - `--png-align-composite` (default) aligns composite overlays to density bounds; disable with `--no-png-align-composite` if overlays already share the same coordinate frame.
 
 **Outputs (per slab)**
+
 - 3D clips: `_walls_3d.vtu`, `_filaments_3d.vtp`, `_density_3d.vtu/.vti`
 - 2D flats/averages: `_walls.vtu`, `_filaments.vtp`, `_walls_filaments.vtm`, `_density.vtu`, `_density_avg.vti`
 - `_summary_stats.csv`
@@ -228,6 +234,7 @@ Tile a large snapshot into non-overlapping crops, run Stages 1–3 on each crop,
 4. *Per-slab: clip* — March slab origins by `--slab-step` / `--slab-thickness`; call `batch_clip.py` with `--resample-dims` and `--scalar-name` to produce 3D/2D clips and PNGs. Use `--skip-slabs` to run analysis + stats only.
 
 **Inputs/tiling**
+
 - `--snapshot`: full HDF5 snapshot.
 - `--crop-size DX DY DZ`: tile size in `--input-unit` (default kpc/h).
 - `--x-range/--y-range/--z-range`: overall region to tile; partial edge tiles are skipped.
@@ -273,6 +280,7 @@ output-root/
 Automates running the full pipeline over many tiles and slabs, organizing outputs cleanly per crop/slab and delivering both visuals and stats for downstream analysis.
 
 **Tips**
+
 - Ensure `pvpython` is on PATH for slab clipping; ensure `vtkmodules` is available for VTK shifts/stats.
 - If a crop contains no particles, it is skipped.
 - Filament mass < count is expected when many filament `cell` IDs don't match Delaunay `true_index`.
@@ -312,6 +320,7 @@ python scripts/aggregate_topology_points.py \
 ```
 
 **Outputs**
+
 - `<prefix>_topology_stats.csv` — aggregated stats across all crops.
 - `<prefix>_<category>_<scalar>_hist.csv/.png` — per-category histograms (with count and median line).
 - `<prefix>_filman_walls_composition.png` — composition barchart (clusters / filaments / walls / unassigned).

@@ -61,6 +61,7 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 * `--dump-clusters TAG` — export cluster critical points (maxima) using the given tag (e.g., `JE3a`).
   - The pipeline exports **cluster critical points** from the skeleton as a VTP/VTU point set. This is the primary cluster representation used downstream because DisPerSE's 3‑manifold exports are volumetric and often empty.
   - Cluster `log_field_value` is computed as `ln(field_value)` for consistency with the other structures.
+
 * `--dump-cluster-manifolds TAG` — deprecated alias for `--dump-clusters` (kept for backward compatibility).
 * `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
   - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). Use `--dump-filament-manifolds` for one extra tag, or run separate passes if you need more.
