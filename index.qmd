@@ -95,6 +95,7 @@ Streams particle coordinates from an HDF5 snapshot, optionally crops and decimat
 For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.
 
 **Key flags:**
+
 - `--input`: HDF5 snapshot path
 - `--crop-box xmin ymin zmin xmax ymax zmax`: restrict to a sub-volume (in `--input-unit`, default kpc/h)
 - `--stride N` / `--target-count N`: particle decimation
@@ -137,6 +138,7 @@ python scripts/analyze_snapshot.py \
 Matches Delaunay vertex IDs to walls/filaments/clusters and computes how many points fall in each category (walls, filaments, both, clusters, unassigned, etc.), aggregating Delaunay scalars (mass, field_value, log_field_value) per category.
 
 **Key flags:**
+
 - `--delaunay-vtk`, `--walls-vtk`, `--filaments-vtk`: VTK inputs (or `--*-ndnet` / `--*-ndskl` with `--write-vtk`)
 - `--filament-manifolds-vtk`, `--cluster-manifolds-vtk`: optional additional inputs
 - `--per-point-csv PATH`: write one row per Delaunay vertex with boolean membership flags — needed for downstream aggregation
@@ -164,6 +166,7 @@ python scripts/ndtopo_stats.py \
 Clips walls, filaments, and density to a thin slab along a chosen axis, flattens to 2D, averages density across the slab, and renders composite PNGs. Must be run via `pvpython`.
 
 **Key flags:**
+
 - `--walls`, `--filaments`, `--delaunay`: VTK inputs (relative to `--input-dir`)
 - `--slab-axis z --slab-origin 0 --slab-thickness 10`: slab position (in output units, mpc/h)
 - `--resample-dims 512 512 64`: resampling grid
@@ -197,6 +200,7 @@ pvpython scripts/batch_clip.py \
 Orchestrates Stages 1–3 across a tiled grid of non-overlapping crop boxes, running `analyze_snapshot.py` → `ndtopo_stats.py` → `batch_clip.py` for each crop and slab. This is the main entry point for large-volume analysis.
 
 **Key flags:**
+
 - `--snapshot`, `--output-root`: input snapshot and output root
 - `--crop-size DX DY DZ`: tile dimensions (in `--input-unit`, default kpc/h)
 - `--x-range`, `--y-range`, `--z-range`: volume to tile
@@ -247,6 +251,7 @@ outputs/quijote_batches/
 Combines all `*_topology_points.csv` files across crops into global statistics, per-category histograms, and composition/violin/box plots for four primary categories: **Clusters**, **Filaments** (filament manifolds not clusters), **Walls** (walls only), and **Unassigned**.
 
 **Key flags:**
+
 - `--root`: root directory to scan for `*_topology_points.csv`
 - `--output-dir`, `--output-prefix`: output location
 - `--engine polars`: fast path (default); `--polars-chunks N` for large datasets
