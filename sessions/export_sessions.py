@@ -481,7 +481,9 @@ def extract_keywords(messages, limit=10):
 
 
 def render_master_by_day(all_messages):
-    lines = ["# AI Sessions Timeline", ""]
+    lines = ["# AI Log", ""]
+    lines.append("A chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code.")
+    lines.append("")
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
     lines.append(f"Generated: `{generated}`")
     lines.append("")

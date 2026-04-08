@@ -41,7 +41,7 @@ website:
             text: Other Tools
     right:
       - href: sessions/export/MASTER_BY_DAY.md
-        text: AI Sessions
+        text: AI Log
       - href: https://github.com/efuleky27/disperse
         text: GitHub
         icon: github

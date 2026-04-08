@@ -1,4 +1,6 @@
-# AI Sessions Timeline
+# AI Log
+
+A chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code.
 
 Generated: `2026-04-08 02:57:51Z`
 
