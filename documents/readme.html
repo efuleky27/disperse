@@ -595,10 +595,13 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 </section>
 <section id="snapshot-bsq0-single-file" class="level3">
 <h3 class="anchored" data-anchor-id="snapshot-bsq0-single-file">Snapshot (BSQ/0, single file)</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f   <span class="co"># Quijote BSQ endpoint</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5"</span> <span class="dt">\</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint local-id</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> endpoint search quijote</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> ls <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/"</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5"</span> </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">--label</span> <span class="st">"Quijote Snapshot BSQ 0 z0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="pre-computed-density-field-bsq0" class="level3">
 <h3 class="anchored" data-anchor-id="pre-computed-density-field-bsq0">Pre-computed density field (BSQ/0)</h3>

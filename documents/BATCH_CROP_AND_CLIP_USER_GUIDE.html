@@ -211,16 +211,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#batch_crop_and_clip.py-user-guide" id="toc-batch_crop_and_clip.py-user-guide" class="nav-link active" data-scroll-target="#batch_crop_and_clip.py-user-guide"><code>batch_crop_and_clip.py</code> User Guide</a>
-  <ul class="collapse">
-  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link active" data-scroll-target="#what-it-does">What it does</a></li>
   <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
   <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
   <li><a href="#outputs-and-layout" id="toc-outputs-and-layout" class="nav-link" data-scroll-target="#outputs-and-layout">Outputs and layout</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#more-examples" id="toc-more-examples" class="nav-link" data-scroll-target="#more-examples">More Examples</a></li>
   <li><a href="#tips" id="toc-tips" class="nav-link" data-scroll-target="#tips">Tips</a></li>
-  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -246,12 +243,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="batch_crop_and_clip.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="batch_crop_and_clip.py-user-guide"><code>batch_crop_and_clip.py</code> User Guide</h2>
 <p>Use <code>scripts/batch_crop_and_clip.py</code> to automate two steps across many subvolumes: 1) Run <code>analyze_snapshot.py</code> on non-overlapping crop boxes of a snapshot. 2) For each crop, run <code>batch_clip.py</code> across multiple slab origins inside that crop.</p>
 <p>Outputs are organized per-crop and per-slab so results do not overwrite.</p>
-<section id="what-it-does" class="level3">
-<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<section id="what-it-does" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
 <ul>
 <li>Tiles a user-specified volume with fixed-size crop boxes (skips partial edge tiles).</li>
 <li>For each crop: calls <code>analyze_snapshot.py</code> with your smoothing, nsig, and export options.</li>
@@ -262,8 +257,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Skips crops that contain no particles (does not abort the batch).</li>
 </ul>
 </section>
-<section id="requirements" class="level3">
-<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<section id="requirements" class="level2">
+<h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
 <ul>
 <li>Python with access to <code>scripts/analyze_snapshot.py</code> and <code>scripts/batch_clip.py</code>.</li>
 <li>ParaView <code>pvpython</code> on PATH for the <code>batch_clip.py</code> calls.</li>
@@ -283,8 +278,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="cli" class="level3">
-<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<section id="cli" class="level2">
+<h2 class="anchored" data-anchor-id="cli">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> <span class="op">&lt;</span>snapshot.hdf5<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> <span class="op">&lt;</span>OUTPUT_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
@@ -317,8 +312,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>ndtopo_stats.py</code> supports <code>--delaunay-id-field</code>, <code>--walls-id-field</code>, <code>--filaments-id-field</code>, and <code>--*-cell-mode</code> if you need to adjust how IDs are matched.</li>
 </ul>
 </section>
-<section id="outputs-and-layout" class="level3">
-<h3 class="anchored" data-anchor-id="outputs-and-layout">Outputs and layout</h3>
+<section id="outputs-and-layout" class="level2">
+<h2 class="anchored" data-anchor-id="outputs-and-layout">Outputs and layout</h2>
 <p>Under <code>--output-root</code>, each crop gets its own folder:</p>
 <pre><code>output-root/
   crop_x&lt;x0&gt;-&lt;x1&gt;_y&lt;y0&gt;-&lt;y1&gt;_z&lt;z0&gt;-&lt;z1&gt;/
@@ -334,10 +329,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       &lt;prefix&gt;_clusters.vtp (if cluster critical points were provided)
       &lt;prefix&gt;_summary_stats.csv
       PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-align-composite`, `--png-hide-orientation-axes`, `--png-lighting`, and `--composite-filaments-source` are forwarded)</code></pre>
-<p>Naming notes: - Manifolds: <code>&lt;crop_prefix&gt;_sX_manifolds_&lt;TAG&gt;_S###.vtu</code> (persistence tag + smoothing). - Filament manifolds (optional): <code>&lt;crop_prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;_S###.vtu</code> (persistence tag + smoothing). - Cluster critical points (recommended): <code>&lt;crop_prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp</code> and <code>.vtu</code>. - Filaments: <code>&lt;crop_prefix&gt;_sX_arcs_&lt;ARC&gt;_S###.vtp</code> (persistence tag + smoothing). - Delaunay: <code>&lt;crop_prefix&gt;_delaunay_S###.vtu</code> (smoothing tag). - Unsmoothed conversions (e.g., via <code>ndtopo_stats.py --write-vtk</code>) use <code>_S000</code>. - DisPerSE concatenates multiple manifold tags into one file (e.g., <code>JE1a2a</code>). Run per-tag if you need separate manifold outputs. Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.</p>
+<p>Naming notes:</p>
+<ul>
+<li>Manifolds: <code>&lt;crop_prefix&gt;_sX_manifolds_&lt;TAG&gt;_S###.vtu</code> (persistence tag + smoothing).</li>
+<li>Filament manifolds (optional): <code>&lt;crop_prefix&gt;_sX_filament_manifolds_&lt;TAG&gt;_S###.vtu</code> (persistence tag + smoothing).</li>
+<li>Cluster critical points (recommended): <code>&lt;crop_prefix&gt;_cluster_critpoints_&lt;TAG&gt;_S000.vtp</code> and <code>.vtu</code>.</li>
+<li>Filaments: <code>&lt;crop_prefix&gt;_sX_arcs_&lt;ARC&gt;_S###.vtp</code> (persistence tag + smoothing).</li>
+<li>Delaunay: <code>&lt;crop_prefix&gt;_delaunay_S###.vtu</code> (smoothing tag).</li>
+<li>Unsmoothed conversions (e.g., via <code>ndtopo_stats.py --write-vtk</code>) use <code>_S000</code>.</li>
+<li>DisPerSE concatenates multiple manifold tags into one file (e.g., <code>JE1a2a</code>). Run per-tag if you need separate manifold outputs.</li>
+</ul>
+<p>Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.</p>
 </section>
-<section id="examples" class="level3">
-<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
 <p>Run a batch over 500×500×100 (kpc/h) tiles, stepping slabs every 10 (mpc/h after conversion):</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
@@ -351,8 +356,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="more-examples" class="level3">
-<h3 class="anchored" data-anchor-id="more-examples">More Examples</h3>
+<section id="more-examples" class="level2">
+<h2 class="anchored" data-anchor-id="more-examples">More Examples</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">--snapshot</span> data/snapdir_000 <span class="dt">\</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">--output-root</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
@@ -371,8 +376,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">--export-delaunay-points</span> <span class="dt">\</span></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">--skip-slabs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="tips" class="level3">
-<h3 class="anchored" data-anchor-id="tips">Tips</h3>
+<section id="tips" class="level2">
+<h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
 <li>If a crop contains no particles, the script logs “[skip] Crop box contains no particles.” and moves on.</li>
 <li>Ensure <code>pvpython</code> is resolvable from the environment; otherwise set PATH accordingly or adjust the <code>--clip-script</code> invocation to include its full path.</li>
@@ -380,7 +385,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

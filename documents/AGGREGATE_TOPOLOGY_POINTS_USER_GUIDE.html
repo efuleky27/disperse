@@ -211,17 +211,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#aggregate_topology_points.py-user-guide" id="toc-aggregate_topology_points.py-user-guide" class="nav-link active" data-scroll-target="#aggregate_topology_points.py-user-guide"><code>aggregate_topology_points.py</code> User Guide</a>
-  <ul class="collapse">
-  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link active" data-scroll-target="#what-it-does">What it does</a></li>
   <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
   <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
   <li><a href="#engines" id="toc-engines" class="nav-link" data-scroll-target="#engines">Engines</a></li>
   <li><a href="#output" id="toc-output" class="nav-link" data-scroll-target="#output">Output</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
-  </ul></li>
-  <li><a href="#compare_simulations.py-user-guide" id="toc-compare_simulations.py-user-guide" class="nav-link" data-scroll-target="#compare_simulations.py-user-guide"><code>compare_simulations.py</code> User Guide</a>
-  <ul class="collapse">
+  <li><a href="#compare_simulations.py-user-guide" id="toc-compare_simulations.py-user-guide" class="nav-link" data-scroll-target="#compare_simulations.py-user-guide"><code>compare_simulations.py</code> User Guide</a></li>
   <li><a href="#what-it-does-1" id="toc-what-it-does-1" class="nav-link" data-scroll-target="#what-it-does-1">What it does</a></li>
   <li><a href="#requirements-1" id="toc-requirements-1" class="nav-link" data-scroll-target="#requirements-1">Requirements</a></li>
   <li><a href="#cli-1" id="toc-cli-1" class="nav-link" data-scroll-target="#cli-1">CLI</a></li>
@@ -229,7 +225,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1">Examples</a></li>
   <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
   <li><a href="#more-examples" id="toc-more-examples" class="nav-link" data-scroll-target="#more-examples">More Examples</a></li>
-  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -255,12 +250,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="aggregate_topology_points.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="aggregate_topology_points.py-user-guide"><code>aggregate_topology_points.py</code> User Guide</h2>
-<p>Use <code>scripts/aggregate_topology_points.py</code> to combine many <code>*_topology_points.csv</code> files into: - A single aggregated <code>topology_stats</code> CSV (same shape as per-crop stats). - Per-category histograms for selected scalars (CSV, plus PNG if matplotlib is available). - Composition barchart + violin/box plots for four focus categories (clusters, filament-manifolds not clusters, walls not filaments/clusters, and unassigned).</p>
+<p>Use <code>scripts/aggregate_topology_points.py</code> to combine many <code>*_topology_points.csv</code> files into:</p>
+<ul>
+<li>A single aggregated <code>topology_stats</code> CSV (same shape as per-crop stats).</li>
+<li>Per-category histograms for selected scalars (CSV, plus PNG if matplotlib is available).</li>
+<li>Composition barchart + violin/box plots for four focus categories (clusters, filament-manifolds not clusters, walls not filaments/clusters, and unassigned).</li>
+</ul>
 <p>This is designed for large datasets (many crops and large per-point files).</p>
-<section id="what-it-does" class="level3">
-<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<section id="what-it-does" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
 <ul>
 <li>Scans for <code>*_topology_points.csv</code> files (or uses explicit inputs).</li>
 <li>Aggregates category statistics across all crops.</li>
@@ -268,16 +266,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Optionally renders composition barchart + violin/box plots.</li>
 </ul>
 </section>
-<section id="requirements" class="level3">
-<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<section id="requirements" class="level2">
+<h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
 <ul>
 <li>Python in your active environment.</li>
 <li>Optional but recommended: <code>polars</code> (fast path, default).</li>
 <li>Optional: <code>matplotlib</code> for PNG histogram plots.</li>
 </ul>
 </section>
-<section id="cli" class="level3">
-<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<section id="cli" class="level2">
+<h2 class="anchored" data-anchor-id="cli">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> <span class="op">&lt;</span>OUTPUT_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> <span class="op">&lt;</span>COMBINED_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
@@ -298,32 +296,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  [--plot-dpi 200] <span class="dt">\</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">no</span><span class="pp">-</span><span class="ss">plots</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="engines" class="level3">
-<h3 class="anchored" data-anchor-id="engines">Engines</h3>
+<section id="engines" class="level2">
+<h2 class="anchored" data-anchor-id="engines">Engines</h2>
 <ul>
 <li><code>polars</code> (default): fast, exact stats, scales well. Use <code>--polars-chunks</code> to split inputs into N chunks for large datasets; chunked mode uses global histogram bins and yields approximate quantiles.</li>
 <li><code>stream</code>: fast and memory-light, approximate quantiles (uses histogram bins).</li>
 <li><code>python</code>: exact but slow on large files.</li>
 </ul>
 </section>
-<section id="output" class="level3">
-<h3 class="anchored" data-anchor-id="output">Output</h3>
-<p>In <code>--output-dir</code> with <code>--output-prefix</code>:<br>
-- <code>&lt;prefix&gt;_topology_stats.csv</code><br>
-- <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code><br>
-- <code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set)<br>
-- <code>&lt;prefix&gt;_filman_walls_composition.png</code> (composition barchart for the four focus categories)<br>
-- <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> (violin plot for the four focus categories)<br>
-- <code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_box.png</code> (box plot for the four focus categories)</p>
-<p>Categories follow <code>ndtopo_stats.py</code>, including filament‑manifold and cluster variants when present. The violin/box/composition plots only include:<br>
-- <code>clusters</code><br>
-- <code>filament_manifolds_not_clusters</code><br>
-- <code>walls_not_filament_manifolds_or_clusters</code><br>
-- <code>unassigned_walls_filament_manifolds_clusters</code><br>
-Histograms use per-category bins by default (<code>--hist-bin-mode per-category</code>) or shared bins per scalar (<code>--hist-bin-mode global</code>). The default histogram scalars are <code>field_value</code> and <code>log_field_value</code> (use <code>--hist-scalars</code> to override). Histogram PNGs include the particle count <code>n</code> and a red dashed median line; histogram CSVs include <code>total_count</code>. Violin plots use raw values if <code>--plots-from-raw</code> is set; otherwise they sample from histogram bins. Box plots are rendered from the aggregated <code>*_topology_stats.csv</code> by default.</p>
+<section id="output" class="level2">
+<h2 class="anchored" data-anchor-id="output">Output</h2>
+<p>In <code>--output-dir</code> with <code>--output-prefix</code>:</p>
+<ul>
+<li><code>&lt;prefix&gt;_topology_stats.csv</code></li>
+<li><code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.csv</code></li>
+<li><code>&lt;prefix&gt;_&lt;category&gt;_&lt;scalar&gt;_hist.png</code> (if matplotlib is available and <code>--no-plots</code> is not set)</li>
+<li><code>&lt;prefix&gt;_filman_walls_composition.png</code> (composition barchart for the four focus categories)</li>
+<li><code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_violin.png</code> (violin plot for the four focus categories)</li>
+<li><code>&lt;prefix&gt;_filman_walls_&lt;scalar&gt;_box.png</code> (box plot for the four focus categories)</li>
+</ul>
+<p>Categories follow <code>ndtopo_stats.py</code>, including filament‑manifold and cluster variants when present. The violin/box/composition plots only include:</p>
+<ul>
+<li><code>clusters</code></li>
+<li><code>filament_manifolds_not_clusters</code></li>
+<li><code>walls_not_filament_manifolds_or_clusters</code></li>
+<li><code>unassigned_walls_filament_manifolds_clusters</code></li>
+</ul>
+<p>Histograms use per-category bins by default (<code>--hist-bin-mode per-category</code>) or shared bins per scalar (<code>--hist-bin-mode global</code>). The default histogram scalars are <code>field_value</code> and <code>log_field_value</code> (use <code>--hist-scalars</code> to override). Histogram PNGs include the particle count <code>n</code> and a red dashed median line; histogram CSVs include <code>total_count</code>. Violin plots use raw values if <code>--plots-from-raw</code> is set; otherwise they sample from histogram bins. Box plots are rendered from the aggregated <code>*_topology_stats.csv</code> by default.</p>
 </section>
-<section id="examples" class="level3">
-<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
 <p>Aggregate all crops under a root, fast path:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000 <span class="dt">\</span></span>
@@ -356,12 +358,12 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-percentile-range</span> 1 99</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
-</section>
 <section id="compare_simulations.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="compare_simulations.py-user-guide"><code>compare_simulations.py</code> User Guide</h2>
 <p>Use <code>scripts/compare_simulations.py</code> to place two simulations’ boxplots side-by-side for direct comparison. It reads one <code>*_topology_stats.csv</code> per simulation (auto-discovered from a folder or its <code>combined/</code> subdirectory) and produces a multi-panel figure with one column-pair per category.</p>
-<section id="what-it-does-1" class="level3">
-<h3 class="anchored" data-anchor-id="what-it-does-1">What it does</h3>
+</section>
+<section id="what-it-does-1" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-does-1">What it does</h2>
 <ul>
 <li>Reads aggregated <code>topology_stats.csv</code> files from two simulation output folders.</li>
 <li>Renders side-by-side box plots for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars.</li>
@@ -369,14 +371,14 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <li>Category labels on the x-axis are coloured to match the boxplot colours.</li>
 </ul>
 </section>
-<section id="requirements-1" class="level3">
-<h3 class="anchored" data-anchor-id="requirements-1">Requirements</h3>
+<section id="requirements-1" class="level2">
+<h2 class="anchored" data-anchor-id="requirements-1">Requirements</h2>
 <ul>
 <li>Python with <code>matplotlib</code>, <code>numpy</code>, and <code>polars</code> (or <code>pandas</code>).</li>
 </ul>
 </section>
-<section id="cli-1" class="level3">
-<h3 class="anchored" data-anchor-id="cli-1">CLI</h3>
+<section id="cli-1" class="level2">
+<h2 class="anchored" data-anchor-id="cli-1">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> <span class="op">&lt;</span>SIM_A_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> <span class="op">&lt;</span>SIM_B_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
@@ -385,8 +387,8 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  [--output-dir <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span>] <span class="dt">\</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  [--output-prefix <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="key-options" class="level3">
-<h3 class="anchored" data-anchor-id="key-options">Key options</h3>
+<section id="key-options" class="level2">
+<h2 class="anchored" data-anchor-id="key-options">Key options</h2>
 <ul>
 <li><code>--folder-a / --folder-b</code> — Root output directories for each simulation. The script searches for <code>*_topology_stats.csv</code> directly or inside a <code>combined/</code> subdirectory.</li>
 <li><code>--labels</code> — Display names for the two simulations (default: folder basenames).</li>
@@ -395,8 +397,8 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <li><code>--output-prefix</code> — Filename prefix for the output PNG.</li>
 </ul>
 </section>
-<section id="examples-1" class="level3">
-<h3 class="anchored" data-anchor-id="examples-1">Examples</h3>
+<section id="examples-1" class="level2">
+<h2 class="anchored" data-anchor-id="examples-1">Examples</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
@@ -405,8 +407,8 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/comparison_000_vs_004 <span class="dt">\</span></span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> compare_z3_vs_z0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="notes" class="level3">
-<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
 <ul>
 <li>The figure uses the same four-category colour scheme as <code>aggregate_topology_points.py</code> (clusters yellow, filaments orange, walls red, unassigned purple).</li>
 <li>Simulation A boxes are lighter with a <code>////</code> hatch; simulation B boxes are solid and darker.</li>
@@ -414,8 +416,8 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 </ul>
 <hr>
 </section>
-<section id="more-examples" class="level3">
-<h3 class="anchored" data-anchor-id="more-examples">More Examples</h3>
+<section id="more-examples" class="level2">
+<h2 class="anchored" data-anchor-id="more-examples">More Examples</h2>
 <p>Redshift 3:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_w_clusters <span class="dt">\</span></span>
@@ -446,7 +448,6 @@ Histograms use per-category bins by default (<code>--hist-bin-mode per-category<
 <span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 600</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

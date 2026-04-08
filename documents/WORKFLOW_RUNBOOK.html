@@ -415,7 +415,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-log-range</span> <span class="at">-3</span> 1 <span class="dt">\</span></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--no-png-transparent</span> <span class="dt">\</span></span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-align-composite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Notes: - Use <code>--no-png-transparent</code> if you want the background color to be visible in PNGs. - <code>--png-align-composite</code> (default) aligns composite overlays to density bounds; disable with <code>--no-png-align-composite</code> if overlays already share the same coordinate frame.</p>
+<p>Notes:</p>
+<ul>
+<li>Use <code>--no-png-transparent</code> if you want the background color to be visible in PNGs.</li>
+<li><code>--png-align-composite</code> (default) aligns composite overlays to density bounds; disable with <code>--no-png-align-composite</code> if overlays already share the same coordinate frame.</li>
+</ul>
 <p><strong>Outputs (per slab)</strong> - 3D clips: <code>_walls_3d.vtu</code>, <code>_filaments_3d.vtp</code>, <code>_density_3d.vtu/.vti</code> - 2D flats/averages: <code>_walls.vtu</code>, <code>_filaments.vtp</code>, <code>_walls_filaments.vtm</code>, <code>_density.vtu</code>, <code>_density_avg.vti</code> - <code>_summary_stats.csv</code> - PNGs if <code>--save-pngs</code></p>
 <p><strong>Why it matters</strong> Provides ready-to-view 2D/3D slices aligned to a slab, and flattened 2D layers that make overlaps/absence between density, walls, and filaments easy to see at a glance.</p>
 <hr>
@@ -468,7 +472,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="stage-5-aggregate_topology_points.py-cross-crop-aggregation" class="level2">
 <h2 class="anchored" data-anchor-id="stage-5-aggregate_topology_points.py-cross-crop-aggregation">Stage 5: <code>aggregate_topology_points.py</code> (cross-crop aggregation)</h2>
 <p><strong>Purpose</strong> Combine <code>*_topology_points.csv</code> files from all crops into a single aggregated stats CSV, per-category histograms (CSV + PNG), and composition/violin/box plots for the four primary categories: <strong>Clusters</strong>, <strong>Filaments</strong> (filament manifolds not clusters), <strong>Walls</strong> (walls only), and <strong>Unassigned</strong>.</p>
-<p><strong>How it works</strong> Scans <code>--root</code> recursively for <code>*_topology_points.csv</code> files (or uses an explicit <code>--inputs</code> list). Three aggregation engines: - <code>polars</code> (default) — fast, exact stats. Use <code>--polars-chunks N</code> to split into N chunks for very large datasets (approx. quantiles in chunked mode). - <code>stream</code> — memory-light, approximate quantiles. - <code>python</code> — exact but slow.</p>
+<p><strong>How it works</strong> Scans <code>--root</code> recursively for <code>*_topology_points.csv</code> files (or uses an explicit <code>--inputs</code> list). Three aggregation engines:</p>
+<ul>
+<li><code>polars</code> (default) — fast, exact stats. Use <code>--polars-chunks N</code> to split into N chunks for very large datasets (approx. quantiles in chunked mode).</li>
+<li><code>stream</code> — memory-light, approximate quantiles.</li>
+<li><code>python</code> — exact but slow.</li>
+</ul>
 <p><strong>Key inputs</strong> <code>--root</code> pointing to the batch output directory; <code>--output-dir</code> and <code>--output-prefix</code>; <code>--engine polars</code>; <code>--hist-bin-mode global</code> for shared bins across categories.</p>
 <p><strong>Example:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
@@ -543,7 +552,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3.0</span> <span class="at">--range-max</span> 1.0 <span class="dt">\</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slideshow</span> <span class="at">--slideshow-duration</span> 2.0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Notes: - Proximity alignment (chained KDTree nearest-neighbor) ensures interpolation traces the same physical particle across snapshots rather than position-index correspondence. Requires <code>scipy</code>; falls back to positional ordering with a warning if unavailable. - Label position is in normalized viewport coordinates (<code>--label-position X Y</code>); default <code>0.45 0.05</code> is center-bottom.</p>
+<p>Notes:</p>
+<ul>
+<li>Proximity alignment (chained KDTree nearest-neighbor) ensures interpolation traces the same physical particle across snapshots rather than position-index correspondence. Requires <code>scipy</code>; falls back to positional ordering with a warning if unavailable.</li>
+<li>Label position is in normalized viewport coordinates (<code>--label-position X Y</code>); default <code>0.45 0.05</code> is center-bottom.</li>
+</ul>
 </section>
 <section id="compare_simulations.py-side-by-side-comparison" class="level3">
 <h3 class="anchored" data-anchor-id="compare_simulations.py-side-by-side-comparison"><code>compare_simulations.py</code> (side-by-side comparison)</h3>

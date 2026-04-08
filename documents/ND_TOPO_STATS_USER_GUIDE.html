@@ -211,16 +211,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#ndtopo_stats.py-user-guide" id="toc-ndtopo_stats.py-user-guide" class="nav-link active" data-scroll-target="#ndtopo_stats.py-user-guide"><code>ndtopo_stats.py</code> User Guide</a>
-  <ul class="collapse">
-  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link active" data-scroll-target="#what-it-does">What it does</a></li>
   <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
   <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
   <li><a href="#output" id="toc-output" class="nav-link" data-scroll-target="#output">Output</a></li>
   <li><a href="#naming-conventions-for-auto-converted-files---write-vtk" id="toc-naming-conventions-for-auto-converted-files---write-vtk" class="nav-link" data-scroll-target="#naming-conventions-for-auto-converted-files---write-vtk">Naming conventions for auto-converted files (<code>--write-vtk</code>)</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#tips" id="toc-tips" class="nav-link" data-scroll-target="#tips">Tips</a></li>
-  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -246,11 +243,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="ndtopo_stats.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="ndtopo_stats.py-user-guide"><code>ndtopo_stats.py</code> User Guide</h2>
 <p>Use <code>scripts/ndtopo_stats.py</code> to measure how many vertices belong to walls, filaments, optional filament/cluster manifolds, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.</p>
-<section id="what-it-does" class="level3">
-<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<section id="what-it-does" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
 <ul>
 <li>Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (<code>--write-vtk</code> via <code>netconv</code>/<code>skelconv</code>).</li>
 <li>Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament manifolds VTU. Cluster inputs can be either VTU manifolds <strong>or</strong> the VTP critical-point export (<code>cluster_critpoints</code>).</li>
@@ -258,15 +253,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Aggregates selected scalar fields (default: <code>mass</code>, <code>field_value</code>, <code>log_field_value</code>) from the Delaunay mesh for each category and writes a CSV.</li>
 </ul>
 </section>
-<section id="requirements" class="level3">
-<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<section id="requirements" class="level2">
+<h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
 <ul>
 <li>Python with <code>vtkmodules</code> available in the active environment.</li>
 <li>Optional: <code>netconv</code>, <code>skelconv</code> on PATH (or pointed to via <code>--netconv-bin</code> / <code>--skelconv-bin</code>) if you want <code>--write-vtk</code>.</li>
 </ul>
 </section>
-<section id="cli" class="level3">
-<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<section id="cli" class="level2">
+<h2 class="anchored" data-anchor-id="cli">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> <span class="op">&lt;</span>Delaunay.vtu<span class="op">&gt;</span>   <span class="kw">|</span> <span class="ex">--delaunay-ndnet</span> <span class="op">&lt;</span>Delaunay.NDnet<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    <span class="op">&lt;</span>Walls.vtu<span class="op">&gt;</span>      <span class="kw">|</span> <span class="ex">--walls-ndnet</span>    <span class="op">&lt;</span>Walls.NDnet<span class="op">&gt;</span> <span class="dt">\</span></span>
@@ -298,8 +293,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Scalars are read only from the Delaunay file, regardless of what walls/filaments store.</li>
 </ul>
 </section>
-<section id="output" class="level3">
-<h3 class="anchored" data-anchor-id="output">Output</h3>
+<section id="output" class="level2">
+<h2 class="anchored" data-anchor-id="output">Output</h2>
 <ul>
 <li>A single CSV at <code>--output-csv</code> with columns: <code>category</code>, <code>count</code>, and for each scalar <code>&lt;name&gt;_sum</code>, <code>&lt;name&gt;_mean</code>.</li>
 <li>Base categories: <code>walls</code>, <code>filaments</code>, <code>walls_not_filaments</code>, <code>filaments_not_walls</code>, <code>shared_walls_filaments</code>, <code>unassigned</code>.</li>
@@ -320,8 +315,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 </ul>
 </section>
-<section id="naming-conventions-for-auto-converted-files---write-vtk" class="level3">
-<h3 class="anchored" data-anchor-id="naming-conventions-for-auto-converted-files---write-vtk">Naming conventions for auto-converted files (<code>--write-vtk</code>)</h3>
+<section id="naming-conventions-for-auto-converted-files---write-vtk" class="level2">
+<h2 class="anchored" data-anchor-id="naming-conventions-for-auto-converted-files---write-vtk">Naming conventions for auto-converted files (<code>--write-vtk</code>)</h2>
 <ul>
 <li>Delaunay from NDnet: <code>&lt;prefix&gt;_delaunay_S000.vtu</code>.</li>
 <li>Manifolds from NDnet: <code>&lt;prefix&gt;_manifolds_&lt;TAG&gt;_S000.vtu</code> (with existing persistence token kept in the stem).</li>
@@ -332,8 +327,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Stems are sanitized to use underscores (single dot before the extension).</li>
 </ul>
 </section>
-<section id="examples" class="level3">
-<h3 class="anchored" data-anchor-id="examples">Examples</h3>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
 <p>Use preexisting VTU/VTP:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="at">--verbose</span> <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span>  outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_delaunay_S000.vtu <span class="dt">\</span></span>
@@ -356,8 +351,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_cropped_test/topology_stats.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="tips" class="level3">
-<h3 class="anchored" data-anchor-id="tips">Tips</h3>
+<section id="tips" class="level2">
+<h2 class="anchored" data-anchor-id="tips">Tips</h2>
 <ul>
 <li>Ensure <code>vtkmodules</code> is importable (<code>python - &lt;&lt;'PY'\nimport vtkmodules; print('vtk ok')\nPY</code>).</li>
 <li>Stick to unsmoothed VTU/VTP if you want closer scalar agreement; the script still uses Delaunay scalars to avoid interpolation differences in walls/filaments.</li>
@@ -366,7 +361,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

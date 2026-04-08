@@ -211,9 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#stitch_slab_pngs.py-user-guide" id="toc-stitch_slab_pngs.py-user-guide" class="nav-link active" data-scroll-target="#stitch_slab_pngs.py-user-guide"><code>stitch_slab_pngs.py</code> User Guide</a>
-  <ul class="collapse">
-  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does">What it does</a></li>
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link active" data-scroll-target="#what-it-does">What it does</a></li>
   <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
   <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
   <li><a href="#key-options" id="toc-key-options" class="nav-link" data-scroll-target="#key-options">Key options</a></li>
@@ -221,7 +219,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#example-single-crop-density-pngs" id="toc-example-single-crop-density-pngs" class="nav-link" data-scroll-target="#example-single-crop-density-pngs">Example: single crop, density PNGs</a></li>
   <li><a href="#example-one-mp4-across-all-crops-ordered-by-z" id="toc-example-one-mp4-across-all-crops-ordered-by-z" class="nav-link" data-scroll-target="#example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</a></li>
   <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
-  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -247,11 +244,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="stitch_slab_pngs.py-user-guide" class="level2">
-<h2 class="anchored" data-anchor-id="stitch_slab_pngs.py-user-guide"><code>stitch_slab_pngs.py</code> User Guide</h2>
 <p>Use <code>scripts/stitch_slab_pngs.py</code> to build an MP4 by stitching one PNG type across slab folders (<code>slab_z*</code>) for each crop.</p>
-<section id="what-it-does" class="level3">
-<h3 class="anchored" data-anchor-id="what-it-does">What it does</h3>
+<section id="what-it-does" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
 <ul>
 <li>Scans each crop folder for slab directories (e.g., <code>slab_z0</code>, <code>slab_z10</code>, …).</li>
 <li>Picks a single PNG per slab (by suffix or glob).</li>
@@ -259,15 +254,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Writes an MP4 using <code>ffmpeg</code>.</li>
 </ul>
 </section>
-<section id="requirements" class="level3">
-<h3 class="anchored" data-anchor-id="requirements">Requirements</h3>
+<section id="requirements" class="level2">
+<h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
 <ul>
 <li><code>ffmpeg</code> on PATH.</li>
 <li>Slab PNGs created by <code>batch_clip.py</code> (or equivalent).</li>
 </ul>
 </section>
-<section id="cli" class="level3">
-<h3 class="anchored" data-anchor-id="cli">CLI</h3>
+<section id="cli" class="level2">
+<h2 class="anchored" data-anchor-id="cli">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> <span class="op">&lt;</span>CROP_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> <span class="op">&lt;</span>PNG_SUFFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
@@ -277,8 +272,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">combine</span><span class="pp">-</span><span class="ss">all</span><span class="pp">]</span> <span class="dt">\</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="key-options" class="level3">
-<h3 class="anchored" data-anchor-id="key-options">Key options</h3>
+<section id="key-options" class="level2">
+<h2 class="anchored" data-anchor-id="key-options">Key options</h2>
 <ul>
 <li><code>--root</code> – Root directory containing <code>crop_*</code> folders.</li>
 <li><code>--crop-dir</code> – Process a single crop directory instead of all crops.</li>
@@ -294,22 +289,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>--dry-run</code> – Print actions without running <code>ffmpeg</code>.</li>
 </ul>
 </section>
-<section id="example-all-crops-composite-pngs" class="level3">
-<h3 class="anchored" data-anchor-id="example-all-crops-composite-pngs">Example: all crops, composite PNGs</h3>
+<section id="example-all-crops-composite-pngs" class="level2">
+<h2 class="anchored" data-anchor-id="example-all-crops-composite-pngs">Example: all crops, composite PNGs</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> composite_density_walls_filaments_filament_manifolds.png <span class="dt">\</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="example-single-crop-density-pngs" class="level3">
-<h3 class="anchored" data-anchor-id="example-single-crop-density-pngs">Example: single crop, density PNGs</h3>
+<section id="example-single-crop-density-pngs" class="level2">
+<h2 class="anchored" data-anchor-id="example-single-crop-density-pngs">Example: single crop, density PNGs</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-dir</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000 <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> density.png <span class="dt">\</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000/density.mp4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="example-one-mp4-across-all-crops-ordered-by-z" class="level3">
-<h3 class="anchored" data-anchor-id="example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</h3>
+<section id="example-one-mp4-across-all-crops-ordered-by-z" class="level2">
+<h2 class="anchored" data-anchor-id="example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> walls_3d.png <span class="dt">\</span></span>
@@ -317,8 +312,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies <span class="dt">\</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frame-hold</span> 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="notes" class="level3">
-<h3 class="anchored" data-anchor-id="notes">Notes</h3>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
 <ul>
 <li>If multiple PNGs match in a slab, the first one is used and a warning is printed.</li>
 <li>The script uses a concat list so non-sequential slab indices are fine.</li>
@@ -326,7 +321,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
