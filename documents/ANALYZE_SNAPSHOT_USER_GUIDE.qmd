@@ -2,24 +2,22 @@
 title: "`analyze_snapshot.py` User Guide"
 ---
 
-## `analyze_snapshot.py` User Guide
-
 Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction pipeline on a Gadget/Quijote HDF5 snapshot.
 
-### What it does
+## What it does
 1. **Builds an NDfield catalog** (optionally cropped/decimated).
 2. **Runs `delaunay_3D`** to reconstruct the Delaunay tessellation (with optional block decomposition).
 3. **Runs `mse`** to compute the Morse–Smale complex and dump manifolds/filaments.
 4. **Converts DisPerSE outputs** to VTK-family formats (VTU/VTP/etc.) via `netconv`/`skelconv`.
 5. For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.
 
-### Requirements
+## Requirements
 - Python environment with `h5py`, `hdf5plugin`, `numpy` (conda env `disperse`).
 - DisPerSE binaries (`delaunay_3D`, `mse`, `netconv`, `skelconv`) on PATH, or pointed to via `--disperse-bin-dir`.
 
-### CLI
+## CLI
 
-#### Basic Inputs
+### Basic Inputs
 
 | Argument | Description |
 |----------|-------------|
@@ -31,19 +29,19 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 | `--network-input PATH` | Reuse an existing Delaunay NDnet (skip `delaunay_3D`). |
 | `--manifolds-input PATH` | Reuse an existing manifolds NDnet (skip `mse`). |
 
-#### Sampling Controls
+### Sampling Controls
 
 * `--target-count N` — approximate number of particles to keep. The script derives a stride.
 * `--stride N` — keep every Nth particle (overrides `--target-count`).
 * `--chunk-size N` — number of particles streamed per read (default 2M).
 * `--crop-box xmin ymin zmin xmax ymax zmax` — restricts the analysis to a rectangular sub-volume in the snapshot's input units (`kpc/h` by default).
 
-#### Units
+### Units
 
 * `--input-unit {kpc/h,mpc/h}` — units used by `--input`.
 * `--output-unit {kpc/h,mpc/h}` — units stored in downstream NDfields/VTK files.
 
-#### Delaunay Stage
+### Delaunay Stage
 
 * `--periodic` — enforce periodic boundary conditions (crops are rebased to the origin internally; VTK outputs are shifted back). (THIS GENERATES ARTIFACTS, USE --delaunay-btype INSTEAD).
 * `--delaunay-blocks NCHUNKS NTHREADS` — activate DisPerSE's block decomposition to reduce memory; the script automatically switches to the gathered `_G.NDnet`. (DON'T USE, THROWS ERROR).
@@ -52,7 +50,7 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
   * `--delaunay-format ...` — output format for the above (defaults to VTU).
   * `--delaunay-smooth N` — smoothing iterations passed to `netconv`.
 
-#### Morse–Smale / Manifolds
+### Morse–Smale / Manifolds
 
 * `--mse-nsig s1 [s2 ...]` — persistence thresholds in sigma units (default `3.5`).
 * `--persistence-cut c1 [c2 ...]` — absolute persistence thresholds (override `--mse-nsig`).
@@ -67,7 +65,7 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 * `--dump-arcs CUID` — one or more `-dumpArcs` descriptors (e.g., `U`, `CUD`). Repeatable.
   - Note: DisPerSE concatenates multiple manifold tags into one output (e.g., `JE1a2a`). Use `--dump-filament-manifolds` for one extra tag, or run separate passes if you need more.
 
-#### Conversion / Output Formats
+### Conversion / Output Formats
 
 * `--netconv-format ...` — how to convert manifolds (VTU/PLY/NDnet/etc.).
 * `--netconv-smooth N` — smoothing iterations for `netconv`.
@@ -77,7 +75,7 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 * `--skelconv-smooth N` — smoothing iterations for `skelconv`.
 * `--skip-skelconv` — skip skeleton conversion.
 
-#### Workflow Control
+### Workflow Control
 
 * `--stop-after {ndfield,delaunay,mse}` — halt after the named stage.
 * `--keep-ndfield` — keep (rather than delete) the intermediate `coords_stride*.AND`.
@@ -85,9 +83,9 @@ Use `scripts/analyze_snapshot.py` to run the full DisPerSE topology extraction p
 
 ---
 
-### Examples
+## Examples
 
-#### Full Snapshot Pipeline
+### Full Snapshot Pipeline
 
 ```bash
 python scripts/analyze_snapshot.py \
@@ -105,7 +103,7 @@ python scripts/analyze_snapshot.py \
   --skelconv-smooth 20
 ```
 
-#### Cropped Sub-volume
+### Cropped Sub-volume
 
 ```bash
 python scripts/analyze_snapshot.py \
@@ -122,7 +120,7 @@ python scripts/analyze_snapshot.py \
   --skelconv-smooth 20
 ```
 
-#### Conversion-only (reuse existing NDnets)
+### Conversion-only (reuse existing NDnets)
 
 ```bash
 python scripts/analyze_snapshot.py \
@@ -136,9 +134,9 @@ python scripts/analyze_snapshot.py \
 
 ---
 
-### Notes
+## Notes
 
-#### Naming conventions (VTK/NDnet/NDskl)
+### Naming conventions (VTK/NDnet/NDskl)
 - Delaunay: `<prefix>_delaunay_S###.vtu` (or `_S000` for unsmoothed conversions).
 - Manifolds (walls): `<prefix>_sX_manifolds_<TAG>_S###.vtu` (NDnet: `<prefix>_sX_manifolds_<TAG>.NDnet`).
 - Filament manifolds (optional): `<prefix>_sX_filament_manifolds_<TAG>_S###.vtu`.
@@ -146,7 +144,7 @@ python scripts/analyze_snapshot.py \
 - Skeletons: `<prefix>_sX_arcs_<TAG>_S###.vtp` (NDskl: `<prefix>_sX_arcs_<TAG>.NDskl`). A matching `.vtu` is also written for convenience.
 - Persistence tags (`sX`) precede the role/tag; smoothing (`S###`) is appended by converters.
 
-#### Pipeline stages
+### Pipeline stages
 1. **NDfield Creation** — reads the snapshot (or uses `--coords-input`), applies optional cropping and decimation, writes an `ANDFIELD COORDS` file. `--stop-after ndfield` lets you inspect this stage alone.
 2. **Delaunay Tessellation** — runs `delaunay_3D` on the NDfield to produce an NDnet. Pass `--stop-after delaunay` to examine the tessellation.
 3. **Morse–Smale Analysis** — runs `mse` on the NDnet, applying persistence thresholds and dumping manifolds/filaments. Reuse with `--manifolds-input` or stop with `--stop-after mse`.

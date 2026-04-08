@@ -2,15 +2,13 @@
 title: "`batch_crop_and_clip.py` User Guide"
 ---
 
-## `batch_crop_and_clip.py` User Guide
-
 Use `scripts/batch_crop_and_clip.py` to automate two steps across many subvolumes:
 1) Run `analyze_snapshot.py` on non-overlapping crop boxes of a snapshot.
 2) For each crop, run `batch_clip.py` across multiple slab origins inside that crop.
 
 Outputs are organized per-crop and per-slab so results do not overwrite.
 
-### What it does
+## What it does
 - Tiles a user-specified volume with fixed-size crop boxes (skips partial edge tiles).
 - For each crop: calls `analyze_snapshot.py` with your smoothing, nsig, and export options.
 - If `--dump-filament-manifolds` is provided, it also exports the filament-manifold VTKs for each crop.
@@ -19,7 +17,7 @@ Outputs are organized per-crop and per-slab so results do not overwrite.
 - Handles unit conversion between input snapshot units and output units (e.g., kpc/h to mpc/h).
 - Skips crops that contain no particles (does not abort the batch).
 
-### Requirements
+## Requirements
 - Python with access to `scripts/analyze_snapshot.py` and `scripts/batch_clip.py`.
 - ParaView `pvpython` on PATH for the `batch_clip.py` calls.
 - DisPerSE binaries available to `analyze_snapshot.py` (as usual).
@@ -40,7 +38,7 @@ unset _PV_OLD_PATH
 EOF
 ```
 
-### CLI
+## CLI
 ```bash
 python scripts/batch_crop_and_clip.py \
   --snapshot <snapshot.hdf5> \
@@ -73,7 +71,7 @@ python scripts/batch_crop_and_clip.py \
 - Smoothing tags for output filenames come from `--netconv-smooth` and `--skelconv-smooth`.
 - `ndtopo_stats.py` supports `--delaunay-id-field`, `--walls-id-field`, `--filaments-id-field`, and `--*-cell-mode` if you need to adjust how IDs are matched.
 
-### Outputs and layout
+## Outputs and layout
 Under `--output-root`, each crop gets its own folder:
 ```
 output-root/
@@ -92,6 +90,7 @@ output-root/
       PNGs if batch_clip was called with --save-pngs (the driver passes it by default; PNG options such as `--png-dpi`, `--png-colormap`, `--png-log-range`, `--png-background`, `--png-transparent`, `--png-align-composite`, `--png-hide-orientation-axes`, `--png-lighting`, and `--composite-filaments-source` are forwarded)
 ```
 Naming notes:
+
 - Manifolds: `<crop_prefix>_sX_manifolds_<TAG>_S###.vtu` (persistence tag + smoothing).
 - Filament manifolds (optional): `<crop_prefix>_sX_filament_manifolds_<TAG>_S###.vtu` (persistence tag + smoothing).
 - Cluster critical points (recommended): `<crop_prefix>_cluster_critpoints_<TAG>_S000.vtp` and `.vtu`.
@@ -99,9 +98,10 @@ Naming notes:
 - Delaunay: `<crop_prefix>_delaunay_S###.vtu` (smoothing tag).
 - Unsmoothed conversions (e.g., via `ndtopo_stats.py --write-vtk`) use `_S000`.
 - DisPerSE concatenates multiple manifold tags into one file (e.g., `JE1a2a`). Run per-tag if you need separate manifold outputs.
+
 Crop and slab prefixes embed coordinates (and slab origin) so runs do not collide.
 
-### Examples
+## Examples
 Run a batch over 500×500×100 (kpc/h) tiles, stepping slabs every 10 (mpc/h after conversion):
 ```bash
 python scripts/batch_crop_and_clip.py \
@@ -117,7 +117,7 @@ python scripts/batch_crop_and_clip.py \
   --scalar-name log_field_value
 ```
 
-### More Examples
+## More Examples
 ```bash
 python scripts/batch_crop_and_clip.py \
       --snapshot data/snapdir_000 \
@@ -138,7 +138,7 @@ python scripts/batch_crop_and_clip.py \
       --skip-slabs
 ```
      
-### Tips
+## Tips
 - If a crop contains no particles, the script logs “[skip] Crop box contains no particles.” and moves on.
 - Ensure `pvpython` is resolvable from the environment; otherwise set PATH accordingly or adjust the `--clip-script` invocation to include its full path.
 - Keep `--input-unit`/`--output-unit` consistent with your snapshot and downstream expectations; the driver handles the z-origin conversion for slabs automatically.***

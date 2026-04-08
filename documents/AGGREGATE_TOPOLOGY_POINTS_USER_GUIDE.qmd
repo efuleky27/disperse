@@ -2,27 +2,26 @@
 title: "`aggregate_topology_points.py` User Guide"
 ---
 
-## `aggregate_topology_points.py` User Guide
-
 Use `scripts/aggregate_topology_points.py` to combine many `*_topology_points.csv` files into:
+
 - A single aggregated `topology_stats` CSV (same shape as per-crop stats).
 - Per-category histograms for selected scalars (CSV, plus PNG if matplotlib is available).
 - Composition barchart + violin/box plots for four focus categories (clusters, filament-manifolds not clusters, walls not filaments/clusters, and unassigned).
 
 This is designed for large datasets (many crops and large per-point files).
 
-### What it does
+## What it does
 - Scans for `*_topology_points.csv` files (or uses explicit inputs).
 - Aggregates category statistics across all crops.
 - Writes histogram CSVs (and optional PNGs) per category and scalar.
 - Optionally renders composition barchart + violin/box plots.
 
-### Requirements
+## Requirements
 - Python in your active environment.
 - Optional but recommended: `polars` (fast path, default).
 - Optional: `matplotlib` for PNG histogram plots.
 
-### CLI
+## CLI
 ```bash
 python scripts/aggregate_topology_points.py \
   --root <OUTPUT_ROOT> \
@@ -45,33 +44,36 @@ python scripts/aggregate_topology_points.py \
   [--no-plots]
 ```
 
-### Engines
+## Engines
 - `polars` (default): fast, exact stats, scales well. Use `--polars-chunks` to split inputs into N chunks for large datasets; chunked mode uses global histogram bins and yields approximate quantiles.
 - `stream`: fast and memory-light, approximate quantiles (uses histogram bins).
 - `python`: exact but slow on large files.
 
-### Output
-In `--output-dir` with `--output-prefix`:  
-- `<prefix>_topology_stats.csv`  
-- `<prefix>_<category>_<scalar>_hist.csv`  
-- `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)  
-- `<prefix>_filman_walls_composition.png` (composition barchart for the four focus categories)  
-- `<prefix>_filman_walls_<scalar>_violin.png` (violin plot for the four focus categories)  
-- `<prefix>_filman_walls_<scalar>_box.png` (box plot for the four focus categories)  
+## Output
+In `--output-dir` with `--output-prefix`:
+
+- `<prefix>_topology_stats.csv`
+- `<prefix>_<category>_<scalar>_hist.csv`
+- `<prefix>_<category>_<scalar>_hist.png` (if matplotlib is available and `--no-plots` is not set)
+- `<prefix>_filman_walls_composition.png` (composition barchart for the four focus categories)
+- `<prefix>_filman_walls_<scalar>_violin.png` (violin plot for the four focus categories)
+- `<prefix>_filman_walls_<scalar>_box.png` (box plot for the four focus categories)
 
 Categories follow `ndtopo_stats.py`, including filament‑manifold and cluster variants when present.
-The violin/box/composition plots only include:  
-- `clusters`  
-- `filament_manifolds_not_clusters`  
-- `walls_not_filament_manifolds_or_clusters`  
-- `unassigned_walls_filament_manifolds_clusters`  
+The violin/box/composition plots only include:
+
+- `clusters`
+- `filament_manifolds_not_clusters`
+- `walls_not_filament_manifolds_or_clusters`
+- `unassigned_walls_filament_manifolds_clusters`
+
 Histograms use per-category bins by default (`--hist-bin-mode per-category`) or shared bins per scalar (`--hist-bin-mode global`).
 The default histogram scalars are `field_value` and `log_field_value` (use `--hist-scalars` to override).
 Histogram PNGs include the particle count `n` and a red dashed median line; histogram CSVs include `total_count`.
 Violin plots use raw values if `--plots-from-raw` is set; otherwise they sample from histogram bins.
 Box plots are rendered from the aggregated `*_topology_stats.csv` by default.
 
-### Examples
+## Examples
 Aggregate all crops under a root, fast path:
 ```bash
 python scripts/aggregate_topology_points.py \
@@ -120,16 +122,16 @@ python scripts/aggregate_topology_points.py \
 
 Use `scripts/compare_simulations.py` to place two simulations' boxplots side-by-side for direct comparison.  It reads one `*_topology_stats.csv` per simulation (auto-discovered from a folder or its `combined/` subdirectory) and produces a multi-panel figure with one column-pair per category.
 
-### What it does
+## What it does
 - Reads aggregated `topology_stats.csv` files from two simulation output folders.
 - Renders side-by-side box plots for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars.
 - Adds a summary-statistics table below the plots.
 - Category labels on the x-axis are coloured to match the boxplot colours.
 
-### Requirements
+## Requirements
 - Python with `matplotlib`, `numpy`, and `polars` (or `pandas`).
 
-### CLI
+## CLI
 ```bash
 python scripts/compare_simulations.py \
   --folder-a <SIM_A_DIR> \
@@ -140,14 +142,14 @@ python scripts/compare_simulations.py \
   [--output-prefix <PREFIX>]
 ```
 
-### Key options
+## Key options
 - `--folder-a / --folder-b` — Root output directories for each simulation. The script searches for `*_topology_stats.csv` directly or inside a `combined/` subdirectory.
 - `--labels` — Display names for the two simulations (default: folder basenames).
 - `--scalars` — Which scalar columns to plot (default: all detected scalars).
 - `--output-dir` — Where to write the figure (default: current directory).
 - `--output-prefix` — Filename prefix for the output PNG.
 
-### Examples
+## Examples
 ```bash
 python scripts/compare_simulations.py \
   --folder-a outputs/quijote_batches_000_w_clusters_points \
@@ -158,14 +160,14 @@ python scripts/compare_simulations.py \
   --output-prefix compare_z3_vs_z0
 ```
 
-### Notes
+## Notes
 - The figure uses the same four-category colour scheme as `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
 - Simulation A boxes are lighter with a `////` hatch; simulation B boxes are solid and darker.
 - The x-axis shows only the coloured category label — no tick marks.
 
 ---
 
-### More Examples
+## More Examples
 Redshift 3:
 ```bash
 python scripts/aggregate_topology_points.py \

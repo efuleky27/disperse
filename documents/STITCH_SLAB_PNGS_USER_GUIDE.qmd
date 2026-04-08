@@ -2,21 +2,19 @@
 title: "`stitch_slab_pngs.py` User Guide"
 ---
 
-## `stitch_slab_pngs.py` User Guide
-
 Use `scripts/stitch_slab_pngs.py` to build an MP4 by stitching one PNG type across slab folders (`slab_z*`) for each crop.
 
-### What it does
+## What it does
 - Scans each crop folder for slab directories (e.g., `slab_z0`, `slab_z10`, ...).
 - Picks a single PNG per slab (by suffix or glob).
 - Orders frames by the numeric `z` value in the slab folder name.
 - Writes an MP4 using `ffmpeg`.
 
-### Requirements
+## Requirements
 - `ffmpeg` on PATH.
 - Slab PNGs created by `batch_clip.py` (or equivalent).
 
-### CLI
+## CLI
 ```bash
 python scripts/stitch_slab_pngs.py \
   --root <CROP_ROOT> \
@@ -28,7 +26,7 @@ python scripts/stitch_slab_pngs.py \
   [--overwrite]
 ```
 
-### Key options
+## Key options
 - `--root` – Root directory containing `crop_*` folders.
 - `--crop-dir` – Process a single crop directory instead of all crops.
 - `--slab-glob` – Slab folder glob (default `slab_z*`).
@@ -42,7 +40,7 @@ python scripts/stitch_slab_pngs.py \
 - `--overwrite` – Overwrite existing MP4s.
 - `--dry-run` – Print actions without running `ffmpeg`.
 
-### Example: all crops, composite PNGs
+## Example: all crops, composite PNGs
 ```bash
 python scripts/stitch_slab_pngs.py \
   --root outputs/quijote_batches_000_test_2fil \
@@ -50,7 +48,7 @@ python scripts/stitch_slab_pngs.py \
   --output-dir outputs/quijote_batches_000_test_2fil/movies
 ```
 
-### Example: single crop, density PNGs
+## Example: single crop, density PNGs
 ```bash
 python scripts/stitch_slab_pngs.py \
   --crop-dir outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000 \
@@ -58,7 +56,7 @@ python scripts/stitch_slab_pngs.py \
   --output outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000/density.mp4
 ```
 
-### Example: one MP4 across all crops (ordered by z)
+## Example: one MP4 across all crops (ordered by z)
 ```bash
 python scripts/stitch_slab_pngs.py \
   --root outputs/quijote_batches_000_test_2fil \
@@ -68,7 +66,7 @@ python scripts/stitch_slab_pngs.py \
   --frame-hold 2
 ```
 
-### Notes
+## Notes
 - If multiple PNGs match in a slab, the first one is used and a warning is printed.
 - The script uses a concat list so non-sequential slab indices are fine.
 - Use `--dry-run` if you want to verify the frame list before encoding.

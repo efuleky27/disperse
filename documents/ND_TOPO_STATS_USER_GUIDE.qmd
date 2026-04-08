@@ -2,21 +2,19 @@
 title: "`ndtopo_stats.py` User Guide"
 ---
 
-## `ndtopo_stats.py` User Guide
-
 Use `scripts/ndtopo_stats.py` to measure how many vertices belong to walls, filaments, optional filament/cluster manifolds, both, or neither, and to aggregate scalar totals/means for those categories. Scalars are always taken from the Delaunay mesh; IDs are used only to decide membership.
 
-### What it does
+## What it does
 - Optionally converts native NDnet/NDskl to unsmoothed VTU/VTP (`--write-vtk` via `netconv`/`skelconv`).
 - Loads the Delaunay VTU (universe), walls VTU, filaments VTP, and optional filament manifolds VTU. Cluster inputs can be either VTU manifolds **or** the VTP critical-point export (`cluster_critpoints`).
 - Matches point IDs (`true_index` by default; filaments use integer part of `cell` unless you filter to `.0` cells) and splits them into: walls, filaments, walls_not_filaments, filaments_not_walls, shared_walls_filaments, unassigned, plus filament‑/cluster‑manifold categories when provided.
 - Aggregates selected scalar fields (default: `mass`, `field_value`, `log_field_value`) from the Delaunay mesh for each category and writes a CSV.
 
-### Requirements
+## Requirements
 - Python with `vtkmodules` available in the active environment.
 - Optional: `netconv`, `skelconv` on PATH (or pointed to via `--netconv-bin` / `--skelconv-bin`) if you want `--write-vtk`.
 
-### CLI
+## CLI
 ```bash
 python scripts/ndtopo_stats.py \
   --delaunay-vtk <Delaunay.vtu>   | --delaunay-ndnet <Delaunay.NDnet> \
@@ -48,7 +46,7 @@ python scripts/ndtopo_stats.py \
 - `--*-cell-mode zero` keeps only `.0` cell IDs (0-cells) when `cell` is used; `all` uses `int(cell)` for every point.
 - Scalars are read only from the Delaunay file, regardless of what walls/filaments store.
 
-### Output
+## Output
 - A single CSV at `--output-csv` with columns: `category`, `count`, and for each scalar `<name>_sum`, `<name>_mean`.
 - Base categories: `walls`, `filaments`, `walls_not_filaments`, `filaments_not_walls`, `shared_walls_filaments`, `unassigned`.
 - Extra filament-manifold categories (only if provided): `filament_manifolds`, `walls_not_filament_manifolds`, `filament_manifolds_not_walls`, `shared_walls_filament_manifolds`, `shared_filaments_filament_manifolds`.
@@ -64,7 +62,7 @@ python scripts/ndtopo_stats.py \
 - Optional topology-scalars CSV (`--topology-scalars-csv`) that uses **topology dataset scalars** instead of Delaunay scalars.
   - Adds a `scalar_source` column (`walls`, `filaments`, `filament_manifolds`, `clusters`) to indicate which topology dataset supplied the scalar values.
 
-### Naming conventions for auto-converted files (`--write-vtk`)
+## Naming conventions for auto-converted files (`--write-vtk`)
 - Delaunay from NDnet: `<prefix>_delaunay_S000.vtu`.
 - Manifolds from NDnet: `<prefix>_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
 - Filament manifolds from NDnet: `<prefix>_filament_manifolds_<TAG>_S000.vtu` (with existing persistence token kept in the stem).
@@ -73,7 +71,7 @@ python scripts/ndtopo_stats.py \
 - Filaments from NDskl: `<prefix>_arcs_<TAG>_S000.vtp` (with existing persistence token kept in the stem).
 - Stems are sanitized to use underscores (single dot before the extension).
 
-### Examples
+## Examples
 Use preexisting VTU/VTP:
 ```bash
 python scripts/ndtopo_stats.py --verbose \
@@ -101,7 +99,7 @@ python scripts/ndtopo_stats.py --verbose --write-vtk \
   --output-csv outputs/snap_010_cropped_test/topology_stats.csv
 ```
 
-### Tips
+## Tips
 - Ensure `vtkmodules` is importable (`python - <<'PY'\nimport vtkmodules; print('vtk ok')\nPY`).
 - Stick to unsmoothed VTU/VTP if you want closer scalar agreement; the script still uses Delaunay scalars to avoid interpolation differences in walls/filaments.
 - If you change ID field names, confirm they exist with `vtkInfo` or by printing `PointData.keys()` in a small snippet.

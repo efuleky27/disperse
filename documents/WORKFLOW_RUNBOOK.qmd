@@ -197,6 +197,7 @@ pvpython scripts/batch_clip.py \
 ```
 
 Notes:
+
 - Use `--no-png-transparent` if you want the background color to be visible in PNGs.
 - `--png-align-composite` (default) aligns composite overlays to density bounds; disable with `--no-png-align-composite` if overlays already share the same coordinate frame.
 
@@ -285,6 +286,7 @@ Combine `*_topology_points.csv` files from all crops into a single aggregated st
 
 **How it works**
 Scans `--root` recursively for `*_topology_points.csv` files (or uses an explicit `--inputs` list). Three aggregation engines:
+
 - `polars` (default) — fast, exact stats. Use `--polars-chunks N` to split into N chunks for very large datasets (approx. quantiles in chunked mode).
 - `stream` — memory-light, approximate quantiles.
 - `python` — exact but slow.
@@ -365,6 +367,7 @@ pvpython scripts/redshift_evolution.py \
 ```
 
 Notes:
+
 - Proximity alignment (chained KDTree nearest-neighbor) ensures interpolation traces the same physical particle across snapshots rather than position-index correspondence. Requires `scipy`; falls back to positional ordering with a warning if unavailable.
 - Label position is in normalized viewport coordinates (`--label-position X Y`); default `0.45 0.05` is center-bottom.
 

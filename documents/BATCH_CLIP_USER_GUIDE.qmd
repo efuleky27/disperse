@@ -2,16 +2,14 @@
 title: "`batch_clip.py` User Guide"
 ---
 
-## `batch_clip.py` User Guide
-
 Use `scripts/batch_clip.py` to clip DisPerSE outputs to a slab, export clipped 3D data, and produce flattened 2D views plus a Z-averaged density map for ParaView or downstream tools.
 
-### What it does
+## What it does
 - Clips walls (manifolds), filaments, optional filament/cluster manifolds, and the Delaunay/density volume to a user-defined slab along x/y/z.
 - Exports both the clipped 3D datasets and flattened 2D versions (walls/filaments/density scaled onto a plane, averaged over the slab depth - vti files).
 - Keeps topology tags as point data (`topology_type`) for easy coloring.
 
-### Requirements
+## Requirements
 - ParaView pvpython (e.g., `/Applications/ParaView-6.0.1.app/Contents/bin/pvpython`).
 - Inputs: walls VTU, filaments VTP, optional filament manifolds VTU, optional cluster manifolds **VTU or VTP** (critical-point clusters are VTP), Delaunay VTU (with density as point data or convertible via Cell Data to Point Data).
 
@@ -30,7 +28,7 @@ unset _PV_OLD_PATH
 EOF
 ```
 
-### CLI
+## CLI
 ```bash
 pvpython scripts/batch_clip.py \
   --input-dir <INPUT_DIR> \
@@ -73,7 +71,7 @@ pvpython scripts/batch_clip.py \
 - `--composite-filaments-source` selects whether the composite overlay uses filament manifolds or arc filaments (default: manifolds).
 - Expect input filenames to follow the simplified stems from `analyze_snapshot.py`, e.g., `*_manifolds_<tag>_S###.vtu`, `*_filament_manifolds_<tag>_S###.vtu`, `*_cluster_critpoints_<tag>_S000.vtp`, `*_arcs_<arc>_S###.vtp`, `*_delaunay.vtu`.
 
-### Outputs (all in `--output-dir`)
+## Outputs (all in `--output-dir`)
 - `<PREFIX>_walls_3d.vtu` – clipped 3D walls (point-data `topology_type=1`).
 - `<PREFIX>_filaments_3d.vtp` – clipped 3D filaments (`topology_type=2`).
 - `<PREFIX>_filament_manifolds_3d.vtu` – clipped 3D filament manifolds (`topology_type=3`, if provided).
@@ -100,7 +98,7 @@ pvpython scripts/batch_clip.py \
   - `<PREFIX>_composite_density_walls_filaments.png` – composite: density base, walls light green, filaments red; overlay opacity controlled by `--composite-opacity`.
   - `<PREFIX>_composite_density_walls_filaments_*.png` – composite that also includes filament/cluster manifolds (suffixes appended when provided).
 
-### Examples
+## Examples
 ```bash
 PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch_clip.py \
   --input-dir outputs/snap_010_cropped \
@@ -117,7 +115,7 @@ PV_NO_MPI=1 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/batch
   --save-pngs
 ```
 
-### Notes
+## Notes
 - Use point-data arrays for coloring (`topology_type`, density scalars).
 - If ParaView on macOS complains about MPI init, prefix the command with `PV_NO_MPI=1`.
 - To view in ParaView, open the outputs, click Apply, switch to 2D (XY) view, and Reset Camera. Color walls/filaments by `topology_type`; color density by `scalar_name`.

@@ -2,17 +2,15 @@
 title: "`spin_render.py` User Guide"
 ---
 
-## `spin_render.py` User Guide
-
 Use `scripts/spin_render.py` to render a rotating camera animation of a VTK dataset and write a PNG sequence suitable for stitching into a movie.
 
-### What it does
+## What it does
 - Loads a VTU/VTP/VTI/VTR dataset and orbits the camera around its bounds.
 - Colors by a chosen point-data scalar (default `log_field_value`) using a ParaView colormap preset (default `Fast`).
 - Writes numbered PNG frames that can be stitched into an MP4 with `ffmpeg`.
 - Optionally animates elevation and zoom during the rotation.
 
-### Requirements
+## Requirements
 - ParaView `pvpython` (e.g., `/Applications/ParaView-6.0.1.app/Contents/bin/pvpython`).
 - A readable VTK file (VTU/VTP/VTI/VTR).
 - `ffmpeg` (optional, for MP4 stitching).
@@ -32,7 +30,7 @@ unset _PV_OLD_PATH
 EOF
 ```
 
-### CLI
+## CLI
 ```bash
 pvpython scripts/spin_render.py \
   --input <INPUT_VTK> \
@@ -59,7 +57,7 @@ pvpython scripts/spin_render.py \
   [--overwrite]
 ```
 
-### Key options
+## Key options
 - `--input` – VTK file to render.
 - `--output` – Output path used as the PNG prefix; the script writes `<OUTPUT_BASE>_0000.png`, `<OUTPUT_BASE>_0001.png`, ...
 - If `--output` ends with `.mp4`, the script also stitches the PNGs into that movie using `ffmpeg`.
@@ -83,7 +81,7 @@ pvpython scripts/spin_render.py \
 - `--representation` – Render as `surface` or `points`.
 - `--point-size` – Point size when `--representation points` is used.
 
-### Animated elevation + zoom
+## Animated elevation + zoom
 ```bash
 pvpython scripts/spin_render.py \
   --input <INPUT_VTK> \
@@ -95,7 +93,7 @@ pvpython scripts/spin_render.py \
 ```
 This animates elevation and zoom smoothly (sinusoidal) while the camera continues to rotate.
 
-### Multi-loop variation (seamless)
+## Multi-loop variation (seamless)
 ```bash
 pvpython scripts/spin_render.py \
   --input <INPUT_VTK> \
@@ -109,10 +107,10 @@ pvpython scripts/spin_render.py \
 ```
 Slow modulation produces different loops while returning to the starting position at the end for seamless playback.
 
-### Outputs
+## Outputs
 - `<OUTPUT_BASE>_0000.png` ... `<OUTPUT_BASE>_####.png` – PNG frames of the rotation.
 
-### Stitch frames to MP4
+## Stitch frames to MP4
 ```bash
 ffmpeg -framerate 30 \
   -i <OUTPUT_BASE>_%04d.png \
@@ -120,7 +118,7 @@ ffmpeg -framerate 30 \
   <OUTPUT_BASE>.mp4
 ```
 
-### Example
+## Example
 ```bash
 /Applications/ParaView-6.0.1.app/Contents/bin/pvpython scripts/spin_render.py \
   --input outputs/quijote_batches/crop_x500-1000_y500-1000_z0-100/crop_x500-1000_y500-1000_z0-100_s5_manifolds_JE1a_S020.vtu \
@@ -133,7 +131,7 @@ ffmpeg -framerate 30 \
   --background black
 ```
 
-### Example (multi-loop, smooth modulation)
+## Example (multi-loop, smooth modulation)
 ```bash
 pvpython scripts/spin_render.py \
   --input outputs/combined_for_video.vtu \
@@ -160,7 +158,7 @@ pvpython scripts/spin_render.py \
   --overwrite
 ```
 
-### More Examples (for science fair)
+## More Examples
 ```bash
 pvpython scripts/spin_render.py \
   --input outputs/movie_loop/combined_components.vtu \
@@ -241,7 +239,7 @@ pvpython scripts/spin_render.py \
   --overwrite
 ```
 
-### Notes
+## Notes
 - Coloring uses **point-data** arrays. If your scalar is only in cell data, convert to point data before rendering.
 - If colors look washed out, try a tighter range with `--range-min/--range-max`.
 - If you’re re-running with different settings, change the output prefix or remove old `*_####.png` frames first.
@@ -255,7 +253,7 @@ Use `scripts/redshift_evolution.py` to generate a smooth movie showing the evolu
 
 Must be run via `pvpython`.
 
-### What it does
+## What it does
 - Reads one Delaunay VTU per snapshot (earliest universe first).
 - Optionally aligns particle ordering across snapshots using chained nearest-neighbour matching (via `scipy.spatial.cKDTree`), so interpolation traces the same physical particle rather than position-index correspondence.
 - Interpolates both coordinates and scalar values linearly between consecutive snapshots.
@@ -263,7 +261,7 @@ Must be run via `pvpython`.
 - Shows a redshift label (e.g. `z=3`) in the lower-left corner of each frame.
 - Writes numbered PNGs and stitches them into an MP4 via `ffmpeg`.
 
-### Rendering modes
+## Rendering modes
 
 | Mode | Flag | Description |
 |---|---|---|
@@ -271,12 +269,12 @@ Must be run via `pvpython`.
 | Cross-fade | *(automatic fallback)* | Opacity blending when point counts differ after alignment. |
 | Slideshow | `--slideshow` | No interpolation — holds each snapshot for `--frames-hold` frames then cuts. Skips alignment entirely. |
 
-### Requirements
+## Requirements
 - `pvpython` (ParaView’s Python interpreter).
 - `scipy` (for proximity alignment; ships with recent ParaView builds).
 - `ffmpeg` (optional, for MP4 assembly).
 
-### CLI
+## CLI
 ```bash
 pvpython scripts/redshift_evolution.py \
   --inputs SNAP_000.vtu SNAP_001.vtu ... \
@@ -299,7 +297,7 @@ pvpython scripts/redshift_evolution.py \
   [--no-mp4]
 ```
 
-### Key options
+## Key options
 - `--inputs` — VTU files in time order (earliest redshift first, i.e. `000` → `004`).
 - `--labels` — Redshift label per snapshot, shown in the lower-left corner. Must match `--inputs` count.
 - `--frames-per-transition` — Interpolated frames between each pair (default 30).
@@ -312,7 +310,7 @@ pvpython scripts/redshift_evolution.py \
 - `--slideshow` — Cut directly between snapshots with no interpolation or alignment.
 - `--no-mp4` — Keep PNGs only, skip ffmpeg.
 
-### Example (5 Quijote redshift snapshots, one crop)
+## Example (5 Quijote redshift snapshots, one crop)
 ```bash
 pvpython scripts/redshift_evolution.py \
     --inputs \
@@ -330,7 +328,7 @@ pvpython scripts/redshift_evolution.py \
     --output-prefix evolution
 ```
 
-### Slideshow example
+## Slideshow example
 ```bash
 pvpython scripts/redshift_evolution.py \
     --inputs \
@@ -348,7 +346,7 @@ pvpython scripts/redshift_evolution.py \
     --output-prefix evolution_slideshow_100
 ```
 
-### Slideshow example (10Mpc slab)
+## Slideshow example (10Mpc slab)
 ```bash
 pvpython scripts/redshift_evolution.py \
     --inputs \
@@ -366,7 +364,7 @@ pvpython scripts/redshift_evolution.py \
     --output-prefix evolution_slideshow_10
 ```
 
-### Notes
+## Notes
 - The Delaunay VTU files produced by `analyze_snapshot.py` contain `log_field_value` (DTFE log-density) and a `true_index` array — these are the recommended input files.
 - Proximity alignment uses chained nearest-neighbour matching (snapshot *i* matched to snapshot *i−1*), so small per-step displacements accumulate correctly across many redshifts. This requires `scipy`; if unavailable the script falls back to positional ordering with a warning.
 - Total frame count = `(N−1) × (frames_hold + frames_per_transition) + frames_hold` for interpolation mode, or N frames (one per snapshot) for slideshow mode.

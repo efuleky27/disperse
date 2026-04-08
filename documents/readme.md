@@ -398,10 +398,13 @@ globus transfer "$SRC:/Snapshots/fiducial/0/snapdir_000/" "$DST:~/Downloads/snap
 
 ### Snapshot (BSQ/0, single file)
 ```bash
+globus endpoint local-id
 export DST=d0b6b6f1-bdf0-11f0-9431-0e092d85c59b
-export SRC=f4863854-3819-11eb-b171-0ee0d5d9299f   # Quijote BSQ endpoint
-globus transfer "$SRC:/Snapshots/BSQ/0/snap_010.hdf5" "$DST:~/Downloads/snap_010.hdf5" \
-  --label "Quijote BSQ 0 z=0"
+globus endpoint search quijote
+export SRC=f4863854-3819-11eb-b171-0ee0d5d9299f
+globus ls "$SRC:/Snapshots/BSQ/0/"
+globus transfer "$SRC:/Snapshots/BSQ/0/snap_010.hdf5" "$DST:~/Downloads/snap_010.hdf5" 
+  --label "Quijote Snapshot BSQ 0 z0"
 ```
 
 ### Pre-computed density field (BSQ/0)
