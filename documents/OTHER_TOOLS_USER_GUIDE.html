@@ -258,7 +258,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="compute_density_field.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="compute_density_field.py-user-guide"><code>compute_density_field.py</code> User Guide</h2>
 <p>This script deposits particle data from a Gadget/Quijote snapshot onto a regular 3‑D grid using Cloud-In-Cell (CIC). The resulting density (and optional overdensity) fields are written to an HDF5 file that includes the original snapshot header plus metadata describing the grid.</p>
-<hr>
 <section id="command-overview" class="level3">
 <h3 class="anchored" data-anchor-id="command-overview">Command Overview</h3>
 <table class="caption-top table">
@@ -308,7 +307,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p>The script automatically reads box size and mass information from the snapshot header, computes CIC weights chunk-by-chunk, normalizes by the cell volume, and stores the mean density in the output header.</p>
-<hr>
 </section>
 <section id="example-command" class="level3">
 <h3 class="anchored" data-anchor-id="example-command">Example Command</h3>
@@ -325,7 +323,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>DensityField/density</code> dataset (float32, 256×256×256).</li>
 <li>Optional <code>DensityField/delta</code> if <code>--store-contrast</code> is set.</li>
 </ul>
-<hr>
 </section>
 <section id="workflow-summary" class="level3">
 <h3 class="anchored" data-anchor-id="workflow-summary">Workflow Summary</h3>
@@ -336,7 +333,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Output HDF5</strong> — writes the grid(s), along with header metadata for future reference.</li>
 </ol>
 <p>This file can then be visualized directly (e.g., via <code>export_snapshot_vtu.py --density-field</code>) or used as input for other grid-based analyses.</p>
-<hr>
 </section>
 </section>
 <section id="export_grid_vti.py-visualize-the-hdf5-grid" class="level2">
@@ -395,7 +391,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Density-field HDF5 files</strong> — when <code>--density-field</code> is set, reads a 3‑D grid dataset and writes a VTI (ImageData) volume.</li>
 </ol>
 <p>It supports chunked processing, optional inclusion of extra particle fields, and the same HDF5 plugin bootstrap used elsewhere.</p>
-<hr>
 <section id="command-overview-1" class="level3">
 <h3 class="anchored" data-anchor-id="command-overview-1">Command Overview</h3>
 <section id="common-arguments" class="level4">
@@ -472,7 +467,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<hr>
 </section>
 </section>
 <section id="example-commands" class="level3">
@@ -493,7 +487,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-dataset</span> DensityField/density <span class="dt">\</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
 </section>
 </section>
 <section id="workflow-summary-1" class="level3">

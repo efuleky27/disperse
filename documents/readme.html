@@ -277,7 +277,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="disentangling-the-cosmic-web" class="level2">
 <h2 class="anchored" data-anchor-id="disentangling-the-cosmic-web">Disentangling the Cosmic Web</h2>
 <p>This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using <a href="https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html">DisPerSE</a>. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.</p>
-<hr>
 </section>
 <section id="documentation-index" class="level2">
 <h2 class="anchored" data-anchor-id="documentation-index">Documentation Index</h2>
@@ -331,7 +330,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<hr>
 </section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
@@ -363,7 +361,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="st">export PATH="$_PV_OLD_PATH"</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="st">unset _PV_OLD_PATH</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
 </section>
 </section>
 <section id="pipeline-overview" class="level2">
@@ -382,7 +379,6 @@ compare_simulations.py            → side-by-side boxplots across two simulatio
 
 spin_render.py                    → rotating 3D animation of any VTK dataset
 redshift_evolution.py             → smooth movie evolving across redshift snapshots</code></pre>
-<hr>
 </section>
 <section id="stage-1-topology-extraction-analyze_snapshot.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-1-topology-extraction-analyze_snapshot.py">Stage 1: Topology Extraction (<code>analyze_snapshot.py</code>)</h2>
@@ -420,7 +416,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Outputs:</strong> <code>*_delaunay_S###.vtu</code>, <code>*_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>*_arcs_&lt;ARC&gt;_S###.vtp</code>, <code>*_filament_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>*_cluster_critpoints_&lt;TAG&gt;_S000.vtp/.vtu</code>, <code>*_summary_stats.csv</code>.</p>
 <p>→ Full reference: <a href="ANALYZE_SNAPSHOT_USER_GUIDE.html">Analyze Snapshot User Guide</a></p>
-<hr>
 </section>
 <section id="stage-2-topology-overlap-stats-ndtopo_stats.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-2-topology-overlap-stats-ndtopo_stats.py">Stage 2: Topology Overlap Stats (<code>ndtopo_stats.py</code>)</h2>
@@ -443,7 +438,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/snap_010_topology_stats.csv <span class="dt">\</span></span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--per-point-csv</span> outputs/snap_010_subbox/snap_010_topology_points.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>→ Full reference: <a href="ND_TOPO_STATS_USER_GUIDE.html">ND Topo Stats User Guide</a></p>
-<hr>
 </section>
 <section id="stage-3-slab-clip-and-2d-rendering-batch_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-3-slab-clip-and-2d-rendering-batch_clip.py">Stage 3: Slab Clip and 2D Rendering (<code>batch_clip.py</code>)</h2>
@@ -472,7 +466,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-log-range</span> <span class="at">-3</span> 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>→ Full reference: <a href="BATCH_CLIP_USER_GUIDE.html">Batch Clip User Guide</a></p>
-<hr>
 </section>
 <section id="stage-4-batch-tiling-batch_crop_and_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-4-batch-tiling-batch_crop_and_clip.py">Stage 4: Batch Tiling (<code>batch_crop_and_clip.py</code>)</h2>
@@ -515,7 +508,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
     slab_z10/ ...
   crop_x0-500_y500-1000_z0-100/ ...</code></pre>
 <p>→ Full reference: <a href="BATCH_CROP_AND_CLIP_USER_GUIDE.html">Batch Crop and Clip User Guide</a></p>
-<hr>
 </section>
 <section id="stage-5-cross-crop-aggregation-aggregate_topology_points.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-5-cross-crop-aggregation-aggregate_topology_points.py">Stage 5: Cross-Crop Aggregation (<code>aggregate_topology_points.py</code>)</h2>
@@ -545,7 +537,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 300</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Outputs:</strong> aggregated <code>*_topology_stats.csv</code>, per-category histogram CSVs and PNGs, composition barchart, violin/box plots.</p>
 <p>→ Full reference: <a href="AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">Aggregate Topology Points User Guide</a></p>
-<hr>
 </section>
 <section id="visualization-scripts" class="level2">
 <h2 class="anchored" data-anchor-id="visualization-scripts">Visualization Scripts</h2>
@@ -595,7 +586,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> composite_density_walls_filaments.png <span class="dt">\</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches/movies</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>→ Full reference: <a href="STITCH_SLAB_PNGS_USER_GUIDE.html">Stitch Slab PNGs User Guide</a></p>
-<hr>
 </section>
 </section>
 <section id="utility-tools" class="level2">
@@ -624,7 +614,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_points.vtu <span class="dt">\</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 2000000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>→ Full reference: <a href="OTHER_TOOLS_USER_GUIDE.html">Other Tools User Guide</a></p>
-<hr>
 </section>
 </section>
 <section id="data-access-globus" class="level2">
@@ -652,7 +641,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5"</span> <span class="dt">\</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote Density Field BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
 </section>
 </section>
 <section id="build-disperse-from-source-macos" class="level2">
@@ -702,7 +690,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"/path/to/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">"</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to ~/.zshrc to persist</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If you see <code>Undefined symbols ___gmpn_*</code>, the GMP/MPFR shim above fixes the link.</p>
-<hr>
 </section>
 <section id="why-disperse" class="level2">
 <h2 class="anchored" data-anchor-id="why-disperse">Why DisPerSE?</h2>
@@ -753,7 +740,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 </tr>
 </tbody>
 </table>
-<hr>
 </section>
 <section id="repository-layout" class="level2">
 <h2 class="anchored" data-anchor-id="repository-layout">Repository Layout</h2>
@@ -769,7 +755,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <p>Session exports are auto-updated whenever the Claude Code context window is compacted (via a PostCompact hook in <code>.claude/settings.json</code>). To sync manually:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ~/.claude/projects/-Users-fules-Documents-disperse/<span class="pp">*</span>.jsonl sessions/claude/ <span class="kw">&amp;&amp;</span> <span class="dt">\</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">python3</span> sessions/export_sessions.py</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
 </section>
 <section id="technologies-used" class="level2">
 <h2 class="anchored" data-anchor-id="technologies-used">Technologies Used</h2>
@@ -823,7 +808,6 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 </tr>
 </tbody>
 </table>
-<hr>
 </section>
 <section id="key-links" class="level2">
 <h2 class="anchored" data-anchor-id="key-links">Key Links</h2>
