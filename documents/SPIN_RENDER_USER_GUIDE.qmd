@@ -290,6 +290,7 @@ pvpython scripts/redshift_evolution.py \
   [--fps 30] \
   [--label-position X Y] \
   [--label-font-size 28] \
+  [--zoom 1.0] \
   [--no-align] \
   [--slideshow] \
   [--no-mp4]
@@ -304,6 +305,7 @@ pvpython scripts/redshift_evolution.py \
 - `--range-min/--range-max` — Fixed colour range (default −3 / 2).
 - `--percentile-range` — Derive colour range from percentiles across all snapshots (overrides fixed range).
 - `--colormap` — ParaView preset name (default `Inferno (matplotlib)`).
+- `--zoom` — Zoom factor applied after auto-framing (default 1.0). Values > 1 zoom in (less black border around the data); < 1 zoom out.
 - `--no-align` — Skip proximity alignment; assume all files share the same point ordering.
 - `--slideshow` — Cut directly between snapshots with no interpolation or alignment.
 - `--no-mp4` — Keep PNGs only, skip ffmpeg.
@@ -348,18 +350,20 @@ pvpython scripts/redshift_evolution.py \
 ```bash
 pvpython scripts/redshift_evolution.py \
     --inputs \
-        outputs/evolution_slideshow_10/particle_simulation_0.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_1.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_2.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_3.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_4.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_0_10.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_1_10.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_2_10.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_3_10.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_4_10.vtu \
     --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
     --scalar log_field_value \
-    --range-min -3.0 --range-max 1.0 \
+    --range-min -4.0 --range-max 4.0 \
+    --resolution 3840 2160 \
+    --label-font-size 48 \
     --slideshow \
     --slideshow-duration 2.0 \
     --output-dir outputs/evolution_slideshow_10 \
-    --output-prefix evolution_slideshow_10
+    --output-prefix evolution_slideshow_10_10
 ```
 
 ## Notes

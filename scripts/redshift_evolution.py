@@ -160,6 +160,13 @@ def _parse_args() -> argparse.Namespace:
         help="Camera focal point. Default: centre of first snapshot's bounding box.",
     )
     p.add_argument(
+        "--zoom",
+        type=float,
+        default=1.0,
+        help="Zoom factor applied after ResetCamera (default: 1.0). "
+             "Values > 1 zoom in (less black border); < 1 zoom out.",
+    )
+    p.add_argument(
         "--fps",
         type=int,
         default=30,
@@ -419,6 +426,9 @@ def _position_camera(view, bounds: tuple, args) -> None:
         cam.SetViewUp([0.0, 0.0, 1.0])
     else:
         ResetCamera(view)
+        if args.zoom != 1.0:
+            GetActiveCamera().Dolly(args.zoom)
+            view.ResetCameraClippingRange()
 
 
 def _make_label_display(view, text: str, args):
