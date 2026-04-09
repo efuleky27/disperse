@@ -428,7 +428,6 @@ def _position_camera(view, bounds: tuple, args) -> None:
         ResetCamera(view)
         if args.zoom != 1.0:
             GetActiveCamera().Dolly(args.zoom)
-            view.ResetCameraClippingRange()
 
 
 def _make_label_display(view, text: str, args):
