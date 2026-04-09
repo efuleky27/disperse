@@ -350,20 +350,21 @@ pvpython scripts/redshift_evolution.py \
 ```bash
 pvpython scripts/redshift_evolution.py \
     --inputs \
-        outputs/evolution_slideshow_10/particle_simulation_0_10.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_1_10.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_2_10.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_3_10.vtu \
-        outputs/evolution_slideshow_10/particle_simulation_4_10.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_0_5.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_1_5.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_2_5.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_3_5.vtu \
+        outputs/evolution_slideshow_10/particle_simulation_4_5.vtu \
     --labels "z=3" "z=2" "z=1" "z=0.5" "z=0" \
     --scalar log_field_value \
     --range-min -4.0 --range-max 4.0 \
     --resolution 3840 2160 \
-    --label-font-size 48 \
+    --label-font-size 56 \
+    --zoom 1.2 \
     --slideshow \
     --slideshow-duration 2.0 \
     --output-dir outputs/evolution_slideshow_10 \
-    --output-prefix evolution_slideshow_10_10
+    --output-prefix evolution_slideshow_10_5
 ```
 
 ## Notes

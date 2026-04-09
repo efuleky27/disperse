@@ -3,7 +3,8 @@
 
 Scans:
   - sessions/codex/... (Codex rollout-*.jsonl files)
-  - sessions/claude/   (Claude Code UUID-named .jsonl files)
+  - sessions/claude/   (Claude Code UUID-named .jsonl files, manually copied)
+  - ~/.claude/projects/<slug>/  (live Claude Code sessions for this project)
 
 Writes to sessions/export/:
   - One .md per session
@@ -19,6 +20,12 @@ from datetime import datetime, timezone
 ROOT = os.path.abspath(os.path.dirname(__file__))
 EXPORT_DIR = os.path.join(ROOT, "export")
 CLAUDE_DIR = os.path.join(ROOT, "claude")
+
+# Derive the ~/.claude/projects/ slug from the repo root path.
+# e.g. /Users/fules/Documents/disperse → -Users-fules-Documents-disperse
+_REPO_ROOT = os.path.dirname(ROOT)
+_PROJECT_SLUG = _REPO_ROOT.replace(os.sep, "-")  # leading "-" from root "/"
+CLAUDE_LIVE_DIR = os.path.expanduser(f"~/.claude/projects/{_PROJECT_SLUG}")
 
 CODEX_FILENAME_RE = re.compile(
     r"rollout-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-([0-9a-f-]+)\.jsonl$"
@@ -69,8 +76,17 @@ def safe_text(text):
 # ---------------------------------------------------------------------------
 
 def find_jsonl_files():
-    """Find all session JSONL files: Codex rollout-*.jsonl and Claude UUID.jsonl."""
-    jsonl_files = []
+    """Find all session JSONL files: Codex rollout-*.jsonl and Claude UUID.jsonl.
+
+    Claude UUID sessions are collected from both sessions/claude/ (manually
+    copied files) and ~/.claude/projects/<slug>/ (live sessions).  When the
+    same UUID appears in both locations the file with the newer mtime wins,
+    so the live copy (which keeps growing) always takes precedence.
+    """
+    # --- Codex + manually-copied Claude files (walk sessions/ tree) ---
+    codex_files = []
+    uuid_candidates: dict[str, tuple[str, float]] = {}  # uuid → (path, mtime)
+
     for root, _, files in os.walk(ROOT):
         abs_root = os.path.abspath(root)
         if abs_root.startswith(EXPORT_DIR):
@@ -78,9 +94,30 @@ def find_jsonl_files():
         for name in files:
             if not name.endswith(".jsonl"):
                 continue
-            if CODEX_FILENAME_RE.search(name) or CLAUDE_FILENAME_RE.match(name):
-                jsonl_files.append(os.path.join(root, name))
-    return sorted(jsonl_files)
+            path = os.path.join(root, name)
+            if CODEX_FILENAME_RE.search(name):
+                codex_files.append(path)
+            elif CLAUDE_FILENAME_RE.match(name):
+                uuid = os.path.splitext(name)[0]
+                mtime = os.path.getmtime(path)
+                if uuid not in uuid_candidates or mtime > uuid_candidates[uuid][1]:
+                    uuid_candidates[uuid] = (path, mtime)
+
+    # --- Live Claude sessions from ~/.claude/projects/<slug>/ ---
+    if os.path.isdir(CLAUDE_LIVE_DIR):
+        for name in os.listdir(CLAUDE_LIVE_DIR):
+            if not name.endswith(".jsonl"):
+                continue
+            if not CLAUDE_FILENAME_RE.match(name):
+                continue
+            path = os.path.join(CLAUDE_LIVE_DIR, name)
+            uuid = os.path.splitext(name)[0]
+            mtime = os.path.getmtime(path)
+            if uuid not in uuid_candidates or mtime > uuid_candidates[uuid][1]:
+                uuid_candidates[uuid] = (path, mtime)
+
+    claude_files = [p for p, _ in uuid_candidates.values()]
+    return sorted(codex_files + claude_files)
 
 
 # ---------------------------------------------------------------------------
@@ -484,7 +521,7 @@ def render_master_by_day(all_messages):
         'title: "AI Log"',
         "---",
         "",
-        "A chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code. Use the magnifying glass in the navigation bar to search the full log.",
+        "I learned a tremendous amount from my conversations with AI. This is a chronological record of all AI-assisted development sessions for this project, including interactions with Codex and Claude Code. Use the magnifying glass in the navigation bar to search the full text of the log.",
         "",
         f"Generated: `{generated}`",
         "",
@@ -810,17 +847,11 @@ def main():
 
     entries.sort(key=lambda e: (e["date"], e["time"], e["session_id"]))
 
-    with open(os.path.join(EXPORT_DIR, "INDEX.md"), "w", encoding="utf-8") as f:
-        f.write(render_index(entries))
-
     def sort_key(msg):
         dt = msg.get("ts_dt") or msg.get("session_start_dt")
         return (dt or datetime.max.replace(tzinfo=timezone.utc), msg.get("session_id") or "", msg.get("index") or 0)
 
     all_messages.sort(key=sort_key)
-
-    with open(os.path.join(EXPORT_DIR, "MASTER.md"), "w", encoding="utf-8") as f:
-        f.write(render_master(entries, all_messages))
 
     with open(os.path.join(EXPORT_DIR, "MASTER_BY_DAY.qmd"), "w", encoding="utf-8") as f:
         f.write(render_master_by_day(all_messages))

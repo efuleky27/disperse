@@ -2,6 +2,25 @@
 title: "Disentangling the Cosmic Web"
 ---
 
+This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona.
+
+**Summary**: Pull of gravity and expansion due to dark energy shape the universe into a vast cosmic web composed of:
+
+- Clusters: clusters of galaxies
+- Filaments: 1D thread-like structures
+- Walls: 2D sheets made of galaxies and gas
+- Voids: empty/low density areas
+
+While filaments and clusters are well studied, walls are harder to detect and therefore less understood. Because walls and filaments form at different stages of gravitational collapse, comparing their densities and spatial relationships can improve our understanding of how:
+
+- dark matter organizes large cosmic structures
+- galaxies have evolved
+- cosmos expands due to dark energy
+
+**Research Question**: How do walls fit into the cosmic web?
+How does their density and spatial distribution compare to
+other structures?
+
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
 ## Documentation Index
