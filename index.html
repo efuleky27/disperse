@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.36">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -74,10 +74,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-3bb95fcf13a991dba0133ab2e30b42a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6dce83697ef593b6f21f66f8d1a1696b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -273,6 +273,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona.</p>
+<p><strong>Summary</strong>: Pull of gravity and expansion due to dark energy shape the universe into a vast cosmic web composed of:</p>
+<ul>
+<li>Clusters: clusters of galaxies</li>
+<li>Filaments: 1D thread-like structures</li>
+<li>Walls: 2D sheets made of galaxies and gas</li>
+<li>Voids: empty/low density areas</li>
+</ul>
+<p>While filaments and clusters are well studied, walls are harder to detect and therefore less understood. Because walls and filaments form at different stages of gravitational collapse, comparing their densities and spatial relationships can improve our understanding of how:</p>
+<ul>
+<li>dark matter organizes large cosmic structures</li>
+<li>galaxies have evolved</li>
+<li>cosmos expands due to dark energy</li>
+</ul>
+<p><strong>Research Question</strong>: How do walls fit into the cosmic web? How does their density and spatial distribution compare to other structures?</p>
 <p>This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using <a href="https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html">DisPerSE</a>. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.</p>
 <section id="documentation-index" class="level2">
 <h2 class="anchored" data-anchor-id="documentation-index">Documentation Index</h2>
@@ -378,160 +393,32 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 </section>
 <section id="stage-1-topology-extraction-analyze_snapshot.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-1-topology-extraction-analyze_snapshot.py">Stage 1: Topology Extraction (<code>analyze_snapshot.py</code>)</h2>
-<p>Streams particle coordinates from an HDF5 snapshot, optionally crops and decimates, builds a Delaunay tessellation (DTFE density), runs the Morse–Smale complex to identify walls/filaments/clusters, and exports VTK files.</p>
-<p>For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates.</p>
-<p><strong>Key flags:</strong></p>
-<ul>
-<li><code>--input</code>: HDF5 snapshot path</li>
-<li><code>--crop-box xmin ymin zmin xmax ymax zmax</code>: restrict to a sub-volume (in <code>--input-unit</code>, default kpc/h)</li>
-<li><code>--stride N</code> / <code>--target-count N</code>: particle decimation</li>
-<li><code>--delaunay-btype periodic</code>: recommended over <code>--periodic</code> (avoids artifacts)</li>
-<li><code>--mse-nsig</code>: persistence threshold in sigma units (higher = fewer, more significant features)</li>
-<li><code>--dump-manifolds JE1a</code>: wall manifolds</li>
-<li><code>--dump-filament-manifolds JE2a</code>: optional filament-bounding manifolds</li>
-<li><code>--dump-clusters JE3a</code>: cluster critical points (maxima)</li>
-<li><code>--dump-arcs U</code>: filament arcs (1D skeleton)</li>
-<li><code>--netconv-smooth 20 --skelconv-smooth 20</code>: smoothing passes on export</li>
-<li><code>--export-delaunay</code>: also export the Delaunay tessellation as VTU</li>
-</ul>
-<p><strong>Example (cropped, periodic):</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/analyze_snapshot.py <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-box</span> 0 0 0 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stride</span> 1 <span class="dt">\</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-btype</span> periodic <span class="dt">\</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--export-delaunay</span> <span class="dt">\</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="dt">\</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-clusters</span> JE3a <span class="dt">\</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--skelconv-smooth</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Outputs:</strong> <code>*_delaunay_S###.vtu</code>, <code>*_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>*_arcs_&lt;ARC&gt;_S###.vtp</code>, <code>*_filament_manifolds_&lt;TAG&gt;_S###.vtu</code>, <code>*_cluster_critpoints_&lt;TAG&gt;_S000.vtp/.vtu</code>, <code>*_summary_stats.csv</code>.</p>
+<p>Streams particle coordinates from an HDF5 snapshot, builds a Delaunay tessellation to reconstruct the DTFE density field, and runs the Morse–Smale complex to identify walls, filaments, and clusters. The analysis can be restricted to any rectangular sub-volume, with particle density controlled via a stride or target count. For cropped runs, coordinates are rebased to the crop origin for periodic tessellation, then VTK outputs are shifted back to global coordinates, avoiding boundary artifacts.</p>
+<p>The key tunable parameters are the <strong>persistence threshold</strong> (<code>--mse-nsig</code>), which sets how statistically significant a topological feature must be to survive — higher values retain only the most prominent structures — and the <strong>smoothing passes</strong> applied during VTK export, which control geometric smoothness of walls and filaments in the output meshes. You choose which structure types to export: wall manifolds, filament manifolds, filament arcs, and cluster critical points can each be enabled independently.</p>
 <p>→ Full reference: <a href="./documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">Analyze Snapshot User Guide</a></p>
 </section>
 <section id="stage-2-topology-overlap-stats-ndtopo_stats.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-2-topology-overlap-stats-ndtopo_stats.py">Stage 2: Topology Overlap Stats (<code>ndtopo_stats.py</code>)</h2>
-<p>Matches Delaunay vertex IDs to walls/filaments/clusters and computes how many points fall in each category (walls, filaments, both, clusters, unassigned, etc.), aggregating Delaunay scalars (mass, field_value, log_field_value) per category.</p>
-<p><strong>Key flags:</strong></p>
-<ul>
-<li><code>--delaunay-vtk</code>, <code>--walls-vtk</code>, <code>--filaments-vtk</code>: VTK inputs (or <code>--*-ndnet</code> / <code>--*-ndskl</code> with <code>--write-vtk</code>)</li>
-<li><code>--filament-manifolds-vtk</code>, <code>--cluster-manifolds-vtk</code>: optional additional inputs</li>
-<li><code>--per-point-csv PATH</code>: write one row per Delaunay vertex with boolean membership flags — needed for downstream aggregation</li>
-</ul>
-<p><strong>Example:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/ndtopo_stats.py <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-vtk</span> outputs/snap_010_subbox/snap_010_delaunay_S000.vtu <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-vtk</span>    outputs/snap_010_subbox/snap_010_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-vtk</span> outputs/snap_010_subbox/snap_010_arcs_U_S020.vtp <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay-id-field</span> true_index <span class="dt">\</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls-id-field</span> true_index <span class="dt">\</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments-id-field</span> cell <span class="dt">\</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-fields</span> mass field_value log_field_value <span class="dt">\</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-csv</span> outputs/snap_010_subbox/snap_010_topology_stats.csv <span class="dt">\</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--per-point-csv</span> outputs/snap_010_subbox/snap_010_topology_points.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Matches each Delaunay vertex to the topological structures it belongs to — walls, filaments, filament manifolds, clusters — and tallies counts and scalar sums (mass, density) for every membership combination, including overlaps and unassigned points. Scalars are always drawn from the Delaunay mesh rather than the manifold geometry, avoiding interpolation artifacts.</p>
+<p>The set of structures included is flexible: filament manifolds and clusters are optional inputs added only when available. A per-point CSV output records boolean membership flags for every vertex, which is required for cross-crop aggregation in Stage 5. This stage is designed to run independently of the slab clipping in Stage 3 — both can follow Stage 1 in parallel.</p>
 <p>→ Full reference: <a href="./documents/ND_TOPO_STATS_USER_GUIDE.html">ND Topo Stats User Guide</a></p>
 </section>
 <section id="stage-3-slab-clip-and-2d-rendering-batch_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-3-slab-clip-and-2d-rendering-batch_clip.py">Stage 3: Slab Clip and 2D Rendering (<code>batch_clip.py</code>)</h2>
-<p>Clips walls, filaments, and density to a thin slab along a chosen axis, flattens to 2D, averages density across the slab, and renders composite PNGs. Must be run via <code>pvpython</code>.</p>
-<p><strong>Key flags:</strong></p>
-<ul>
-<li><code>--walls</code>, <code>--filaments</code>, <code>--delaunay</code>: VTK inputs (relative to <code>--input-dir</code>)</li>
-<li><code>--slab-axis z --slab-origin 0 --slab-thickness 10</code>: slab position (in output units, mpc/h)</li>
-<li><code>--resample-dims 512 512 64</code>: resampling grid</li>
-<li><code>--save-pngs</code>: render PNG outputs</li>
-<li><code>--png-colormap "Inferno (matplotlib)"</code>: colormap preset</li>
-<li><code>--composite-filaments-source manifolds</code>: use filament manifolds for composite renders</li>
-</ul>
-<p><strong>Example:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/batch_clip.py <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input-dir</span> outputs/snap_010_subbox <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--walls</span> snap_010_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--filaments</span> snap_010_arcs_U_S020.vtp <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--delaunay</span> snap_010_delaunay_S000.vtu <span class="dt">\</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/snap_010_subbox/slab_z0 <span class="dt">\</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> snap_010 <span class="dt">\</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-axis</span> z <span class="at">--slab-origin</span> 0 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 512 512 64 <span class="dt">\</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save-pngs</span> <span class="dt">\</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-log-range</span> <span class="at">-3</span> 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extracts a thin slab of the 3D topology along a chosen axis, flattens the wall and filament geometry onto the slab plane, averages the density field across the slab depth, and renders composite overlay PNGs. Must be run via <code>pvpython</code>.</p>
+<p>The slab position, axis, and thickness are all configurable, as is the resampling grid resolution used for density averaging. PNG rendering options include colormap, density range, overlay opacity, and background color. The composite image layers density as a base with walls and filaments overlaid, giving an immediate visual sense of how structure aligns with density at any given slice through the simulation.</p>
 <p>→ Full reference: <a href="./documents/BATCH_CLIP_USER_GUIDE.html">Batch Clip User Guide</a></p>
 </section>
 <section id="stage-4-batch-tiling-batch_crop_and_clip.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-4-batch-tiling-batch_crop_and_clip.py">Stage 4: Batch Tiling (<code>batch_crop_and_clip.py</code>)</h2>
-<p>Orchestrates Stages 1–3 across a tiled grid of non-overlapping crop boxes, running <code>analyze_snapshot.py</code> → <code>ndtopo_stats.py</code> → <code>batch_clip.py</code> for each crop and slab. This is the main entry point for large-volume analysis.</p>
-<p><strong>Key flags:</strong></p>
-<ul>
-<li><code>--snapshot</code>, <code>--output-root</code>: input snapshot and output root</li>
-<li><code>--crop-size DX DY DZ</code>: tile dimensions (in <code>--input-unit</code>, default kpc/h)</li>
-<li><code>--x-range</code>, <code>--y-range</code>, <code>--z-range</code>: volume to tile</li>
-<li><code>--mse-nsig</code>, <code>--dump-manifolds</code>, <code>--dump-arcs</code>, etc.: forwarded to <code>analyze_snapshot.py</code></li>
-<li><code>--slab-step</code>, <code>--slab-thickness</code>: slab spacing within each crop</li>
-<li><code>--write-per-point-csv</code>: write <code>topology_points.csv</code> per crop (needed for aggregation)</li>
-<li><code>--skip-slabs</code>: run analysis + stats only, skip slab clipping</li>
-</ul>
-<p><strong>Example:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--snapshot</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-root</span> outputs/quijote_batches <span class="dt">\</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 1000000 <span class="dt">\</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mse-nsig</span> 5.0 <span class="dt">\</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-manifolds</span> JE1a <span class="at">--dump-filament-manifolds</span> JE2a <span class="dt">\</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dump-clusters</span> JE3a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--netconv-smooth</span> 20 <span class="at">--skelconv-smooth</span> 20 <span class="dt">\</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slab-step</span> 10 <span class="at">--slab-thickness</span> 10 <span class="dt">\</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resample-dims</span> 500 500 100 <span class="dt">\</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar-name</span> log_field_value <span class="dt">\</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--write-per-point-csv</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Output layout:</strong></p>
-<pre><code>outputs/quijote_batches/
-  crop_x0-500_y0-500_z0-100/
-    *_delaunay_S###.vtu
-    *_manifolds_&lt;TAG&gt;_S###.vtu
-    *_arcs_&lt;ARC&gt;_S###.vtp
-    *_topology_stats.csv
-    *_topology_points.csv
-    slab_z0/
-      *_density.png
-      *_composite_density_walls_filaments.png
-    slab_z10/ ...
-  crop_x0-500_y500-1000_z0-100/ ...</code></pre>
+<p>Orchestrates Stages 1–3 across a tiled grid of non-overlapping crop boxes, running topology extraction, statistics, and slab clipping for every tile automatically. This is the main entry point for large-volume analysis where a single snapshot is too large to process at once. Outputs are organized per crop and per slab so results never overwrite each other across tiles.</p>
+<p>The tile size and the spatial range to cover are fully configurable. All topology parameters from Stage 1 (persistence, structure types, smoothing) are forwarded to each crop. Slab spacing and thickness are set independently of the crop size. Slab clipping can be skipped entirely with <code>--skip-slabs</code> to run topology extraction and statistics only, which is useful when visualizations are not needed or will be generated separately.</p>
 <p>→ Full reference: <a href="./documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">Batch Crop and Clip User Guide</a></p>
 </section>
 <section id="stage-5-cross-crop-aggregation-aggregate_topology_points.py" class="level2">
 <h2 class="anchored" data-anchor-id="stage-5-cross-crop-aggregation-aggregate_topology_points.py">Stage 5: Cross-Crop Aggregation (<code>aggregate_topology_points.py</code>)</h2>
-<p>Combines all <code>*_topology_points.csv</code> files across crops into global statistics, per-category histograms, and composition/violin/box plots for four primary categories: <strong>Clusters</strong>, <strong>Filaments</strong> (filament manifolds not clusters), <strong>Walls</strong> (walls only), and <strong>Unassigned</strong>.</p>
-<p><strong>Key flags:</strong></p>
-<ul>
-<li><code>--root</code>: root directory to scan for <code>*_topology_points.csv</code></li>
-<li><code>--output-dir</code>, <code>--output-prefix</code>: output location</li>
-<li><code>--engine polars</code>: fast path (default); <code>--polars-chunks N</code> for large datasets</li>
-<li><code>--hist-bin-mode global</code>: shared bins across categories (better for comparison)</li>
-<li><code>--log10-field-value</code>: convert field_value to log10 before aggregating</li>
-<li><code>--plot-dpi</code>, <code>--plot-fontscale</code>: control figure quality</li>
-</ul>
-<p><strong>Example:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches/combined <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--engine</span> polars <span class="dt">\</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--polars-chunks</span> 4 <span class="dt">\</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--log10-field-value</span> <span class="dt">\</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--violin-scalar</span> log10_field_value <span class="dt">\</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-bin-mode</span> global <span class="dt">\</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--hist-percentile-range</span> 1 99 <span class="dt">\</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-percentile-range</span> .1 99.9 <span class="dt">\</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-fontscale</span> 1.2 <span class="dt">\</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 300</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Outputs:</strong> aggregated <code>*_topology_stats.csv</code>, per-category histogram CSVs and PNGs, composition barchart, violin/box plots.</p>
+<p>Scans all per-crop <code>*_topology_points.csv</code> files and combines them into a single aggregated statistics table, per-category histograms, and composition and distribution plots for the four primary categories — <strong>Clusters</strong>, <strong>Filaments</strong> (filament manifolds not clusters), <strong>Walls</strong> (walls only), and <strong>Unassigned</strong>. This gives a global view of how mass and density are distributed across cosmic-web structures for the full simulated volume, not just individual tiles.</p>
+<p>Processing is handled by a fast Polars engine by default, with a chunked mode available for very large datasets when memory is limited. Histogram binning can be per-category or shared across categories (useful for direct visual comparison). The density scalar can be converted to log₁₀ before aggregating. Plot resolution and font scale are adjustable for publication-quality figures.</p>
 <p>→ Full reference: <a href="./documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">Aggregate Topology Points User Guide</a></p>
 </section>
 <section id="visualization-scripts" class="level2">
@@ -539,48 +426,22 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <p>These scripts are standalone — they are not part of the batch pipeline but consume its outputs.</p>
 <section id="spin_render.py-rotating-3d-animation" class="level3">
 <h3 class="anchored" data-anchor-id="spin_render.py-rotating-3d-animation"><code>spin_render.py</code> — rotating 3D animation</h3>
-<p>Orbits a camera around any VTK dataset and writes a PNG sequence or MP4. Must be run via <code>pvpython</code>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/spin_render.py <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/crop_x0-500_y0-500_z0-100/crop_manifolds_JE1a_S020.vtu <span class="dt">\</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/spin.mp4 <span class="dt">\</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frames</span> 360 <span class="dt">\</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--colormap</span> <span class="st">"Inferno (matplotlib)"</span> <span class="dt">\</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3</span> <span class="at">--range-max</span> 1 <span class="dt">\</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--resolution</span> 1920 1080 <span class="at">--background</span> black <span class="dt">\</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--animate-elev-zoom</span> <span class="at">--loops</span> 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Orbits a camera around any VTK dataset and writes a PNG sequence or MP4. Resolution, frame count, colormap, scalar range, elevation, zoom, and rotation speed are all configurable. An animated elevation-and-zoom mode adds smooth sinusoidal camera motion across the rotation, and multi-loop renders can modulate slowly across loops for varied motion without seams. Must be run via <code>pvpython</code>.</p>
 <p>→ Full reference: <a href="./documents/SPIN_RENDER_USER_GUIDE.html">Spin Render User Guide</a></p>
 </section>
 <section id="redshift_evolution.py-redshift-evolution-movie" class="level3">
 <h3 class="anchored" data-anchor-id="redshift_evolution.py-redshift-evolution-movie"><code>redshift_evolution.py</code> — redshift evolution movie</h3>
-<p>Takes one Delaunay VTU per redshift snapshot and produces an interpolated or slideshow movie showing cosmic web evolution. Must be run via <code>pvpython</code>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pvpython</span> scripts/redshift_evolution.py <span class="dt">\</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--inputs</span> snap_000_delaunay.vtu snap_001_delaunay.vtu snap_002_delaunay.vtu <span class="dt">\</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=1"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/evolution <span class="at">--output-prefix</span> evolution <span class="dt">\</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalar</span> log_field_value <span class="dt">\</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--range-min</span> <span class="at">-3.0</span> <span class="at">--range-max</span> 1.0 <span class="dt">\</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slideshow</span> <span class="at">--slideshow-duration</span> 2.0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Takes one Delaunay VTU per redshift snapshot and produces a smooth interpolation movie across redshifts, tracing the evolution of the cosmic web from early times to the present. Point positions and scalar values are interpolated between snapshots using nearest-neighbour alignment so the same physical particles are followed across frames. A slideshow mode is also available for a simple cut-between-snapshots presentation. Must be run via <code>pvpython</code>.</p>
 <p>→ Full reference: <a href="./documents/SPIN_RENDER_USER_GUIDE.html">Spin Render User Guide</a> (includes <code>redshift_evolution.py</code> section)</p>
 </section>
 <section id="compare_simulations.py-side-by-side-comparison" class="level3">
 <h3 class="anchored" data-anchor-id="compare_simulations.py-side-by-side-comparison"><code>compare_simulations.py</code> — side-by-side comparison</h3>
-<p>Reads two simulations’ <code>topology_stats.csv</code> files and renders side-by-side boxplots.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalars</span> log_field_value <span class="dt">\</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/comparison <span class="at">--output-prefix</span> compare_z3_vs_z0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reads two simulations’ aggregated <code>topology_stats.csv</code> files and renders side-by-side box plots for the four primary categories, using the same colour scheme as the composition plots. Useful for comparing runs at different redshifts or with different simulation parameters.</p>
 <p>→ Full reference: <a href="./documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">Aggregate Topology Points User Guide</a> (includes <code>compare_simulations.py</code> section)</p>
 </section>
 <section id="stitch_slab_pngs.py-slab-png-mp4" class="level3">
 <h3 class="anchored" data-anchor-id="stitch_slab_pngs.py-slab-png-mp4"><code>stitch_slab_pngs.py</code> — slab PNG → MP4</h3>
-<p>Assembles the per-slab PNGs produced by <code>batch_clip.py</code> into MP4 movies.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches <span class="dt">\</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> composite_density_walls_filaments.png <span class="dt">\</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches/movies</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Assembles the per-slab PNGs produced by <code>batch_clip.py</code> into MP4 movies, scanning a batch output directory for matching PNG files and encoding them in slab-origin order. Useful for quickly animating a flythrough along the z-axis.</p>
 <p>→ Full reference: <a href="./documents/STITCH_SLAB_PNGS_USER_GUIDE.html">Stitch Slab PNGs User Guide</a></p>
 </section>
 </section>
@@ -588,27 +449,15 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <h2 class="anchored" data-anchor-id="utility-tools">Utility Tools</h2>
 <section id="compute_density_field.py-cic-density-grid" class="level3">
 <h3 class="anchored" data-anchor-id="compute_density_field.py-cic-density-grid"><code>compute_density_field.py</code> — CIC density grid</h3>
-<p>Deposits snapshot particles onto a regular N³ grid using Cloud-In-Cell interpolation and saves to HDF5.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compute_density_field.py <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--grid-size</span> 256 <span class="at">--store-contrast</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Deposits snapshot particles onto a regular N³ grid using Cloud-In-Cell interpolation and saves to HDF5. Useful for producing a pre-computed density field for volume rendering or as input to other analyses.</p>
 </section>
 <section id="export_grid_vti.py-hdf5-grid-vti" class="level3">
 <h3 class="anchored" data-anchor-id="export_grid_vti.py-hdf5-grid-vti"><code>export_grid_vti.py</code> — HDF5 grid → VTI</h3>
-<p>Wraps an existing 3D HDF5 dataset as ParaView VTI for volume rendering.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_grid_vti.py <span class="dt">\</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> outputs/snap_010_density.hdf5 <span class="dt">\</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dataset</span> DensityField/density <span class="dt">\</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_density.vti</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Wraps an existing 3D HDF5 density array as a ParaView VTI structured grid for direct volume rendering without any intermediate processing.</p>
 </section>
 <section id="export_snapshot_vtu.py-snapshot-particles-vtu" class="level3">
 <h3 class="anchored" data-anchor-id="export_snapshot_vtu.py-snapshot-particles-vtu"><code>export_snapshot_vtu.py</code> — snapshot particles → VTU</h3>
-<p>Streams snapshot particles to a VTU point cloud, with optional stride/decimation.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/export_snapshot_vtu.py <span class="dt">\</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> data/snap_010.hdf5 <span class="dt">\</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/snap_010_points.vtu <span class="dt">\</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-count</span> 2000000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Streams raw snapshot particles to a VTU point cloud, with optional decimation by stride or target count. Useful for visualizing the raw particle distribution alongside topology outputs in ParaView.</p>
 <p>→ Full reference: <a href="./documents/OTHER_TOOLS_USER_GUIDE.html">Other Tools User Guide</a></p>
 </section>
 </section>
@@ -616,72 +465,72 @@ redshift_evolution.py             → smooth movie evolving across redshift snap
 <h2 class="anchored" data-anchor-id="data-access-globus">Data Access (Globus)</h2>
 <section id="snapshot-fiducial0-all-redshifts" class="level3">
 <h3 class="anchored" data-anchor-id="snapshot-fiducial0-all-redshifts">Snapshot (Fiducial/0, all redshifts)</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b   <span class="co"># your local endpoint</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437   <span class="co"># Quijote NERSC endpoint</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/fiducial/0/snapdir_000/"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snapdir_000/"</span> <span class="dt">\</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote Snapshot Fiducial 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b   <span class="co"># your local endpoint</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437   <span class="co"># Quijote NERSC endpoint</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/fiducial/0/snapdir_000/"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snapdir_000/"</span> <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote Snapshot Fiducial 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="snapshot-bsq0-single-file" class="level3">
 <h3 class="anchored" data-anchor-id="snapshot-bsq0-single-file">Snapshot (BSQ/0, single file)</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f   <span class="co"># Quijote BSQ endpoint</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5"</span> <span class="dt">\</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>f4863854-3819-11eb-b171-0ee0d5d9299f   <span class="co"># Quijote BSQ endpoint</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/Snapshots/BSQ/0/snap_010.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/snap_010.hdf5"</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="pre-computed-density-field-bsq0" class="level3">
 <h3 class="anchored" data-anchor-id="pre-computed-density-field-bsq0">Pre-computed density field (BSQ/0)</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5"</span> <span class="dt">\</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote Density Field BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DST</span><span class="op">=</span>d0b6b6f1-bdf0-11f0-9431-0e092d85c59b</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRC</span><span class="op">=</span>e0eae0aa-5bca-11ea-9683-0e56c063f437</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">globus</span> transfer <span class="st">"</span><span class="va">$SRC</span><span class="st">:/3D_cubes/BSQ/0/df_m_CIC_z=0.00.hdf5"</span> <span class="st">"</span><span class="va">$DST</span><span class="st">:~/Downloads/df_m_CIC_z=0.00.hdf5"</span> <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--label</span> <span class="st">"Quijote Density Field BSQ 0 z=0"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="build-disperse-from-source" class="level2">
 <h2 class="anchored" data-anchor-id="build-disperse-from-source">Build DisPerSE from Source (macOS)</h2>
 <p><strong>One-time prerequisites:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">xcode-select</span> <span class="at">--install</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install cgal gmp mpfr gsl cfitsio boost@1.85</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">xcode-select</span> <span class="at">--install</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install cgal gmp mpfr gsl cfitsio boost@1.85</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Build:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/DisPerSE</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Shim to ensure CGAL/GMP/MPFR are found</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> cgal_use_dummy.cmake <span class="op">&lt;&lt;'CMAKE'</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="st">if (DEFINED CGAL_DIR AND EXISTS "${CGAL_DIR}/UseCGAL.cmake")</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="st">  include("${CGAL_DIR}/UseCGAL.cmake")</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT GMP_FOUND)  find_package(GMP)  endif()</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT MPFR_FOUND) find_package(MPFR) endif()</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="st">if (GMP_FOUND AND NOT TARGET GMP::gmp)</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(GMP::gmp UNKNOWN IMPORTED)</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(GMP::gmp PROPERTIES</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION "${GMP_LIBRARIES}"</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR};${GMP_INCLUDE_DIRS}")</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="st">if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)</span></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(MPFR::mpfr UNKNOWN IMPORTED)</span></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(MPFR::mpfr PROPERTIES</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION "${MPFR_LIBRARIES}"</span></span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES "${MPFR_INCLUDE_DIR};${MPFR_INCLUDE_DIRS}")</span></span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
-<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a><span class="op">CMAKE</span></span>
-<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
-<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
-<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
-<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL"</span> <span class="dt">\</span></span>
-<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
-<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">"/opt/homebrew/opt/boost@1.85"</span> <span class="dt">\</span></span>
-<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">"/opt/homebrew/opt/boost@1.85:/opt/homebrew"</span> <span class="dt">\</span></span>
-<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake"</span> <span class="dt">\</span></span>
-<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
-<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">"-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS"</span></span>
-<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /path/to/DisPerSE</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Shim to ensure CGAL/GMP/MPFR are found</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> cgal_use_dummy.cmake <span class="op">&lt;&lt;'CMAKE'</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">if (DEFINED CGAL_DIR AND EXISTS "${CGAL_DIR}/UseCGAL.cmake")</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">  include("${CGAL_DIR}/UseCGAL.cmake")</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT GMP_FOUND)  find_package(GMP)  endif()</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">if (NOT MPFR_FOUND) find_package(MPFR) endif()</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">if (GMP_FOUND AND NOT TARGET GMP::gmp)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(GMP::gmp UNKNOWN IMPORTED)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(GMP::gmp PROPERTIES</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION "${GMP_LIBRARIES}"</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR};${GMP_INCLUDE_DIRS}")</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="st">if (MPFR_FOUND AND NOT TARGET MPFR::mpfr)</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">  add_library(MPFR::mpfr UNKNOWN IMPORTED)</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="st">  set_target_properties(MPFR::mpfr PROPERTIES</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="st">    IMPORTED_LOCATION "${MPFR_LIBRARIES}"</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="st">    INTERFACE_INCLUDE_DIRECTORIES "${MPFR_INCLUDE_DIR};${MPFR_INCLUDE_DIRS}")</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="st">endif()</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="op">CMAKE</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> build <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> build <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> build</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-Wno-dev</span> <span class="dt">\</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_POLICY_VERSION_MINIMUM</span><span class="op">=</span>3.5 <span class="dt">\</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DGSL_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> gsl<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCFITSIO_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cfitsio<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">brew</span> <span class="at">--prefix</span> cgal<span class="va">)</span><span class="st">/lib/cmake/CGAL"</span> <span class="dt">\</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_BOOST_CMAKE</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBoost_NO_SYSTEM_PATHS</span><span class="op">=</span>ON <span class="dt">\</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DBOOST_ROOT</span><span class="op">=</span><span class="st">"/opt/homebrew/opt/boost@1.85"</span> <span class="dt">\</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_PREFIX_PATH</span><span class="op">=</span><span class="st">"/opt/homebrew/opt/boost@1.85:/opt/homebrew"</span> <span class="dt">\</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCGAL_USE_FILE</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/../cgal_use_dummy.cmake"</span> <span class="dt">\</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_STANDARD</span><span class="op">=</span>17 <span class="at">-DCMAKE_CXX_STANDARD_REQUIRED</span><span class="op">=</span>ON <span class="at">-DCMAKE_CXX_EXTENSIONS</span><span class="op">=</span>OFF <span class="dt">\</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">-DCMAKE_CXX_FLAGS</span><span class="op">=</span><span class="st">"-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION -D_LIBCPP_ENABLE_CXX17_REMOVED_BINDERS"</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Add to PATH:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"/path/to/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">"</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to ~/.zshrc to persist</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"/path/to/DisPerSE/build/src:</span><span class="va">$PATH</span><span class="st">"</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to ~/.zshrc to persist</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If you see <code>Undefined symbols ___gmpn_*</code>, the GMP/MPFR shim above fixes the link.</p>
 </section>
 <section id="why-disperse" class="level2">
