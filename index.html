@@ -275,7 +275,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona.</p>
+<p>This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.</p>
 <p><strong>Summary</strong>: Pull of gravity and expansion due to dark energy shape the universe into a vast cosmic web composed of:</p>
 <ul>
 <li>Clusters: clusters of galaxies</li>
@@ -291,13 +291,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Research Question</strong>: How do walls fit into the cosmic web? How does their density and spatial distribution compare to other structures?</p>
 <p>This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using <a href="https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html">DisPerSE</a>. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="figures/cube_crop_slab.png" class="img-fluid figure-img"></p>
-<figcaption>Outline of the entire 1 Gpc<sup>3</sup> cube and crops sized 500 × 500 × 100 Mpc<sup>3</sup>, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc<sup>3</sup> slice of walls.</figcaption>
+<div id="fig-evolution" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-evolution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/cube_crop_slab.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-evolution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Outline of the entire 1 Gpc<sup>3</sup> cube and crops sized 500 × 500 × 100 Mpc<sup>3</sup>, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc<sup>3</sup> slice of walls.
+</figcaption>
 </figure>
 </div>
-<div class="quarto-video"><video id="video_shortcode_videojs_video1" class="video-js vjs-default-skin vjs-big-play-centered vjs-fluid" controls="" preload="auto" data-setup="{}" title="Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redishift z = 0)"><source src="figures/evolution_slideshow_5_3.mp4"></video></div>
+<div id="fig-evolution" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-evolution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-video"><video id="video_shortcode_videojs_video1" width="75%" class="video-js vjs-default-skin vjs-big-play-centered " controls="" preload="auto" data-setup="{}" title=""><source src="figures/evolution_slideshow_5_3.mp4"></video></div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-evolution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0).
+</figcaption>
+</figure>
+</div>
 <section id="documentation-index" class="level2">
 <h2 class="anchored" data-anchor-id="documentation-index">Documentation Index</h2>
 <table class="caption-top table">
