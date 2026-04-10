@@ -2,7 +2,7 @@
 title: "Disentangling the Cosmic Web"
 ---
 
-This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona.
+This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.
 
 **Summary**: Pull of gravity and expansion due to dark energy shape the universe into a vast cosmic web composed of:
 
@@ -23,9 +23,17 @@ other structures?
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
-![Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc^3^ slice of walls.](figures/cube_crop_slab.png)
+::: {#fig-evolution}
+![](figures/cube_crop_slab.png)
 
-{{< video figures/evolution_slideshow_5_3.mp4 title="Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redishift z = 0)" >}}
+Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc^3^ slice of walls.
+:::
+
+::: {#fig-evolution}
+{{< video figures/evolution_slideshow_5_3.mp4 width="75%" >}}
+
+Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0).
+:::
 
 ## Documentation Index
 

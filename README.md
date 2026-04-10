@@ -1,7 +1,7 @@
 # Disentangling the Cosmic Web
 
 This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona.
-I createrd an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.
+I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.
 
 ## Documentation
 
