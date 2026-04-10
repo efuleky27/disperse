@@ -23,16 +23,16 @@ other structures?
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
-::: {#fig-cube}
+::: {#fig-cube style="width: 75%; margin-left: auto; margin-right: auto;"}
 ![](figures/cube_crop_slab.png)
 
 Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc^3^ slice of walls.
 :::
 
-::: {#fig-evolution style="max-width: 75%;"}
-{{< video figures/evolution_slideshow_5_3.mp4 width="100%" >}}
+::: {#fig-redshift style="width: 75%; margin-left: auto; margin-right: auto;"}
+{{< video figures/evolution_slideshow_5_3.mp4 >}}
 
-Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0).
+Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0). Illutrated by a 500 × 500 × 5 Mpc^3^ slice of the N-body simulation colored by log-density.
 :::
 
 ## Documentation Index
