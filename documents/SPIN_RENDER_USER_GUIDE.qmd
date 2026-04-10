@@ -361,10 +361,11 @@ pvpython scripts/redshift_evolution.py \
     --resolution 3840 2160 \
     --label-font-size 56 \
     --zoom 1.2 \
+    --point-size 3.0 \
     --slideshow \
     --slideshow-duration 2.0 \
     --output-dir outputs/evolution_slideshow_10 \
-    --output-prefix evolution_slideshow_10_5
+    --output-prefix evolution_slideshow_10_5_3
 ```
 
 ## Notes

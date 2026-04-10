@@ -252,6 +252,7 @@ def parse_claude_session(path):
     session_id = None
     cwd = None
     model = None
+    seen_uuids: set[str] = set()
 
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -268,6 +269,13 @@ def parse_claude_session(path):
             # Skip sidechain (tool orchestration) messages
             if obj.get("isSidechain"):
                 continue
+
+            # Claude Code writes each message entry twice; deduplicate by uuid.
+            uuid = obj.get("uuid")
+            if uuid:
+                if uuid in seen_uuids:
+                    continue
+                seen_uuids.add(uuid)
 
             if obj_type == "user":
                 if not session_id:
