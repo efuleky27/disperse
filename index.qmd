@@ -4,6 +4,9 @@ title: "Disentangling the Cosmic Web"
 
 This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.
 
+::: {#fig-components style="width: 75%; margin-left: auto; margin-right: auto;"}
+![](figures/Components_of_the_Cosmic_Web.png)
+
 **Summary**: Pull of gravity and accelerating expansion due to dark energy shape the universe into a vast cosmic web composed of:
 
 - Clusters: clusters of galaxies
