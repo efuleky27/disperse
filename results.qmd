@@ -14,7 +14,7 @@ title: "Results"
 
 ## Video
 
-{{< video https://www.youtube.com/watch?v=I9Ck1TP54eg width="100%" >}}
+{{< video https://www.youtube.com/watch?v=I9Ck1TP54eg width="100%" aspect-ratio="16x9" >}}
 
 ---
 
