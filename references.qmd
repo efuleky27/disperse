@@ -4,28 +4,28 @@ title: "References"
 
 Bassi, M. (2025, February 11). [An enormous, branching string of galaxy clusters is the largest known structure in the universe, scientists say.](https://www.smithsonianmag.com/smart-news/an-enormous-branching-string-of-galaxy-clusters-is-the-largest-known-structure-in-the-universe-scientists-say-180986039/) *Smithsonian Magazine.*
 
-Cautun, M., van de Weygaert, R., & Jones, B. J. T. (2012). [NEXUS: Tracing the cosmic web connection.](https://doi.org/10.48550/ARXIV.1209.2043) *arXiv:1209.2043.*
+Cautun, M., van de Weygaert, R., & Jones, B. J. T. (2013). [NEXUS: Tracing the cosmic web connection.](https://doi.org/10.1093/mnras/sts416) *Monthly Notices of the Royal Astronomical Society, 429*(2), 1286–1308.
 
-Gurzadyan, V. G., Fimin, N. N., & Chechetkin, V. M. (2023). [Cosmic voids and the kinetic analysis. II. Link to Hubble tension.](https://doi.org/10.48550/arXiv.2303.03194) *arXiv:2303.03194.*
+Gurzadyan, V. G., Fimin, N. N., & Chechetkin, V. M. (2023). [Cosmic voids and the kinetic analysis. II. Link to Hubble tension.](https://doi.org/10.1051/0004-6361/202346139) *Astronomy & Astrophysics, 672*, A95.
 
-Hahn, O., Porciani, C., Carollo, C. M., & Dekel, A. (2006). [Properties of dark matter haloes in clusters, filaments, sheets and voids.](https://doi.org/10.48550/ARXIV.ASTRO-PH/0610280) *arXiv:astro-ph/0610280.*
+Hahn, O., Porciani, C., Carollo, C. M., & Dekel, A. (2007). [Properties of dark matter haloes in clusters, filaments, sheets and voids.](https://doi.org/10.1111/j.1365-2966.2006.11318.x) *Monthly Notices of the Royal Astronomical Society, 375*, 489–499.
 
 [Large scale structure.](https://www.cfa.harvard.edu/research/topic/large-scale-structure) (n.d.). Center for Astrophysics | Harvard & Smithsonian. Retrieved January 20, 2026.
 
 [Large scale structures.](https://science.nasa.gov/universe/galaxies/large-scale-structures/) (2022, August 2). NASA Science.
 
-Libeskind, N. I., van de Weygaert, R., Cautun, M., Falck, B., Tempel, E., Abel, T., Alpaslan, M., Aragón-Calvo, M. A., Forero-Romero, J. E., Gonzalez, R., Gottlöber, S., Hahn, O., Hellwing, W. A., Hoffman, Y., Jones, B. J. T., Kitaura, F., Knebe, A., Manti, S., Neyrinck, M., Nuza, S. E., Padilla, N., Platen, E., Ramachandra, N., Robotham, A., Saar, E., Shandarin, S., Steinmetz, M., Stoica, R. S., Sousbie, T., & Yepes, G. (2017). [Tracing the cosmic web.](https://doi.org/10.48550/ARXIV.1705.03021) *arXiv:1705.03021.*
+Libeskind, N. I., van de Weygaert, R., Cautun, M., Falck, B., Tempel, E., Abel, T., Alpaslan, M., Aragón-Calvo, M. A., Forero-Romero, J. E., Gonzalez, R., Gottlöber, S., Hahn, O., Hellwing, W. A., Hoffman, Y., Jones, B. J. T., Kitaura, F., Knebe, A., Manti, S., Neyrinck, M., Nuza, S. E., Padilla, N., Platen, E., Ramachandra, N., Robotham, A., Saar, E., Shandarin, S., Steinmetz, M., Stoica, R. S., Sousbie, T., & Yepes, G. (2018). [Tracing the cosmic web.](https://doi.org/10.1093/mnras/stx1976) *Monthly Notices of the Royal Astronomical Society, 473*, 1195–1217.
 
 Mu, Z. (2025). [Environmental effects on galaxy evolution.](https://doi.org/10.48550/arXiv.2507.17243) *arXiv:2507.17243.*
 
 Netchitailo, V. (2022). [Hubble tension.](https://doi.org/10.4236/jhepgc.2022.82030) *Journal of High Energy Physics, Gravitation and Cosmology, 8*(2).
 
-Sousbie, T. (2010a). [The persistent cosmic web and its filamentary structure I: Theory and implementation.](https://doi.org/10.48550/arXiv.1009.4015) *arXiv:1009.4015.*
+Sousbie, T. (2011a). [The persistent cosmic web and its filamentary structure I: Theory and implementation.](https://doi.org/10.1111/j.1365-2966.2011.18394.x) *Monthly Notices of the Royal Astronomical Society, 414*(1), 350–383.
 
-Sousbie, T. (2010b). [The persistent cosmic web and its filamentary structure II: Illustrations.](https://doi.org/10.48550/arXiv.1009.4014) *arXiv:1009.4014.*
+Sousbie, T. (2011b). [The persistent cosmic web and its filamentary structure II: Illustrations.](https://doi.org/10.1111/j.1365-2966.2011.18395.x) *Monthly Notices of the Royal Astronomical Society, 414*(1), 384–403.
 
 Sousbie, T. (2013). [DisPerSE — Discrete persistent structures extractor.](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html)
 
 [Structure and types.](https://quijote-simulations.readthedocs.io/en/latest/types.html) (n.d.). Quijote Simulations documentation. Retrieved January 20, 2026.
 
-Villaescusa-Navarro, F., Hahn, C., Massara, E., Banerjee, A., Delgado, A. M., Ramanah, D. K., Charnock, T., Giusarma, E., Li, Y., Allys, E., Brochard, A., Uhlemann, C., Chiang, C.-T., He, S., Pisani, A., Obuljen, A., Feng, Y., Castorina, E., Contardo, G., Kreisch, C. D., Nicola, A., Alsing, J., Scoccimarro, R., Verde, L., Viel, M., Ho, S., Mallat, S., Wandelt, B., & Spergel, D. N. (2021). [The Quijote simulations.](https://doi.org/10.48550/arXiv.1909.05273) *arXiv:1909.05273.*
+Villaescusa-Navarro, F., Hahn, C., Massara, E., Banerjee, A., Delgado, A. M., Ramanah, D. K., Charnock, T., Giusarma, E., Li, Y., Allys, E., Brochard, A., Uhlemann, C., Chiang, C.-T., He, S., Pisani, A., Obuljen, A., Feng, Y., Castorina, E., Contardo, G., Kreisch, C. D., Nicola, A., Alsing, J., Scoccimarro, R., Verde, L., Viel, M., Ho, S., Mallat, S., Wandelt, B., & Spergel, D. N. (2020). [The Quijote simulations.](https://doi.org/10.3847/1538-4365/ab9d82) *Astrophysical Journal Supplement Series, 250*(2).
