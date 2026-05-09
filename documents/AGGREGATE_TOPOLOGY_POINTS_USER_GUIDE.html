@@ -130,6 +130,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../results.html"> 
+<span class="menu-text">Results</span></a>
+  </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Workflow</span>
@@ -222,8 +226,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#requirements-1" id="toc-requirements-1" class="nav-link" data-scroll-target="#requirements-1">Requirements</a></li>
   <li><a href="#cli-1" id="toc-cli-1" class="nav-link" data-scroll-target="#cli-1">CLI</a></li>
   <li><a href="#key-options" id="toc-key-options" class="nav-link" data-scroll-target="#key-options">Key options</a></li>
-  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1">Examples</a></li>
+  <li><a href="#output-files" id="toc-output-files" class="nav-link" data-scroll-target="#output-files">Output files</a></li>
+  <li><a href="#violin-plot-conventions" id="toc-violin-plot-conventions" class="nav-link" data-scroll-target="#violin-plot-conventions">Violin plot conventions</a></li>
   <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
+  <li><a href="#examples-1" id="toc-examples-1" class="nav-link" data-scroll-target="#examples-1">Examples</a></li>
   <li><a href="#more-examples" id="toc-more-examples" class="nav-link" data-scroll-target="#more-examples">More Examples</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -359,60 +365,99 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="compare_simulations.py-user-guide" class="level2">
 <h2 class="anchored" data-anchor-id="compare_simulations.py-user-guide"><code>compare_simulations.py</code> User Guide</h2>
-<p>Use <code>scripts/compare_simulations.py</code> to place two simulations’ boxplots side-by-side for direct comparison. It reads one <code>*_topology_stats.csv</code> per simulation (auto-discovered from a folder or its <code>combined/</code> subdirectory) and produces a multi-panel figure with one column-pair per category.</p>
+<p>Use <code>scripts/compare_simulations.py</code> to compare two simulations side-by-side. It reads one <code>*_topology_stats.csv</code> per simulation (auto-discovered from a folder or its <code>combined/</code> subdirectory) and, when per-point CSVs are available, reads the individual <code>*_topology_points.csv</code> files across all crops.</p>
 </section>
 <section id="what-it-does-1" class="level2">
 <h2 class="anchored" data-anchor-id="what-it-does-1">What it does</h2>
 <ul>
 <li>Reads aggregated <code>topology_stats.csv</code> files from two simulation output folders.</li>
-<li>Renders side-by-side box plots for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars.</li>
-<li>Adds a summary-statistics table below the plots.</li>
-<li>Category labels on the x-axis are coloured to match the boxplot colours.</li>
+<li>Renders side-by-side <strong>box plots</strong> for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars, with a summary-statistics table below.</li>
+<li>Renders side-by-side <strong>violin plots</strong> (requires per-point CSVs) built from actual particle values with equal-area KDE normalization — every violin’s visual area is proportional to its sample size — plus a median line and IQR indicator.</li>
+<li>Renders two <strong>scatter + marginal-density plots</strong> (requires per-point CSVs):
+<ul>
+<li><em>Particle proximity</em>: x = density^(−1/3) (a proxy for inter-particle separation), y = log₁₀(density).</li>
+<li><em>Voronoi cell volume</em>: x = density^(−1) (Voronoi volume proxy), y = log₁₀(density).</li>
+<li>Each scatter plot includes marginal density curves along both axes.</li>
+</ul></li>
 </ul>
 </section>
 <section id="requirements-1" class="level2">
 <h2 class="anchored" data-anchor-id="requirements-1">Requirements</h2>
 <ul>
-<li>Python with <code>matplotlib</code>, <code>numpy</code>, and <code>polars</code> (or <code>pandas</code>).</li>
+<li>Python with <code>matplotlib</code>, <code>numpy</code>, <code>scipy</code> (for KDE), and <code>polars</code> (or <code>pandas</code>).</li>
 </ul>
 </section>
 <section id="cli-1" class="level2">
 <h2 class="anchored" data-anchor-id="cli-1">CLI</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> <span class="op">&lt;</span>SIM_A_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> <span class="op">&lt;</span>SIM_B_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  [--labels <span class="st">"z=0"</span> <span class="st">"z=3"</span>] <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  [--scalars log_field_value field_value] <span class="dt">\</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  [--output-dir <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span>] <span class="dt">\</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  [--output-prefix <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> <span class="op">&lt;</span>SIM_A_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> <span class="op">&lt;</span>SIM_B_DIR<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  [--stats-file <span class="op">&lt;</span>CSV_A<span class="op">&gt;</span> --stats-file <span class="op">&lt;</span>CSV_B<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  [--points-file <span class="op">&lt;</span>CSV_A<span class="op">&gt;</span> --points-file <span class="op">&lt;</span>CSV_B<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  [--labels <span class="st">"z=3"</span> <span class="st">"z=0"</span>] <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  [--scalars log_field_value field_value] <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  [--plot-sample-size N] <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  [--output-dir <span class="op">&lt;</span>OUTPUT_DIR<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  [--output-prefix <span class="op">&lt;</span>PREFIX<span class="op">&gt;</span>] <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  [--font-scale 1.0] <span class="dt">\</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  [--dpi 150]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="key-options" class="level2">
 <h2 class="anchored" data-anchor-id="key-options">Key options</h2>
 <ul>
-<li><code>--folder-a / --folder-b</code> — Root output directories for each simulation. The script searches for <code>*_topology_stats.csv</code> directly or inside a <code>combined/</code> subdirectory.</li>
-<li><code>--labels</code> — Display names for the two simulations (default: folder basenames).</li>
+<li><code>--sim</code> — Root output directory for a simulation (repeat exactly twice). The script searches for <code>*_topology_stats.csv</code> directly or inside a <code>combined/</code> subdirectory, and finds all <code>*_topology_points.csv</code> files under the folder (excluding <code>combined/</code>) for violin and scatter plots.</li>
+<li><code>--stats-file</code> — Supply stats CSVs directly (repeat exactly twice) instead of <code>--sim</code>.</li>
+<li><code>--points-file</code> — Supply per-point CSVs directly (repeat exactly twice) instead of auto-discovery.</li>
+<li><code>--labels</code> — Display names for the two simulations (default: folder basenames). Pass the earlier epoch first (e.g.&nbsp;<code>"z=3" "z=0"</code>) — violin plots always show sim A on the right and sim B on the left, so earlier-epoch data appears on the left.</li>
 <li><code>--scalars</code> — Which scalar columns to plot (default: all detected scalars).</li>
+<li><code>--plot-sample-size</code> — Reservoir-sample at most N rows per simulation when reading per-point CSVs (default: read all rows).</li>
 <li><code>--output-dir</code> — Where to write the figure (default: current directory).</li>
-<li><code>--output-prefix</code> — Filename prefix for the output PNG.</li>
+<li><code>--output-prefix</code> — Filename prefix for output PNGs (default: <code>comparison</code>).</li>
+<li><code>--font-scale</code> — Multiplier for all font sizes (default: 1.0).</li>
+<li><code>--dpi</code> — Output image DPI (default: 150).</li>
 </ul>
 </section>
-<section id="examples-1" class="level2">
-<h2 class="anchored" data-anchor-id="examples-1">Examples</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalars</span> log_field_value <span class="dt">\</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/comparison_000_vs_004 <span class="dt">\</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> compare_z3_vs_z0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="output-files" class="level2">
+<h2 class="anchored" data-anchor-id="output-files">Output files</h2>
+<p>For each scalar:</p>
+<ul>
+<li><code>&lt;prefix&gt;_&lt;scalar&gt;_box.png</code> — side-by-side box plots + stats table</li>
+<li><code>&lt;prefix&gt;_&lt;scalar&gt;_violin.png</code> — side-by-side violin plots + stats table (requires per-point CSVs)</li>
+</ul>
+<p>Always (requires per-point CSVs):</p>
+<ul>
+<li><code>&lt;prefix&gt;_scatter_proximity.png</code> — log₁₀-density vs particle proximity scatter + marginal densities</li>
+<li><code>&lt;prefix&gt;_scatter_voronoi.png</code> — log₁₀-density vs Voronoi cell volume scatter + marginal densities</li>
+</ul>
+</section>
+<section id="violin-plot-conventions" class="level2">
+<h2 class="anchored" data-anchor-id="violin-plot-conventions">Violin plot conventions</h2>
+<ul>
+<li>Each violin uses equal-area KDE normalization: all violins share a single global scale so that visual area ∝ sample density rather than being scaled to a common maximum width per violin.</li>
+<li>Outliers are trimmed to the 0.1–99.9% range per category before KDE and stats are computed.</li>
+<li>A horizontal line marks the median; a thick vertical line spans the IQR.</li>
+<li><strong>Column order</strong>: sim B (the second <code>--sim</code>, typically the earlier epoch) is shown on the <strong>left</strong>; sim A is on the right. Pass <code>--labels</code> in chronological order (earlier first) to match the visual order.</li>
+</ul>
 </section>
 <section id="notes" class="level2">
 <h2 class="anchored" data-anchor-id="notes">Notes</h2>
 <ul>
 <li>The figure uses the same four-category colour scheme as <code>aggregate_topology_points.py</code> (clusters yellow, filaments orange, walls red, unassigned purple).</li>
-<li>Simulation A boxes are lighter with a <code>////</code> hatch; simulation B boxes are solid and darker.</li>
-<li>The x-axis shows only the coloured category label — no tick marks.</li>
+<li>Box plots: simulation A uses a lighter fill with <code>////</code> hatch; simulation B uses a solid fill.</li>
+<li>Violin plot colours match the category colour — both redshifts use the same hue.</li>
+<li>Scatter plots colour points by category and show per-category marginal density curves. The legend uses coloured text placed at roughly the upper-right quadrant of the figure.</li>
+<li>If no per-point CSVs are found for a simulation, violin and scatter plots are skipped with a warning.</li>
 </ul>
+</section>
+<section id="examples-1" class="level2">
+<h2 class="anchored" data-anchor-id="examples-1">Examples</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> outputs/quijote_batches_000_w_clusters <span class="dt">\</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> outputs/quijote_batches_004_w_clusters_points_6_0 <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalars</span> log10_field_value <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/comparison_000_vs_004 <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> compare_z3_vs_z0_6_0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="more-examples" class="level2">
 <h2 class="anchored" data-anchor-id="more-examples">More Examples</h2>
@@ -432,9 +477,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--plot-dpi</span> 600</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Redshift 0:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/aggregate_topology_points.py <span class="dt">\</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_004_w_clusters_points/combined <span class="dt">\</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_004_w_clusters_points_6_0 <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_004_w_clusters_points_6_0/combined <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-prefix</span> quijote_batches_004_w_clusters_points_6_0 <span class="dt">\</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--engine</span> polars <span class="dt">\</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--polars-chunks</span> 4 <span class="dt">\</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--log10-field-value</span> <span class="dt">\</span></span>

@@ -130,6 +130,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../results.html"> 
+<span class="menu-text">Results</span></a>
+  </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Workflow</span>
@@ -363,11 +367,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="more-examples" class="level2">
 <h2 class="anchored" data-anchor-id="more-examples">More Examples</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/batch_crop_and_clip.py <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">--snapshot</span> data/snapdir_000 <span class="dt">\</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">--output-root</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">--snapshot</span> data/snapdir_004 <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">--output-root</span> outputs/quijote_batches_004_w_clusters_points_4_5 <span class="dt">\</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">--crop-size</span> 500000 500000 100000 <span class="dt">\</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">--mse-nsig</span> 3.5 <span class="dt">\</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">--x-range</span> 0 500000 <span class="at">--y-range</span> 0 500000 <span class="at">--z-range</span> 900000 1000000 <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">--mse-nsig</span> 4.5 <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">--x-range</span> 0 1000000 <span class="at">--y-range</span> 0 1000000 <span class="at">--z-range</span> 0 1000000 <span class="dt">\</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">--slab-step</span> 5 <span class="at">--slab-thickness</span> 5 <span class="dt">\</span></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">--dump-manifolds</span> J1a <span class="at">--dump-arcs</span> U <span class="dt">\</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">--dump-filament-manifolds</span> J2a <span class="dt">\</span></span>

@@ -130,6 +130,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../results.html"> 
+<span class="menu-text">Results</span></a>
+  </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Workflow</span>
@@ -277,7 +281,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><code>spin_render.py</code> – rotating 3D camera animation of any VTK dataset → PNG sequence / MP4.</li>
 <li><code>redshift_evolution.py</code> – smooth interpolated movie across redshift snapshots → MP4.</li>
-<li><code>compare_simulations.py</code> – side-by-side boxplots comparing two simulations’ topology stats.</li>
+<li><code>compare_simulations.py</code> – side-by-side box plots, violin plots, and scatter+marginal-density plots comparing two simulations’ topology stats.</li>
 </ul>
 </section>
 <section id="data-and-tools" class="level2">
@@ -591,10 +595,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="compare_simulations.py-side-by-side-comparison" class="level3">
 <h3 class="anchored" data-anchor-id="compare_simulations.py-side-by-side-comparison"><code>compare_simulations.py</code> (side-by-side comparison)</h3>
-<p>Reads two simulations’ <code>topology_stats.csv</code> files and renders side-by-side boxplots across the four primary categories. The color scheme matches <code>aggregate_topology_points.py</code> (clusters yellow, filaments orange, walls red, unassigned purple).</p>
+<p>Reads two simulations and renders box plots, violin plots, and scatter+marginal-density plots across the four primary categories. The color scheme matches <code>aggregate_topology_points.py</code> (clusters yellow, filaments orange, walls red, unassigned purple). Violin and scatter plots require per-point <code>topology_points.csv</code> files and are auto-discovered under each <code>--sim</code> folder.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/compare_simulations.py <span class="dt">\</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-a</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--folder-b</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> outputs/quijote_batches_000_w_clusters_points <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--sim</span> outputs/quijote_batches_004_w_clusters_points <span class="dt">\</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--labels</span> <span class="st">"z=3"</span> <span class="st">"z=0"</span> <span class="dt">\</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--scalars</span> log_field_value <span class="dt">\</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/comparison <span class="at">--output-prefix</span> compare_z3_vs_z0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -608,7 +612,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Summary stats</strong>: Per-file scalar stats (<code>*_summary_stats.csv</code>) and per-crop topology overlap stats (<code>*_topology_stats.csv</code>) to quantify counts, sums, and means in shared/unique/unassigned categories.</li>
 <li><strong>Per-point stats</strong>: <code>*_topology_points.csv</code> files (one row per Delaunay vertex) support histogramming and cross-crop aggregation in Stage 5.</li>
 <li><strong>Cross-crop aggregation</strong>: Global stats CSV, per-category histogram CSVs/PNGs, composition barchart, violin/box plots produced by <code>aggregate_topology_points.py</code>.</li>
-<li><strong>Simulation comparison</strong>: Side-by-side boxplots from <code>compare_simulations.py</code> for direct comparison across runs/redshifts.</li>
+<li><strong>Simulation comparison</strong>: Box plots, violin plots, and scatter+marginal-density plots from <code>compare_simulations.py</code> for direct comparison across runs/redshifts.</li>
 <li><strong>3D animations</strong>: Rotating renders (<code>spin_render.py</code>) and redshift evolution movies (<code>redshift_evolution.py</code>).</li>
 </ul>
 </section>

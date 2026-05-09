@@ -98,6 +98,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../results.html"> 
+<span class="menu-text">Results</span></a>
+  </li>  
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-workflow" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Workflow</span>
@@ -240,7 +244,7 @@ graph TD
 <li><strong>aggregate_topology_points.py</strong>: Combines per-point CSVs across crops; writes global stats, histogram CSV/PNG outputs, and composition/violin/box plots.</li>
 <li><strong>spin_render.py</strong>: Produces rotating PNG sequences (optionally stitched to MP4 with ffmpeg).</li>
 <li><strong>redshift_evolution.py</strong>: Generates a smooth interpolation movie (or slideshow) across redshift snapshots from one Delaunay VTU per snapshot; run via <code>pvpython</code>.</li>
-<li><strong>compare_simulations.py</strong>: Reads two simulations’ <code>topology_stats.csv</code> files and produces side-by-side boxplots for direct comparison.</li>
+<li><strong>compare_simulations.py</strong>: Reads two simulations’ <code>topology_stats.csv</code> and per-point <code>topology_points.csv</code> files; produces side-by-side box plots, violin plots, and scatter+marginal-density plots for direct comparison across runs or redshifts.</li>
 <li><strong>stitch_slab_pngs.py</strong>: Stitches per-slab PNGs into MP4s (per crop or combined across crops).</li>
 </ul>
 </section>

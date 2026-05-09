@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>stitch_slab_pngs.py User Guide – Disentangling the Cosmic Web</title>
+<title>Results – Disentangling the Cosmic Web</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,61 +23,26 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6dce83697ef593b6f21f66f8d1a1696b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6dce83697ef593b6f21f66f8d1a1696b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Disentangling the Cosmic Web</span>
     </a>
   </div>
@@ -127,11 +92,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../results.html"> 
+    <a class="nav-link active" href="./results.html" aria-current="page"> 
 <span class="menu-text">Results</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -140,11 +105,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-workflow">    
         <li>
-    <a class="dropdown-item" href="../documents/WORKFLOW_RUNBOOK.html">
+    <a class="dropdown-item" href="./documents/WORKFLOW_RUNBOOK.html">
  <span class="dropdown-text">Workflow Runbook</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/WORKFLOW_FLOWCHART.html">
+    <a class="dropdown-item" href="./documents/WORKFLOW_FLOWCHART.html">
  <span class="dropdown-text">Workflow Flowchart</span></a>
   </li>  
     </ul>
@@ -155,35 +120,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-guides">    
         <li>
-    <a class="dropdown-item" href="../documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/ANALYZE_SNAPSHOT_USER_GUIDE.html">
  <span class="dropdown-text">Analyze Snapshot</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/BATCH_CLIP_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/BATCH_CLIP_USER_GUIDE.html">
  <span class="dropdown-text">Batch Clip</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/ND_TOPO_STATS_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/ND_TOPO_STATS_USER_GUIDE.html">
  <span class="dropdown-text">ND Topo Stats</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/BATCH_CROP_AND_CLIP_USER_GUIDE.html">
  <span class="dropdown-text">Batch Crop + Clip</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/AGGREGATE_TOPOLOGY_POINTS_USER_GUIDE.html">
  <span class="dropdown-text">Aggregate Topology Points</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/SPIN_RENDER_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/SPIN_RENDER_USER_GUIDE.html">
  <span class="dropdown-text">Spin Render</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/STITCH_SLAB_PNGS_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/STITCH_SLAB_PNGS_USER_GUIDE.html">
  <span class="dropdown-text">Stitch Slab PNGs</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../documents/OTHER_TOOLS_USER_GUIDE.html">
+    <a class="dropdown-item" href="./documents/OTHER_TOOLS_USER_GUIDE.html">
  <span class="dropdown-text">Other Tools</span></a>
   </li>  
     </ul>
@@ -191,7 +156,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../sessions/export/MASTER_BY_DAY.html"> 
+    <a class="nav-link" href="./sessions/export/MASTER_BY_DAY.html"> 
 <span class="menu-text">AI Log</span></a>
   </li>  
   <li class="nav-item">
@@ -215,14 +180,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link active" data-scroll-target="#what-it-does">What it does</a></li>
-  <li><a href="#requirements" id="toc-requirements" class="nav-link" data-scroll-target="#requirements">Requirements</a></li>
-  <li><a href="#cli" id="toc-cli" class="nav-link" data-scroll-target="#cli">CLI</a></li>
-  <li><a href="#key-options" id="toc-key-options" class="nav-link" data-scroll-target="#key-options">Key options</a></li>
-  <li><a href="#example-all-crops-composite-pngs" id="toc-example-all-crops-composite-pngs" class="nav-link" data-scroll-target="#example-all-crops-composite-pngs">Example: all crops, composite PNGs</a></li>
-  <li><a href="#example-single-crop-density-pngs" id="toc-example-single-crop-density-pngs" class="nav-link" data-scroll-target="#example-single-crop-density-pngs">Example: single crop, density PNGs</a></li>
-  <li><a href="#example-one-mp4-across-all-crops-ordered-by-z" id="toc-example-one-mp4-across-all-crops-ordered-by-z" class="nav-link" data-scroll-target="#example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</a></li>
-  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
+  <li><a href="#project-slides" id="toc-project-slides" class="nav-link active" data-scroll-target="#project-slides">Project Slides</a></li>
+  <li><a href="#project-poster" id="toc-project-poster" class="nav-link" data-scroll-target="#project-poster">Project Poster</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/efuleky27/disperse/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -231,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><code>stitch_slab_pngs.py</code> User Guide</h1>
+<h1 class="title">Results</h1>
 </div>
 
 
@@ -248,81 +207,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Use <code>scripts/stitch_slab_pngs.py</code> to build an MP4 by stitching one PNG type across slab folders (<code>slab_z*</code>) for each crop.</p>
-<section id="what-it-does" class="level2">
-<h2 class="anchored" data-anchor-id="what-it-does">What it does</h2>
-<ul>
-<li>Scans each crop folder for slab directories (e.g., <code>slab_z0</code>, <code>slab_z10</code>, …).</li>
-<li>Picks a single PNG per slab (by suffix or glob).</li>
-<li>Orders frames by the numeric <code>z</code> value in the slab folder name.</li>
-<li>Writes an MP4 using <code>ffmpeg</code>.</li>
-</ul>
+<section id="project-slides" class="level2">
+<h2 class="anchored" data-anchor-id="project-slides">Project Slides</h2>
+<p>Slides presented at the International Science and Engineering Fair (ISEF). 3.5 seconds per slide — loops continuously.</p>
+<p><img src="figures/ISEF_slides_slideshow.webp" class="img-fluid" style="width:100.0%"></p>
+<p><a href="figures/ISEF_Project_slides.pdf">Download slides (PDF)</a></p>
+<hr>
 </section>
-<section id="requirements" class="level2">
-<h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
-<ul>
-<li><code>ffmpeg</code> on PATH.</li>
-<li>Slab PNGs created by <code>batch_clip.py</code> (or equivalent).</li>
-</ul>
-</section>
-<section id="cli" class="level2">
-<h2 class="anchored" data-anchor-id="cli">CLI</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> <span class="op">&lt;</span>CROP_ROOT<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> <span class="op">&lt;</span>PNG_SUFFIX<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  [--output-dir <span class="op">&lt;</span>OUT_DIR<span class="op">&gt;</span>] <span class="dt">\</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  [--fps N] <span class="dt">\</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  [--frame-hold N] <span class="dt">\</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">combine</span><span class="pp">-</span><span class="ss">all</span><span class="pp">]</span> <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="pp">[--</span><span class="ss">overwrite</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="key-options" class="level2">
-<h2 class="anchored" data-anchor-id="key-options">Key options</h2>
-<ul>
-<li><code>--root</code> – Root directory containing <code>crop_*</code> folders.</li>
-<li><code>--crop-dir</code> – Process a single crop directory instead of all crops.</li>
-<li><code>--slab-glob</code> – Slab folder glob (default <code>slab_z*</code>).</li>
-<li><code>--png-suffix</code> – PNG filename suffix to match (e.g., <code>composite_density_walls_filaments.png</code>).</li>
-<li><code>--png-glob</code> – Full glob pattern for PNGs inside each slab (use this <strong>or</strong> <code>--png-suffix</code>).</li>
-<li><code>--output</code> – Output MP4 path (single crop only).</li>
-<li><code>--output-dir</code> – Output directory for per-crop MP4 files.</li>
-<li><code>--fps</code> – Frames per second (default 30).</li>
-<li><code>--frame-hold</code> – Hold each frame for N×(1/<code>--fps</code>) seconds (default 1).</li>
-<li><code>--combine-all</code> – Build one MP4 across all crops, ordered by slab z.</li>
-<li><code>--overwrite</code> – Overwrite existing MP4s.</li>
-<li><code>--dry-run</code> – Print actions without running <code>ffmpeg</code>.</li>
-</ul>
-</section>
-<section id="example-all-crops-composite-pngs" class="level2">
-<h2 class="anchored" data-anchor-id="example-all-crops-composite-pngs">Example: all crops, composite PNGs</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> composite_density_walls_filaments_filament_manifolds.png <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="example-single-crop-density-pngs" class="level2">
-<h2 class="anchored" data-anchor-id="example-single-crop-density-pngs">Example: single crop, density PNGs</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--crop-dir</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000 <span class="dt">\</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> density.png <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> outputs/quijote_batches_000_test_2fil/crop_x500-1000_y500-1000_z900-1000/density.mp4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="example-one-mp4-across-all-crops-ordered-by-z" class="level2">
-<h2 class="anchored" data-anchor-id="example-one-mp4-across-all-crops-ordered-by-z">Example: one MP4 across all crops (ordered by z)</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/stitch_slab_pngs.py <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--root</span> outputs/quijote_batches_000_test_2fil <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--png-suffix</span> walls_3d.png <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--combine-all</span> <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output-dir</span> outputs/quijote_batches_000_test_2fil/movies <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--frame-hold</span> 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="notes" class="level2">
-<h2 class="anchored" data-anchor-id="notes">Notes</h2>
-<ul>
-<li>If multiple PNGs match in a slab, the first one is used and a warning is printed.</li>
-<li>The script uses a concat list so non-sequential slab indices are fine.</li>
-<li>Use <code>--dry-run</code> if you want to verify the frame list before encoding.</li>
-</ul>
+<section id="project-poster" class="level2">
+<h2 class="anchored" data-anchor-id="project-poster">Project Poster</h2>
+<p><em>Disentangling the Cosmic Web: The Relationship between Walls and Other Cosmic Structures</em></p>
+<p><img src="figures/Disentangling_the_Cosmic_Web_small.png" class="img-fluid" style="width:100.0%"></p>
+<p><a href="figures/Disentangling_the_Cosmic_Web_small.pdf">Download poster (PDF)</a></p>
 
 
 </section>
