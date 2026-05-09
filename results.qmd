@@ -2,6 +2,22 @@
 title: "Results"
 ---
 
+## Project Poster
+
+*Disentangling the Cosmic Web: The Relationship between Walls and Other Cosmic Structures*
+
+![](figures/Disentangling_the_Cosmic_Web_small.png){width="100%"}
+
+[Download poster (PDF)](figures/Disentangling_the_Cosmic_Web_small.pdf)
+
+---
+
+## Video
+
+{{< video https://www.youtube.com/watch?v=I9Ck1TP54eg width="100%" >}}
+
+---
+
 ## Project Slides
 
 Slides presented at the International Science and Engineering Fair (ISEF).
@@ -13,10 +29,3 @@ Slides presented at the International Science and Engineering Fair (ISEF).
 
 ---
 
-## Project Poster
-
-*Disentangling the Cosmic Web: The Relationship between Walls and Other Cosmic Structures*
-
-![](figures/Disentangling_the_Cosmic_Web_small.png){width="100%"}
-
-[Download poster (PDF)](figures/Disentangling_the_Cosmic_Web_small.pdf)

@@ -1,0 +1,5 @@
+---
+title: "Workflow Video"
+---
+
+{{< video https://www.youtube.com/watch?v=d8jJg6JHB1k width="100%" >}}

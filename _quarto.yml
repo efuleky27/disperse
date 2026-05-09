@@ -24,6 +24,8 @@ website:
             text: Workflow Runbook
           - href: documents/WORKFLOW_FLOWCHART.qmd
             text: Workflow Flowchart
+          - href: documents/WORKFLOW_VIDEO.qmd
+            text: Workflow Video
       - text: Guides
         menu:
           - href: documents/ANALYZE_SNAPSHOT_USER_GUIDE.qmd
