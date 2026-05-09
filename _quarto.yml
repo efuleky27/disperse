@@ -3,6 +3,7 @@ project:
   render:
     - index.qmd
     - results.qmd
+    - references.qmd
     - documents/*.qmd
     - documents/readme.md
     - sessions/export/MASTER_BY_DAY.qmd
@@ -44,6 +45,8 @@ website:
             text: Other Tools
       - href: results.qmd
         text: Results
+      - href: references.qmd
+        text: References
     right:
       - href: sessions/export/MASTER_BY_DAY.qmd
         text: AI Log
