@@ -4,7 +4,7 @@ title: "Results"
 
 ## Project Poster
 
-This poster illustrates all important aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!
+This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!
 
 ![](figures/Disentangling_the_Cosmic_Web_small.png){width="100%"}
 
@@ -22,7 +22,7 @@ This video contains a narrated slideshow. It is a teaser with the highlights.
 
 ## Project Slides
 
-These slides distill the most important content from the poster: 3.5 seconds per slide — loops continuously.
+These slides distill the most important content from the poster (3.5 seconds per slide — loops continuously).
 
 ![](figures/ISEF_slides_slideshow.webp){width="100%"}
 

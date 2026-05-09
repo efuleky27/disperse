@@ -37,7 +37,7 @@ I selected an N-body simulation based on a standard set of fiducial parameters d
 Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc^3^ slice of walls.
 :::
 
-This project compares structures at redshifts z=0 (present) and z=3 (11.5 billion years ago) and it demonstrates, how the universe went from a seemingly smooth distribution (with little density fluctuations) to highly defined structures because matter primarily drifted from less dense regions such as voids into walls.
+I compare structures at redshifts z=0 (present) and z=3 (11.5 billion years ago), which demonstrates how the universe went from a seemingly smooth distribution (with little density fluctuations) to highly defined structures because matter primarily drifted from less dense regions such as voids into walls.
 
 ::: {#fig-redshift style="width: 75%; margin-left: auto; margin-right: auto;"}
 ![](figures/evolution_slideshow_bright.webp)
