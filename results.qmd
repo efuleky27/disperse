@@ -4,7 +4,7 @@ title: "Results"
 
 ## Project Poster
 
-*Disentangling the Cosmic Web: The Relationship between Walls and Other Cosmic Structures*
+This poster illustrates all important aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!
 
 ![](figures/Disentangling_the_Cosmic_Web_small.png){width="100%"}
 
@@ -14,14 +14,15 @@ title: "Results"
 
 ## Project Video
 
+This video contains a narrated slideshow. It is a teaser with the highlights.
+
 {{< video https://www.youtube.com/watch?v=I9Ck1TP54eg >}}
 
 ---
 
 ## Project Slides
 
-Slides presented at the International Science and Engineering Fair (ISEF).
-3.5 seconds per slide — loops continuously.
+These slides distill the most important content from the poster: 3.5 seconds per slide — loops continuously.
 
 ![](figures/ISEF_slides_slideshow.webp){width="100%"}
 

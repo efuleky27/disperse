@@ -2,4 +2,6 @@
 title: "Workflow Video"
 ---
 
+This video illustrates the workflow and the extracted components side-by-side in 3D.
+
 {{< video https://www.youtube.com/watch?v=d8jJg6JHB1k >}}

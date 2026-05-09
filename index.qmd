@@ -29,17 +29,23 @@ other structures?
 
 This project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using [DisPerSE](https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html). It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.
 
+I selected an N-body simulation based on a standard set of fiducial parameters describing the evolution and structure of the cosmos. I selected a simulation at redshifts 0 and 3. The simulation is a cube measuring 1Gpc (3.26 billion light-years) per side with a total of 134 million particles ($512^3$ particles). The simulated particles represent dark matter halos. Due to limited computer memory, the analysis is not able to handle the whole 1Gpc cube, so I cropped the whole cube into 4 columns x 10 rows (500 x 500 x 100 Mpc$^3$ or ~3.5M particles/crop).
+
 ::: {#fig-cube style="width: 75%; margin-left: auto; margin-right: auto;"}
 ![](figures/cube_crop_slab.png)
 
 Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, with filaments on the left and walls on the right. Foreground also shows a 500 × 500 × 5 Mpc^3^ slice of walls.
 :::
 
+This project compares structures at redshifts z=0 (present) and z=3 (11.5 billion years ago) and it demonstrates, how the universe went from a seemingly smooth distribution (with little density fluctuations) to highly defined structures because matter primarily drifted from less dense regions such as voids into walls.
+
 ::: {#fig-redshift style="width: 75%; margin-left: auto; margin-right: auto;"}
 ![](figures/evolution_slideshow_bright.webp)
 
-Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0). Illutrated by a 500 × 500 × 5 Mpc^3^ slice of the N-body simulation colored by log-density.
+Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0). Illutrated by a 500 × 500 × 10 Mpc^3^ slice of the N-body simulation colored by log-density.
 :::
+
+The details about the process of extracting, visualizing, and quantifying the cosmic web are under the workflow tab above. The [results tab](documents/Results.qmd) contains my poster, slides, and a teaser video.
 
 ## Documentation Index
 
