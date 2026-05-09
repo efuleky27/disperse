@@ -2,4 +2,4 @@
 title: "Workflow Video"
 ---
 
-{{< video https://www.youtube.com/watch?v=d8jJg6JHB1k width="100%" aspect-ratio="16x9" >}}
+{{< video https://www.youtube.com/watch?v=d8jJg6JHB1k >}}

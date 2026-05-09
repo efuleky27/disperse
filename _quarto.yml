@@ -16,8 +16,6 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: results.qmd
-        text: Results
       - text: Workflow
         menu:
           - href: documents/WORKFLOW_RUNBOOK.qmd
@@ -44,6 +42,8 @@ website:
             text: Stitch Slab PNGs
           - href: documents/OTHER_TOOLS_USER_GUIDE.qmd
             text: Other Tools
+      - href: results.qmd
+        text: Results
     right:
       - href: sessions/export/MASTER_BY_DAY.qmd
         text: AI Log
