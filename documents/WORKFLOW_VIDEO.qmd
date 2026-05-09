@@ -1,7 +1,7 @@
 ---
-title: "Workflow Video"
+title: "Workflow 3D Visualization"
 ---
 
-This video illustrates the workflow and the extracted components side-by-side in 3D.
+This video illustrates in 3D the workflow and the extracted components side-by-side.
 
 {{< video https://www.youtube.com/watch?v=d8jJg6JHB1k >}}
