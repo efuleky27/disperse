@@ -30,7 +30,7 @@ Outline of the entire 1 Gpc^3^ cube and crops sized 500 × 500 × 100 Mpc^3^, wi
 :::
 
 ::: {#fig-redshift style="width: 75%; margin-left: auto; margin-right: auto;"}
-{{< video figures/evolution_slideshow_5_3.mp4 >}}
+![](figures/evolution_slideshow_bright.webp)
 
 Evolution of cosmic densities from about 11.5 billion years ago (redshift z = 3) to the current time (redshift z = 0). Illutrated by a 500 × 500 × 5 Mpc^3^ slice of the N-body simulation colored by log-density.
 :::

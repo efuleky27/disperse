@@ -27,5 +27,4 @@ Slides presented at the International Science and Engineering Fair (ISEF).
 
 [Download slides (PDF)](figures/ISEF_Project_slides.pdf)
 
----
 
