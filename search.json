@@ -900,7 +900,7 @@
     "href": "index.html",
     "title": "Disentangling the Cosmic Web",
     "section": "",
-    "text": "This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.\nSummary: Pull of gravity and accelerating expansion due to dark energy shape the universe into a vast cosmic web composed of:\nWhile filaments and clusters are well studied, walls are harder to detect and therefore less understood. Because walls and filaments form at different stages of gravitational collapse, comparing their densities and spatial relationships can improve our understanding of how:\nResearch Question: How do walls fit into the cosmic web? How does their density and spatial distribution compare to other structures?\nThis project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using DisPerSE. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.\nI selected an N-body simulation based on a standard set of fiducial parameters describing the evolution and structure of the cosmos. I selected a simulation at redshifts 0 and 3. The simulation is a cube measuring 1Gpc (3.26 billion light-years) per side with a total of 134 million particles (\\(512^3\\) particles). The simulated particles represent dark matter halos. Due to limited computer memory, the analysis is not able to handle the whole 1Gpc cube, so I cropped the whole cube into 4 columns x 10 rows (500 x 500 x 100 Mpc\\(^3\\) or ~3.5M particles/crop).\nThis project compares structures at redshifts z=0 (present) and z=3 (11.5 billion years ago) and it demonstrates, how the universe went from a seemingly smooth distribution (with little density fluctuations) to highly defined structures because matter primarily drifted from less dense regions such as voids into walls.\nThe details about the process of extracting, visualizing, and quantifying the cosmic web are under the workflow tab above. The results tab contains my poster, slides, and a teaser video."
+    "text": "This repository contains my work on the project that I will present at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. I created an automated pipeline for extracting, analyzing, and visualizing the cosmic web — walls, filaments, and clusters — from N-body cosmological simulations.\nSummary: Pull of gravity and accelerating expansion due to dark energy shape the universe into a vast cosmic web composed of:\nWhile filaments and clusters are well studied, walls are harder to detect and therefore less understood. Because walls and filaments form at different stages of gravitational collapse, comparing their densities and spatial relationships can improve our understanding of how:\nResearch Question: How do walls fit into the cosmic web? How does their density and spatial distribution compare to other structures?\nThis project automates the full workflow for extracting, analyzing, and visualizing the cosmic web (walls, filaments, clusters) from N-body simulation snapshots using DisPerSE. It takes Gadget/Quijote HDF5 snapshots, runs Morse–Smale topology extraction, produces per-crop statistics and 2D/3D visualizations, and aggregates results across large tiled volumes.\nI selected an N-body simulation based on a standard set of fiducial parameters describing the evolution and structure of the cosmos. I selected a simulation at redshifts 0 and 3. The simulation is a cube measuring 1Gpc (3.26 billion light-years) per side with a total of 134 million particles (\\(512^3\\) particles). The simulated particles represent dark matter halos. Due to limited computer memory, the analysis is not able to handle the whole 1Gpc cube, so I cropped the whole cube into 4 columns x 10 rows (500 x 500 x 100 Mpc\\(^3\\) or ~3.5M particles/crop).\nI compare structures at redshifts z=0 (present) and z=3 (11.5 billion years ago), which demonstrates how the universe went from a seemingly smooth distribution (with little density fluctuations) to highly defined structures because matter primarily drifted from less dense regions such as voids into walls.\nThe details about the process of extracting, visualizing, and quantifying the cosmic web are under the workflow tab above. The results tab contains my poster, slides, and a teaser video."
   },
   {
     "objectID": "index.html#documentation-index",
@@ -1019,14 +1019,14 @@
     "href": "results.html",
     "title": "Results",
     "section": "",
-    "text": "This poster illustrates all important aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
+    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
   },
   {
     "objectID": "results.html#project-poster",
     "href": "results.html#project-poster",
     "title": "Results",
     "section": "",
-    "text": "This poster illustrates all important aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
+    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
   },
   {
     "objectID": "results.html#project-video",
@@ -1040,7 +1040,7 @@
     "href": "results.html#project-slides",
     "title": "Results",
     "section": "Project Slides",
-    "text": "Project Slides\nThese slides distill the most important content from the poster: 3.5 seconds per slide — loops continuously.\n\nDownload slides (PDF)"
+    "text": "Project Slides\nThese slides distill the most important content from the poster (3.5 seconds per slide — loops continuously).\n\nDownload slides (PDF)"
   },
   {
     "objectID": "documents/ANALYZE_SNAPSHOT_USER_GUIDE.html",
