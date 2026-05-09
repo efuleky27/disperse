@@ -122,11 +122,11 @@ python scripts/batch_crop_and_clip.py \
 ## More Examples
 ```bash
 python scripts/batch_crop_and_clip.py \
-      --snapshot data/snapdir_000 \
-      --output-root outputs/quijote_batches_000_w_clusters_points \
+      --snapshot data/snapdir_004 \
+      --output-root outputs/quijote_batches_004_w_clusters_points_4_5 \
       --crop-size 500000 500000 100000 \
-      --mse-nsig 3.5 \
-      --x-range 0 500000 --y-range 0 500000 --z-range 900000 1000000 \
+      --mse-nsig 4.5 \
+      --x-range 0 1000000 --y-range 0 1000000 --z-range 0 1000000 \
       --slab-step 5 --slab-thickness 5 \
       --dump-manifolds J1a --dump-arcs U \
       --dump-filament-manifolds J2a \

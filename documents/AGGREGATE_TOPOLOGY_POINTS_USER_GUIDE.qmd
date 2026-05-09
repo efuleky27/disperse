@@ -118,50 +118,82 @@ python scripts/aggregate_topology_points.py \
 
 ## `compare_simulations.py` User Guide
 
-Use `scripts/compare_simulations.py` to place two simulations' boxplots side-by-side for direct comparison.  It reads one `*_topology_stats.csv` per simulation (auto-discovered from a folder or its `combined/` subdirectory) and produces a multi-panel figure with one column-pair per category.
+Use `scripts/compare_simulations.py` to compare two simulations side-by-side.  It reads one `*_topology_stats.csv` per simulation (auto-discovered from a folder or its `combined/` subdirectory) and, when per-point CSVs are available, reads the individual `*_topology_points.csv` files across all crops.
 
 ## What it does
 - Reads aggregated `topology_stats.csv` files from two simulation output folders.
-- Renders side-by-side box plots for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars.
-- Adds a summary-statistics table below the plots.
-- Category labels on the x-axis are coloured to match the boxplot colours.
+- Renders side-by-side **box plots** for each of the four primary categories (clusters, filaments, walls, unassigned) across chosen scalars, with a summary-statistics table below.
+- Renders side-by-side **violin plots** (requires per-point CSVs) built from actual particle values with equal-area KDE normalization — every violin's visual area is proportional to its sample size — plus a median line and IQR indicator.
+- Renders two **scatter + marginal-density plots** (requires per-point CSVs):
+  - *Particle proximity*: x = density^(−1/3) (a proxy for inter-particle separation), y = log₁₀(density).
+  - *Voronoi cell volume*: x = density^(−1) (Voronoi volume proxy), y = log₁₀(density).
+  - Each scatter plot includes marginal density curves along both axes.
 
 ## Requirements
-- Python with `matplotlib`, `numpy`, and `polars` (or `pandas`).
+- Python with `matplotlib`, `numpy`, `scipy` (for KDE), and `polars` (or `pandas`).
 
 ## CLI
 ```bash
 python scripts/compare_simulations.py \
-  --folder-a <SIM_A_DIR> \
-  --folder-b <SIM_B_DIR> \
-  [--labels "z=0" "z=3"] \
+  --sim <SIM_A_DIR> \
+  --sim <SIM_B_DIR> \
+  [--stats-file <CSV_A> --stats-file <CSV_B>] \
+  [--points-file <CSV_A> --points-file <CSV_B>] \
+  [--labels "z=3" "z=0"] \
   [--scalars log_field_value field_value] \
+  [--plot-sample-size N] \
   [--output-dir <OUTPUT_DIR>] \
-  [--output-prefix <PREFIX>]
+  [--output-prefix <PREFIX>] \
+  [--font-scale 1.0] \
+  [--dpi 150]
 ```
 
 ## Key options
-- `--folder-a / --folder-b` — Root output directories for each simulation. The script searches for `*_topology_stats.csv` directly or inside a `combined/` subdirectory.
-- `--labels` — Display names for the two simulations (default: folder basenames).
+- `--sim` — Root output directory for a simulation (repeat exactly twice). The script searches for `*_topology_stats.csv` directly or inside a `combined/` subdirectory, and finds all `*_topology_points.csv` files under the folder (excluding `combined/`) for violin and scatter plots.
+- `--stats-file` — Supply stats CSVs directly (repeat exactly twice) instead of `--sim`.
+- `--points-file` — Supply per-point CSVs directly (repeat exactly twice) instead of auto-discovery.
+- `--labels` — Display names for the two simulations (default: folder basenames). Pass the earlier epoch first (e.g. `"z=3" "z=0"`) — violin plots always show sim A on the right and sim B on the left, so earlier-epoch data appears on the left.
 - `--scalars` — Which scalar columns to plot (default: all detected scalars).
+- `--plot-sample-size` — Reservoir-sample at most N rows per simulation when reading per-point CSVs (default: read all rows).
 - `--output-dir` — Where to write the figure (default: current directory).
-- `--output-prefix` — Filename prefix for the output PNG.
+- `--output-prefix` — Filename prefix for output PNGs (default: `comparison`).
+- `--font-scale` — Multiplier for all font sizes (default: 1.0).
+- `--dpi` — Output image DPI (default: 150).
+
+## Output files
+For each scalar:
+
+- `<prefix>_<scalar>_box.png` — side-by-side box plots + stats table
+- `<prefix>_<scalar>_violin.png` — side-by-side violin plots + stats table (requires per-point CSVs)
+
+Always (requires per-point CSVs):
+
+- `<prefix>_scatter_proximity.png` — log₁₀-density vs particle proximity scatter + marginal densities
+- `<prefix>_scatter_voronoi.png` — log₁₀-density vs Voronoi cell volume scatter + marginal densities
+
+## Violin plot conventions
+- Each violin uses equal-area KDE normalization: all violins share a single global scale so that visual area ∝ sample density rather than being scaled to a common maximum width per violin.
+- Outliers are trimmed to the 0.1–99.9% range per category before KDE and stats are computed.
+- A horizontal line marks the median; a thick vertical line spans the IQR.
+- **Column order**: sim B (the second `--sim`, typically the earlier epoch) is shown on the **left**; sim A is on the right. Pass `--labels` in chronological order (earlier first) to match the visual order.
+
+## Notes
+- The figure uses the same four-category colour scheme as `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
+- Box plots: simulation A uses a lighter fill with `////` hatch; simulation B uses a solid fill.
+- Violin plot colours match the category colour — both redshifts use the same hue.
+- Scatter plots colour points by category and show per-category marginal density curves. The legend uses coloured text placed at roughly the upper-right quadrant of the figure.
+- If no per-point CSVs are found for a simulation, violin and scatter plots are skipped with a warning.
 
 ## Examples
 ```bash
 python scripts/compare_simulations.py \
-  --folder-a outputs/quijote_batches_000_w_clusters_points \
-  --folder-b outputs/quijote_batches_004_w_clusters_points \
+  --sim outputs/quijote_batches_000_w_clusters \
+  --sim outputs/quijote_batches_004_w_clusters_points_6_0 \
   --labels "z=3" "z=0" \
-  --scalars log_field_value \
+  --scalars log10_field_value \
   --output-dir outputs/comparison_000_vs_004 \
-  --output-prefix compare_z3_vs_z0
+  --output-prefix compare_z3_vs_z0_6_0
 ```
-
-## Notes
-- The figure uses the same four-category colour scheme as `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
-- Simulation A boxes are lighter with a `////` hatch; simulation B boxes are solid and darker.
-- The x-axis shows only the coloured category label — no tick marks.
 
 ## More Examples
 Redshift 3:
@@ -184,9 +216,9 @@ python scripts/aggregate_topology_points.py \
 Redshift 0:
 ```bash
 python scripts/aggregate_topology_points.py \
-  --root outputs/quijote_batches_004_w_clusters_points \
-  --output-dir outputs/quijote_batches_004_w_clusters_points/combined \
-  --output-prefix quijote_batches_004_w_clusters_points \
+  --root outputs/quijote_batches_004_w_clusters_points_6_0 \
+  --output-dir outputs/quijote_batches_004_w_clusters_points_6_0/combined \
+  --output-prefix quijote_batches_004_w_clusters_points_6_0 \
   --engine polars \
   --polars-chunks 4 \
   --log10-field-value \

@@ -24,7 +24,7 @@ Visualization scripts (standalone, not part of the batch pipeline):
 
 - `spin_render.py` – rotating 3D camera animation of any VTK dataset → PNG sequence / MP4.
 - `redshift_evolution.py` – smooth interpolated movie across redshift snapshots → MP4.
-- `compare_simulations.py` – side-by-side boxplots comparing two simulations' topology stats.
+- `compare_simulations.py` – side-by-side box plots, violin plots, and scatter+marginal-density plots comparing two simulations' topology stats.
 
 ## Data and Tools
 
@@ -364,12 +364,12 @@ Notes:
 
 ### `compare_simulations.py` (side-by-side comparison)
 
-Reads two simulations' `topology_stats.csv` files and renders side-by-side boxplots across the four primary categories. The color scheme matches `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple).
+Reads two simulations and renders box plots, violin plots, and scatter+marginal-density plots across the four primary categories. The color scheme matches `aggregate_topology_points.py` (clusters yellow, filaments orange, walls red, unassigned purple). Violin and scatter plots require per-point `topology_points.csv` files and are auto-discovered under each `--sim` folder.
 
 ```bash
 python scripts/compare_simulations.py \
-  --folder-a outputs/quijote_batches_000_w_clusters_points \
-  --folder-b outputs/quijote_batches_004_w_clusters_points \
+  --sim outputs/quijote_batches_000_w_clusters_points \
+  --sim outputs/quijote_batches_004_w_clusters_points \
   --labels "z=3" "z=0" \
   --scalars log_field_value \
   --output-dir outputs/comparison --output-prefix compare_z3_vs_z0
@@ -382,7 +382,7 @@ python scripts/compare_simulations.py \
 - **Summary stats**: Per-file scalar stats (`*_summary_stats.csv`) and per-crop topology overlap stats (`*_topology_stats.csv`) to quantify counts, sums, and means in shared/unique/unassigned categories.
 - **Per-point stats**: `*_topology_points.csv` files (one row per Delaunay vertex) support histogramming and cross-crop aggregation in Stage 5.
 - **Cross-crop aggregation**: Global stats CSV, per-category histogram CSVs/PNGs, composition barchart, violin/box plots produced by `aggregate_topology_points.py`.
-- **Simulation comparison**: Side-by-side boxplots from `compare_simulations.py` for direct comparison across runs/redshifts.
+- **Simulation comparison**: Box plots, violin plots, and scatter+marginal-density plots from `compare_simulations.py` for direct comparison across runs/redshifts.
 - **3D animations**: Rotating renders (`spin_render.py`) and redshift evolution movies (`redshift_evolution.py`).
 
 ## Troubleshooting / Gotchas

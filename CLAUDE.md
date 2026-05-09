@@ -34,7 +34,7 @@ aggregate_topology_points.py      → combined statistics across all crops
 | `batch_clip.py` | Clip 3D topology to 2D slabs, render PNGs | **pvpython** |
 | `batch_crop_and_clip.py` | Orchestrate above three across a volume grid | python |
 | `aggregate_topology_points.py` | Aggregate per-point CSVs across crops into stats + histograms | python |
-| `compare_simulations.py` | Side-by-side boxplots comparing two simulations' topology_stats.csv | python |
+| `compare_simulations.py` | Side-by-side box plots, violin plots, and scatter+marginal-density plots comparing two simulations | python |
 | `spin_render.py` | Rotating 3D renders → PNG sequence or MP4 | **pvpython** |
 | `redshift_evolution.py` | Smooth redshift-evolution movie across multiple VTU snapshots | **pvpython** |
 | `stitch_slab_pngs.py` | Assemble slab PNGs → MP4 via ffmpeg | python |
@@ -121,6 +121,23 @@ All three engines must produce identical output for the same input. When modifyi
 
 ---
 
+## `compare_simulations.py` — Key Details
+
+Produces four plot types per run:
+
+1. **Box plots** (`*_<scalar>_box.png`) — from aggregated `topology_stats.csv`; sim A uses hatched fill, sim B uses solid fill.
+2. **Violin plots** (`*_<scalar>_violin.png`) — from per-point `topology_points.csv` files; requires `scipy` for KDE. `log10_field_value` is not stored in per-crop CSVs — it is computed on the fly via `math.log10(field_value)`.
+3. **Scatter + marginal density, proximity** (`*_scatter_proximity.png`) — x = `field_value^(-1/3)`, y = `log10(field_value)`.
+4. **Scatter + marginal density, Voronoi** (`*_scatter_voronoi.png`) — x = `field_value^(-1)`, y = `log10(field_value)`.
+
+**Violin ordering convention:** sim B (second `--sim` argument, the earlier epoch) is drawn on the **left**; sim A is on the right. Pass `--labels` in chronological order (e.g. `"z=3" "z=0"`) and sim B will be z=3 on the left. The table columns follow the same left-to-right order.
+
+**Equal-area KDE normalization:** All violins share a single global scale factor = `violin_w/2 / global_max_kde`, so visual area is proportional to distribution density rather than scaled per-violin to a common maximum width.
+
+**Auto-discovery:** `--sim FOLDER` searches `FOLDER/` and `FOLDER/combined/` for `*_topology_stats.csv`; it searches all subdirectories of `FOLDER/` (excluding `combined/`) for `*_topology_points.csv`. Use `--points-file` to supply CSVs explicitly.
+
+---
+
 ## Coordinate System Conventions
 
 - Snapshots arrive in **kpc/h** by default; all scripts accept `--input-unit` / `--output-unit`
@@ -164,7 +181,7 @@ disperse/
   sessions/
     codex/          Codex session JSONL files
     claude/         Claude Code session JSONL files
-    export/         Rendered session exports (MASTER_BY_DAY.md, INDEX.md, etc.)
+    export/         Rendered session exports (MASTER_BY_DAY.qmd, MASTER_BY_DAY_flat.qmd, INDEX.md, etc.)
   index.qmd         Website landing page (Quarto)
   _quarto.yml       Quarto website config (published to GitHub Pages)
   README.md         GitHub repo landing page
@@ -210,4 +227,10 @@ outputs/<run_name>/
     <prefix>_<category>_<scalar>_hist.csv
     <prefix>_filman_walls_composition.png
     <prefix>_filman_walls_composition_mass.png
+
+outputs/<comparison_run>/              ← compare_simulations.py outputs
+  <prefix>_<scalar>_box.png
+  <prefix>_<scalar>_violin.png
+  <prefix>_scatter_proximity.png
+  <prefix>_scatter_voronoi.png
 ```

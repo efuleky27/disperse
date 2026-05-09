@@ -1,0 +1,22 @@
+---
+title: "Results"
+---
+
+## Project Slides
+
+Slides presented at the International Science and Engineering Fair (ISEF).
+3.5 seconds per slide — loops continuously.
+
+![](figures/ISEF_slides_slideshow.webp){width="100%"}
+
+[Download slides (PDF)](figures/ISEF_Project_slides.pdf)
+
+---
+
+## Project Poster
+
+*Disentangling the Cosmic Web: The Relationship between Walls and Other Cosmic Structures*
+
+![](figures/Disentangling_the_Cosmic_Web_small.png){width="100%"}
+
+[Download poster (PDF)](figures/Disentangling_the_Cosmic_Web_small.pdf)

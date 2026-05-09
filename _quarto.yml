@@ -2,6 +2,7 @@ project:
   type: website
   render:
     - index.qmd
+    - results.qmd
     - documents/*.qmd
     - documents/readme.md
     - sessions/export/MASTER_BY_DAY.qmd
@@ -15,6 +16,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - href: results.qmd
+        text: Results
       - text: Workflow
         menu:
           - href: documents/WORKFLOW_RUNBOOK.qmd
