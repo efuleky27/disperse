@@ -511,6 +511,19 @@ def shift_headers(text, shift=3):
     return re.sub(r'^(#{1,6})([ \t])', replacer, text, flags=re.MULTILINE)
 
 
+def escape_shortcodes(text: str) -> str:
+    """Escape Quarto shortcodes ({{< ... >}}) in message text.
+
+    Quarto's documented escape is triple-braces: {{{< ... >}}}.
+    A complete {{< name args >}} becomes {{{< name args >}}}.
+    Any remaining unpaired {{< (e.g. inside code spans) is also escaped.
+    """
+    # Replace complete shortcodes first, then catch any leftover {{<
+    result = re.sub(r"\{\{<(.*?)>\}\}", r"{{{<\1>}}}", text, flags=re.DOTALL)
+    result = result.replace("{{<", "{{{<")
+    return result
+
+
 def extract_keywords(messages, limit=10):
     counts = Counter()
     for msg in messages:
@@ -596,7 +609,7 @@ def render_master_by_day(all_messages):
                 role = msg.get("role") or "unknown"
                 lines.append(f"#### {time_label} — {role}")
                 lines.append("")
-                lines.append(shift_headers(text, shift=4))
+                lines.append(escape_shortcodes(shift_headers(text, shift=4)))
                 lines.append("")
             lines.append(":::")
             lines.append("")
