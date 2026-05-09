@@ -896,6 +896,34 @@
     "text": "More Examples\nRedshift 3:\npython scripts/aggregate_topology_points.py \\\n  --root outputs/quijote_batches_000_w_clusters \\\n  --output-dir outputs/quijote_batches_000_w_clusters/combined \\\n  --output-prefix quijote_batches_000_w_clusters \\\n  --engine polars \\\n  --polars-chunks 4 \\\n  --log10-field-value \\\n  --violin-scalar log10_field_value \\\n  --hist-bin-mode global \\\n  --hist-percentile-range 1 99 \\\n  --plot-percentile-range .1 99.9 \\\n  --plot-fontscale 1.2 \\\n  --plot-dpi 600\nRedshift 0:\npython scripts/aggregate_topology_points.py \\\n  --root outputs/quijote_batches_004_w_clusters_points_6_0 \\\n  --output-dir outputs/quijote_batches_004_w_clusters_points_6_0/combined \\\n  --output-prefix quijote_batches_004_w_clusters_points_6_0 \\\n  --engine polars \\\n  --polars-chunks 4 \\\n  --log10-field-value \\\n  --violin-scalar log10_field_value \\\n  --hist-bin-mode global \\\n  --hist-percentile-range 1 99 \\\n  --plot-percentile-range .1 99.9 \\\n  --plot-fontscale 1.2 \\\n  --plot-dpi 600"
   },
   {
+    "objectID": "results.html",
+    "href": "results.html",
+    "title": "Results",
+    "section": "",
+    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
+  },
+  {
+    "objectID": "results.html#project-poster",
+    "href": "results.html#project-poster",
+    "title": "Results",
+    "section": "",
+    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
+  },
+  {
+    "objectID": "results.html#project-video",
+    "href": "results.html#project-video",
+    "title": "Results",
+    "section": "Project Video",
+    "text": "Project Video\nThis video contains a narrated slideshow. It is a teaser with the highlights."
+  },
+  {
+    "objectID": "results.html#project-slides",
+    "href": "results.html#project-slides",
+    "title": "Results",
+    "section": "Project Slides",
+    "text": "Project Slides\nThese slides distill the most important content from the poster (3.5 seconds per slide — loops continuously).\n\nDownload slides (PDF)"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Disentangling the Cosmic Web",
@@ -1015,32 +1043,11 @@
     "text": "Key Links\n\nDisPerSE: https://www.iap.fr/useriap/sousbie/web/html/indexd41d.html\nQuijote simulations: https://quijote-simulations.readthedocs.io/en/latest/access.html\nGlobus CLI: https://docs.globus.org/cli/\nParaView: https://www.paraview.org/"
   },
   {
-    "objectID": "results.html",
-    "href": "results.html",
-    "title": "Results",
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "References",
     "section": "",
-    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
-  },
-  {
-    "objectID": "results.html#project-poster",
-    "href": "results.html#project-poster",
-    "title": "Results",
-    "section": "",
-    "text": "This poster illustrates all key aspects of my study. I will present my work at the 2026 Regeneron International Science and Engineering Fair in Phoenix, Arizona. Hope to see you there!\n\nDownload poster (PDF)"
-  },
-  {
-    "objectID": "results.html#project-video",
-    "href": "results.html#project-video",
-    "title": "Results",
-    "section": "Project Video",
-    "text": "Project Video\nThis video contains a narrated slideshow. It is a teaser with the highlights."
-  },
-  {
-    "objectID": "results.html#project-slides",
-    "href": "results.html#project-slides",
-    "title": "Results",
-    "section": "Project Slides",
-    "text": "Project Slides\nThese slides distill the most important content from the poster (3.5 seconds per slide — loops continuously).\n\nDownload slides (PDF)"
+    "text": "Bassi, M. (2025, February 11). An enormous, branching string of galaxy clusters is the largest known structure in the universe, scientists say. Smithsonian Magazine.\nCautun, M., van de Weygaert, R., & Jones, B. J. T. (2012). NEXUS: Tracing the cosmic web connection. arXiv:1209.2043.\nGurzadyan, V. G., Fimin, N. N., & Chechetkin, V. M. (2023). Cosmic voids and the kinetic analysis. II. Link to Hubble tension. arXiv:2303.03194.\nHahn, O., Porciani, C., Carollo, C. M., & Dekel, A. (2006). Properties of dark matter haloes in clusters, filaments, sheets and voids. arXiv:astro-ph/0610280.\nHarvard & Smithsonian Center for Astrophysics. (n.d.). Large scale structure. Retrieved January 20, 2026.\nLibeskind, N. I., van de Weygaert, R., Cautun, M., Falck, B., Tempel, E., Abel, T., Alpaslan, M., Aragón-Calvo, M. A., Forero-Romero, J. E., Gonzalez, R., Gottlöber, S., Hahn, O., Hellwing, W. A., Hoffman, Y., Jones, B. J. T., Kitaura, F., Knebe, A., Manti, S., Neyrinck, M., … Sousbie, T. (2017). Tracing the cosmic web. arXiv:1705.03021.\nMu, Z. (2025). Environmental effects on galaxy evolution. arXiv:2507.17243.\nNASA Science. (2022, August 2). Large scale structures.\nNetchitailo, V. (2022). Hubble tension. Journal of High Energy Physics, Gravitation and Cosmology, 8(2).\nSousbie, T. (2010a). The persistent cosmic web and its filamentary structure I: Theory and implementation. arXiv:1009.4015.\nSousbie, T. (2010b). The persistent cosmic web and its filamentary structure II: Illustrations. arXiv:1009.4014.\nSousbie, T. (2013). DisPerSE — Discrete persistent structures extractor.\nQuijote Simulations. (n.d.). Structure and types. Retrieved January 20, 2026.\nVillaescusa-Navarro, F., Hahn, O., Massara, E., Banerjee, A., Delgado, A. M., Ramanah, D. K., Charnock, T., Giusarma, E., Li, Y., Allys, E., Brochard, A., Uhlemann, C., Chiang, C.-T., He, S., Pisani, A., Obuljen, A., Feng, Y., Castorina, E., Contardo, G., … Wandelt, B. D. (2021). The Quijote simulations. arXiv:1909.05273."
   },
   {
     "objectID": "documents/ANALYZE_SNAPSHOT_USER_GUIDE.html",
