@@ -7,6 +7,9 @@ This repository contains my work on the project that I will present at the 2026 
 ::: {#fig-components style="width: 75%; margin-left: auto; margin-right: auto;"}
 ![](figures/Components_of_the_Cosmic_Web.png)
 
+Components of the cosmic web illustrated side-by-side. The [workflow video](documents/WORKFLOW_VIDEO.qmd) illustrates these components from different angles by rotating them in 3D.
+:::
+
 **Summary**: Pull of gravity and accelerating expansion due to dark energy shape the universe into a vast cosmic web composed of:
 
 - Clusters: clusters of galaxies
