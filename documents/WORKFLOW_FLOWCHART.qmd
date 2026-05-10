@@ -5,9 +5,9 @@ title: "Workflow Flowchart"
 ```{mermaid}
 %%{init: {'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}}}%%
 graph TD
-    A[Data acquisition<br/>Download Quijote snapshot - HDF5] --> B[analyze_snapshot.py<br/>Stage 1: Stream, crop, stride and target count<br/>Write NDfield - rebased crop]
-    B --> C[delaunay_3D<br/>Stage 2: Build Delaunay NDnet<br/>DTFE density]
-    C --> D[mse<br/>Stage 3: Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump filament manifolds - optional<br/>Export cluster critical points - maxima<br/>Dump arcs - filaments]
+    A[Data acquisition<br/>Download Quijote snapshot - HDF5] --> B[analyze_snapshot.py<br/>Stream, crop, stride and target count<br/>Write NDfield - rebased crop]
+    B --> C[delaunay_3D<br/>Build Delaunay NDnet<br/>DTFE density]
+    C --> D[mse<br/>Persistence - nsig/cut<br/>Dump manifolds - walls<br/>Dump filament manifolds - optional<br/>Export cluster critical points - maxima<br/>Dump arcs - filaments]
     D --> E[netconv/skelconv<br/>Shift VTKs to global<br/>walls: manifolds<br/>filaments: arcs<br/>filament manifolds - optional<br/>cluster critical points - optional<br/>Delaunay: density]
     E --> F1[ndtopo_stats.py - optional<br/>Match IDs to Delaunay<br/>all topology types<br/>stats CSV]
     %% E --> F2[batch_clip.py<br/>Clip slab - axis/origin/thickness<br/>Flatten walls/filaments<br/>Average density<br/>Resample/grid]
